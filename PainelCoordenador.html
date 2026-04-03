@@ -305,64 +305,42 @@
 </div>
 
 <script>
-    // URL da API do Google Apps Script
     const URL_API = "https://script.google.com/macros/s/AKfycbzwaZk-NZE0omqUf2PrU08c_-gi0H4yuxFqFFL7A5RKKilXSQcsBU-P-lAZMAd-vg0C/exec";
 
-    /**
-     * Funções de Controle de Interface
-     */
-    function abrirModal(id) { 
-        document.getElementById(id).style.display = 'flex'; 
-    }
+    function abrirModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function fecharModal(id) { document.getElementById(id).style.display = 'none'; }
 
-    function fecharModal(id) { 
-        document.getElementById(id).style.display = 'none'; 
-    }
-
-    /**
-     * Limpeza e formatação de texto para evitar erros de quebra de linha
-     */
+    // Limpeza de texto: Remove quebras de linha que quebram o nome dos ministros
     function limparTexto(txt) {
         if (!txt) return "";
-        return txt.toString()
-            .replace(/\r?\n|\r/g, " ") // Remove quebras de linha
-            .replace(/\s+/g, " ")      // Remove espaços duplos
-            .trim();
+        return txt.toString().replace(/\n|\r/g, ", ").replace(/\s+/g, " ").trim();
     }
 
-    /**
-     * Extração segura de horário para evitar o erro do "10:06"
-     */
-    function extrairHoraSegura(valor) {
+    // Extração de hora: Pega o texto bruto da planilha (07:00) ignorando datas do Google
+    function extrairHoraBruta(valor) {
         if (!valor) return "00:00";
         let s = valor.toString();
-        
-        // Se vier no formato ISO do Google (T10:06:00Z)
-        if (s.includes("T")) {
-            s = s.split("T")[1];
-        }
-        
-        // Tenta encontrar o padrão 00:00 na string
+        // Se for o formato do Google (Data + Hora), pega só o final
+        if (s.includes("T")) s = s.split("T")[1];
+        // Procura padrão 00:00:00 ou 00:00 e corta
         const match = s.match(/\d{2}:\d{2}/);
-        if (match) return match[0];
-        
-        // Fallback: pega os 5 primeiros caracteres
-        return s.substring(0, 5);
+        return match ? match[0] : s.substring(0, 5);
     }
 
-    /**
-     * Coleta dados dos inputs dos modais
-     */
+    // Função de envio: Abre o WhatsApp DIRETO no celular
+    function dispararZap(texto) {
+        const url = `whatsapp://send?text=${encodeURIComponent(texto)}`;
+        // Tenta abrir o app direto. Se falhar (ex: PC), usa o navegador.
+        const win = window.open(url, '_blank');
+        if(!win) {
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank');
+        }
+    }
+
     function obterDadosDoModal(modalId) {
         const isExtra = modalId === 'modalEvento';
         const seletor = isExtra ? '.m-input' : '.r-input';
-        
-        const inputs = document.querySelectorAll(seletor);
-        const listaMinistros = Array.from(inputs)
-            .map(i => i.value.trim())
-            .filter(v => v !== "")
-            .join(", ");
-
+        const listaMinistros = Array.from(document.querySelectorAll(seletor)).map(i => i.value.trim()).filter(v => v !== "").join(", ");
         return {
             data: isExtra ? document.getElementById('novaData').value : document.getElementById('regraFixo').value,
             hora: isExtra ? document.getElementById('novaHora').value : document.getElementById('horaFixo').value,
@@ -372,200 +350,79 @@
         };
     }
 
-    /**
-     * Envia dados para o Google Sheets
-     */
     async function salvarEscala(acao, modalId) {
         const btnId = modalId === 'modalEvento' ? 'btnSalvar' : 'btnSalvarRegra';
         const btn = document.getElementById(btnId);
         const d = obterDadosDoModal(modalId);
-
-        if (!d.hora || !d.missa) {
-            return alert("Por favor, preencha o Horário e o Nome da Missa.");
-        }
-
-        const textoOriginal = btn.innerText;
-        btn.innerText = "⏳ SALVANDO...";
-        btn.disabled = true;
-
-        const payload = { 
-            action: acao, 
-            ...d 
-        };
-
-        if (acao === 'addRegra') {
-            payload.regra = d.data;
-            delete payload.data;
-        }
-
+        if (!d.hora || !d.missa) return alert("Preencha Horário e Missa.");
+        btn.innerText = "⏳ SALVANDO..."; btn.disabled = true;
+        const payload = { action: acao, ...d };
+        if (acao === 'addRegra') { payload.regra = d.data; delete payload.data; }
         try {
-            // Enviando via POST (Modo no-cors para Google Script)
-            await fetch(URL_API, { 
-                method: 'POST', 
-                mode: 'no-cors', 
-                body: JSON.stringify(payload) 
-            });
-            
-            alert("✅ Dados enviados com sucesso para a planilha!");
-            location.reload();
-        } catch (error) {
-            console.error("Erro ao salvar:", error);
-            alert("❌ Erro ao conectar com a planilha.");
-            btn.disabled = false;
-            btn.innerText = textoOriginal;
-        }
+            await fetch(URL_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+            alert("✅ Salvo com sucesso!"); location.reload();
+        } catch (e) { alert("❌ Erro ao salvar."); btn.disabled = false; btn.innerText = "SALVAR"; }
     }
 
-    /**
-     * Lógica Principal: Consulta e Envio via WhatsApp
-     */
     async function compartilharEscala() {
         const dataSel = document.getElementById('dataConsulta').value;
-        if (!dataSel) return alert("Selecione uma data para consultar.");
+        if (!dataSel) return alert("Selecione uma data.");
 
         try {
-            // Busca dados com timestamp para evitar cache do celular
             const res = await fetch(`${URL_API}?t=${new Date().getTime()}`);
             const bancoDados = await res.json();
             
-            // Tratamento da Data selecionada
-            const partesData = dataSel.split('-');
-            const ano = partesData[0];
-            const mes = partesData[1];
-            const dia = partesData[2];
-            
-            const dataObjeto = new Date(ano, mes - 1, dia, 12, 0, 0);
+            const [ano, mes, dia] = dataSel.split('-');
+            const dObj = new Date(ano, mes - 1, dia, 12, 0, 0);
             const diasSemana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-            const diaSemanaNome = diasSemana[dataObjeto.getDay()];
-            const ordemMes = Math.ceil(dataObjeto.getDate() / 7);
-            const regraHoje = `${ordemMes}º ${diaSemanaNome}`; 
+            const regraHoje = `${Math.ceil(dObj.getDate() / 7)}º ${diasSemana[dObj.getDay()]}`; 
 
-            // Filtros Blindados
-            const extrasEncontrados = bancoDados.extras.filter(row => {
-                if (!row[1]) return false;
-                // Compara apenas a parte AAAA-MM-DD da data da planilha
-                return row[1].toString().split('T')[0] === dataSel;
-            });
+            const extras = bancoDados.extras.filter(row => row[1] && row[1].toString().split('T')[0] === dataSel);
+            const fixos = bancoDados.regras.filter(row => row[0].toString().trim().toLowerCase() === regraHoje.toLowerCase());
 
-            const regrasEncontradas = bancoDados.regras.filter(row => {
-                if (!row[0]) return false;
-                return row[0].toString().trim().toLowerCase() === regraHoje.toLowerCase();
-            });
+            if (extras.length === 0 && fixos.length === 0) return alert("Nenhuma escala para este dia.");
 
-            if (extrasEncontrados.length === 0 && regrasEncontradas.length === 0) {
-                return alert("Nenhuma escala encontrada para esta data.");
-            }
-
-            // Montagem da Mensagem
-            let mensagemZap = `*📍 ESCALA MESC - ${dia}/${mes}/${ano}*\n`;
-            mensagemZap += `*(${regraHoje})*\n\n`;
-
-            // Consolidação de todos os horários do dia
-            const listaEscalas = [
-                ...regrasEncontradas.map(r => ({ hora: r[1], missa: r[2], min: r[3], obs: "" })), 
-                ...extrasEncontrados.map(e => ({ hora: e[2], missa: e[4], min: e[3], obs: e[5] }))
+            let msg = `*📍 ESCALA MESC - ${dia}/${mes}/${ano}*\n*(${regraHoje})*\n\n`;
+            const lista = [
+                ...fixos.map(f => ({ hora: f[1], missa: f[2], min: f[3], obs: "" })), 
+                ...extras.map(e => ({ hora: e[2], missa: e[4], min: e[3], obs: e[5] }))
             ];
+            lista.sort((a, b) => a.hora.toString().localeCompare(b.hora.toString()));
 
-            // Ordenar por horário
-            listaEscalas.sort((a, b) => a.hora.toString().localeCompare(b.hora.toString()));
+            lista.forEach(item => {
+                const h = extrairHoraBruta(item.hora);
+                const min = limparTexto(item.min);
+                const missa = limparTexto(item.missa);
+                const gData = dataSel.replace(/-/g, '');
+                const linkA = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('MESC: '+missa)}&dates=${gData}T${h.replace(':','')+'00'}/${gData}T${h.replace(':','')+'00'}&details=${encodeURIComponent('Ministros: '+min)}`;
 
-            listaEscalas.forEach(item => {
-                const horaFormatada = extrairHoraSegura(item.hora);
-                const ministros = limparTexto(item.min);
-                const evento = limparTexto(item.missa);
-                
-                // Link para o Google Agenda
-                const dataGCal = dataSel.replace(/-/g, '');
-                const horaGCal = horaFormatada.replace(':', '');
-                const linkAgenda = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('MESC: ' + evento)}&dates=${dataGCal}T${horaGCal}00/${dataGCal}T${horaGCal}00&details=${encodeURIComponent('Ministros: ' + ministros)}`;
-
-                mensagemZap += `⏰ *${horaFormatada}* - ${evento}\n`;
-                mensagemZap += `👥 *Ministros:* ${ministros}\n`;
-                if (item.obs) mensagemZap += `📝 *Obs:* ${limparTexto(item.obs)}\n`;
-                mensagemZap += `📅 *Salvar na Agenda:* ${linkAgenda}\n`;
-                mensagemZap += `─────────────────\n\n`;
+                msg += `⏰ *${h}* - ${missa}\n👥 *Ministros:* ${min}\n`;
+                if (item.obs) msg += `📝 *Obs:* ${limparTexto(item.obs)}\n`;
+                msg += `📅 *Agenda:* ${linkA}\n─────────────────\n\n`;
             });
 
-            // Envio usando o seletor nativo do celular (igual ao seu novo arquivo)
-            if (navigator.share) {
-                navigator.share({
-                    title: 'Escala de Ministros',
-                    text: mensagemZap
-                }).catch(err => {
-                    window.open(`https://wa.me/?text=${encodeURIComponent(mensagemZap)}`);
-                });
-            } else {
-                window.open(`https://wa.me/?text=${encodeURIComponent(mensagemZap)}`);
-            }
-
-        } catch (error) {
-            console.error("Erro na consulta:", error);
-            alert("Erro ao carregar escala. Tente novamente em instantes.");
-        }
+            dispararZap(msg);
+        } catch (e) { alert("Erro ao carregar escala."); }
     }
 
-    /**
-     * Gera PDF das escalas individuais dos modais
-     */
     function gerarPDFInstantaneo(modalId) {
         const d = obterDadosDoModal(modalId);
-        if (!d.hora || !d.missa) return alert("Preencha os dados básicos.");
-        
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        
-        doc.setFontSize(20);
-        doc.setTextColor(30, 58, 138);
-        doc.text("ESCALA DE MINISTROS", 105, 25, { align: 'center' });
-        
-        doc.setLineWidth(0.5);
-        doc.line(20, 30, 190, 30);
-        
-        doc.setFontSize(14);
-        doc.setTextColor(0, 0, 0);
-        doc.text(`Referência: ${d.data}`, 20, 45);
-        doc.text(`Horário: ${d.hora}`, 20, 55);
-        doc.text(`Missa/Evento: ${d.missa}`, 20, 65);
-        
-        doc.setFontSize(16);
-        doc.text("Ministros Escalados:", 20, 85);
-        
-        doc.setFontSize(12);
-        const splitMinistros = doc.splitTextToSize(d.ministro, 170);
-        doc.text(splitMinistros, 20, 95);
-        
-        if (d.obs) {
-            doc.text("Observações:", 20, 130);
-            doc.text(doc.splitTextToSize(d.obs, 170), 20, 140);
-        }
-        
-        doc.save(`Escala_${d.data}_${d.hora}.pdf`);
+        const { jsPDF } = window.jspdf; const doc = new jsPDF();
+        doc.setFontSize(18); doc.text("ESCALA DE MINISTROS", 105, 20, { align: 'center' });
+        doc.setFontSize(12); doc.text(`Data: ${d.data} | Hora: ${d.hora}`, 20, 40);
+        doc.text(`Evento: ${d.missa}`, 20, 50);
+        doc.text(`Ministros:`, 20, 70);
+        doc.text(doc.splitTextToSize(d.ministro, 170), 20, 80);
+        doc.save(`Escala_${d.data}.pdf`);
     }
 
-    /**
-     * Envio rápido via WhatsApp dentro dos modais
-     */
     function compartilharEscalaRapida(modalId) {
         const d = obterDadosDoModal(modalId);
-        if (!d.hora || !d.missa) return alert("Preencha Horário e Missa.");
-        
+        if (!d.hora) return alert("Preencha os dados.");
         const ref = d.data.includes('-') ? d.data.split('-').reverse().join('/') : d.data;
-        let texto = `*📍 NOVA ESCALA - ${ref}*\n`;
-        texto += `⏰ *Horário:* ${d.hora}\n`;
-        texto += `⛪ *Missa:* ${d.missa}\n`;
-        texto += `👥 *Ministros:* ${d.ministro}`;
-        
-        if (d.obs) texto += `\n📝 *Obs:* ${d.obs}`;
-        
-        if (navigator.share) {
-            navigator.share({ text: texto }).catch(() => {
-                window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`);
-            });
-        } else {
-            window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`);
-        }
+        let txt = `*📍 NOVA ESCALA - ${ref}*\n⏰ *Horário:* ${d.hora}\n⛪ *Missa:* ${d.missa}\n👥 *Ministros:* ${d.ministro}`;
+        dispararZap(txt);
     }
 </script>
-
 </body>
 </html>
