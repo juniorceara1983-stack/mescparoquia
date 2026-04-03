@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADM - MESC (Coordenador)</title>
-    <link rel="manifest" href="manifest-adm-mesc.json">
+    <title>ADM - MESC Pro Plus</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        :root { --primary: #1e3a8a; --bg: #f1f5f9; }
+        :root { --primary: #1e3a8a; --bg: #f1f5f9; --success: #25d366; --pdf: #e11d48; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 15px; margin: 0; }
         
         .container { 
@@ -16,139 +16,228 @@
             padding: 25px; 
             border-radius: 20px; 
             box-shadow: 0 10px 15px rgba(0,0,0,0.1); 
-            border-top: 10px solid var(--primary);
+            border-top: 10px solid var(--primary); 
+        }
+        
+        .header { text-align: center; margin-bottom: 20px; }
+        
+        label { display: block; margin-top: 12px; font-weight: 700; font-size: 0.85rem; color: #475569; }
+        
+        input, textarea { 
+            width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #e2e8f0; border-radius: 10px; 
+            box-sizing: border-box; background: #ffffff; box-shadow: inset 0 2px 4px rgba(0,0,0,0.03); font-family: inherit;
         }
 
-        .header { text-align: center; margin-bottom: 25px; }
-        h2 { color: var(--primary); margin: 5px 0; font-size: 1.4rem; }
-        p { color: #64748b; font-size: 0.85rem; margin-top: 0; }
-
-        label { 
-            display: block; 
-            margin-top: 15px; 
-            font-weight: 700; 
-            font-size: 0.85rem; 
-            color: #475569; 
-            text-shadow: 1px 1px 1px rgba(0,0,0,0.05); 
+        .btn { 
+            width: 100%; padding: 16px; border: none; border-radius: 12px; font-weight: bold; 
+            cursor: pointer; transition: 0.2s; margin-top: 10px; display: flex; 
+            align-items: center; justify-content: center; gap: 8px; 
         }
+        
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-zap { background: var(--success); color: white; font-size: 0.9rem; }
+        .btn-pdf { background: var(--pdf); color: white; font-size: 0.9rem; }
+        .btn:active { transform: scale(0.98); }
 
-        /* Efeito de Alto Relevo nos Inputs */
-        input, select { 
-            width: 100%; 
-            padding: 14px; 
-            margin-top: 5px; 
-            border: 1px solid #e2e8f0; 
-            border-radius: 12px; 
-            box-sizing: border-box; 
-            font-size: 1rem; 
-            background: #ffffff;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.05);
-            transition: all 0.3s;
+        /* Modal */
+        .modal { 
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; 
+            height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(3px); 
+            align-items: center; justify-content: center; 
         }
-
-        input:focus { 
-            outline: none; 
-            border-color: var(--primary); 
-            box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1); 
+        .modal-content { 
+            background: white; padding: 20px; border-radius: 20px; width: 90%; 
+            max-width: 400px; max-height: 90vh; overflow-y: auto; position: relative; 
         }
-
-        /* Botão de Ação com Relevo */
-        button { 
-            width: 100%; 
-            padding: 16px; 
-            background: var(--primary); 
-            color: white; 
-            border: none; 
-            border-radius: 12px; 
-            font-weight: bold; 
-            font-size: 1rem; 
-            margin-top: 25px; 
-            cursor: pointer; 
-            box-shadow: 0 4px 6px rgba(30, 58, 138, 0.2);
-            transition: transform 0.2s, background 0.3s;
-        }
-
-        button:active { transform: scale(0.98); }
-        button:disabled { background: #94a3b8; cursor: not-allowed; }
-
-        .signature { text-align: center; margin-top: 25px; font-size: 0.7rem; color: #94a3b8; letter-spacing: 1px; }
+        
+        .grid-ministros { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+        .grid-ministros input { padding: 8px; font-size: 0.85rem; }
+        
+        .modal-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .signature { text-align: center; margin-top: 20px; font-size: 0.7rem; color: #94a3b8; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="header">
-            <h2>COORDENADOR MESC</h2>
-            <p>PNSPS - Gestão de Escalas</p>
-        </div>
-
-        <form id="formEscala">
-            <label>Data do Serviço</label>
-            <input type="date" id="data" required>
-
-            <label>Horário</label>
-            <input type="time" id="hora" required>
-
-            <label>Nome do Ministro</label>
-            <input type="text" id="ministro" placeholder="Digite o nome..." required>
-
-            <label>Celebração / Local</label>
-            <input type="text" id="missa" placeholder="Ex: Missa das 19h / Comunidade" required>
-
-            <button type="button" id="btnSalvar" onclick="salvar()">AGENDAR MINISTRO</button>
-        </form>
-
-        <div class="signature">By: Jr&Iz</div>
+<div class="container">
+    <div class="header">
+        <h2 style="color:var(--primary); margin:0;">COORDENADOR MESC</h2>
+        <p style="color:#64748b; font-size:0.9rem;">Paróquia PNSPS - Maracanaú</p>
     </div>
 
-    <script>
-        // Substitua pela sua URL do Google Apps Script
-        const URL_API = "SUA_URL_DO_GOOGLE_SCRIPT_AQUI";
+    <label>Consultar Escala do Dia</label>
+    <input type="date" id="dataConsulta">
+    
+    <button class="btn btn-zap" onclick="compartilharEscala()">📲 ESCALA PARA WHATSAPP</button>
 
-        async function salvar() {
-            const btn = document.getElementById('btnSalvar');
-            const data = document.getElementById('data').value;
-            const hora = document.getElementById('hora').value;
-            const ministro = document.getElementById('ministro').value;
-            const missa = document.getElementById('missa').value;
+    <div style="margin: 25px 0; border-top: 1px solid #eee;"></div>
 
-            // Validação simples
-            if(!data || !hora || !ministro || !missa) {
-                return alert("Por favor, preencha todos os campos da escala.");
-            }
+    <button class="btn btn-primary" onclick="abrirModal()">➕ NOVO EVENTO / ESCALA</button>
+    <div class="signature">By: Jr&Iz</div>
+</div>
 
-            btn.innerText = "ENVIANDO...";
-            btn.disabled = true;
+<div id="modalEvento" class="modal">
+    <div class="modal-content">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+            <button onclick="fecharModal()" style="background:none; border:none; cursor:pointer; color:var(--primary); font-weight:bold; font-size:1rem;">⬅ Voltar</button>
+            <h3 style="color:var(--primary); margin:0;">Novo Evento</h3>
+            <span style="width: 50px;"></span>
+        </div>
+        
+        <label>Data</label> <input type="date" id="novaData">
+        <label>Horário</label> <input type="time" id="novaHora">
+        <label>Evento / Missa</label> <input type="text" id="novoEvento" placeholder="Ex: Missa de Domingo">
 
-            const payload = {
-                action: "addEscala",
-                data: data,
-                hora: hora,
-                ministro: ministro,
-                missa: missa
-            };
+        <label>Ministros (Até 10)</label>
+        <div class="grid-ministros">
+            <input type="text" class="m-input" placeholder="1. Nome">
+            <input type="text" class="m-input" placeholder="2. Nome">
+            <input type="text" class="m-input" placeholder="3. Nome">
+            <input type="text" class="m-input" placeholder="4. Nome">
+            <input type="text" class="m-input" placeholder="5. Nome">
+            <input type="text" class="m-input" placeholder="6. Nome">
+            <input type="text" class="m-input" placeholder="7. Nome">
+            <input type="text" class="m-input" placeholder="8. Nome">
+            <input type="text" class="m-input" placeholder="9. Nome">
+            <input type="text" class="m-input" placeholder="10. Nome">
+        </div>
 
-            try {
-                // Usando o modo 'no-cors' se necessário, ou fetch padrão
-                await fetch(URL_API, {
-                    method: 'POST',
-                    mode: 'no-cors', // Importante para Google Script
-                    body: JSON.stringify(payload)
-                });
+        <label>Observações</label>
+        <textarea id="obs" rows="2" placeholder="Ex: Cor Branca / Reunião após missa"></textarea>
 
-                alert("Escala salva com sucesso na planilha!");
-                // Limpa apenas o nome do ministro e local para facilitar a próxima escala
-                document.getElementById('ministro').value = "";
-                document.getElementById('missa').value = "";
-                
-            } catch (error) {
-                console.error(error);
-                alert("Erro ao salvar. Verifique a conexão.");
-            } finally {
-                btn.innerText = "AGENDAR MINISTRO";
-                btn.disabled = false;
-            }
+        <div class="modal-footer">
+            <button class="btn btn-pdf" onclick="gerarPDFInstantaneo()">📄 PDF</button>
+            <button class="btn btn-zap" onclick="compartilharEscalaRapida()">📲 WhatsApp</button>
+        </div>
+
+        <button class="btn btn-primary" id="btnSalvar" onclick="salvarEvento()">💾 SALVAR NA PLANILHA</button>
+    </div>
+</div>
+
+<script>
+    // URL do seu Google Apps Script atualizada
+    const URL_API = "https://script.google.com/macros/s/AKfycbzwaZk-NZE0omqUf2PrU08c_-gi0H4yuxFqFFL7A5RKKilXSQcsBU-P-lAZMAd-vg0C/exec";
+    const { jsPDF } = window.jspdf;
+
+    function abrirModal() { document.getElementById('modalEvento').style.display = 'flex'; }
+    function fecharModal() { document.getElementById('modalEvento').style.display = 'none'; }
+
+    function obterDadosForm() {
+        const inputs = document.querySelectorAll('.m-input');
+        const listaMinistros = Array.from(inputs).map(i => i.value).filter(v => v !== "").join(", ");
+        return {
+            data: document.getElementById('novaData').value,
+            hora: document.getElementById('novaHora').value,
+            missa: document.getElementById('novoEvento').value,
+            ministro: listaMinistros,
+            obs: document.getElementById('obs').value
+        };
+    }
+
+    async function salvarEvento() {
+        const btn = document.getElementById('btnSalvar');
+        const dados = obterDadosForm();
+        if(!dados.data || !dados.missa) return alert("Preencha Data e Evento!");
+
+        btn.innerText = "SALVANDO..."; btn.disabled = true;
+        try {
+            await fetch(URL_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify({action: "addEscala", ...dados}) });
+            alert("Escala salva com sucesso!");
+            location.reload();
+        } catch (e) { 
+            alert("Erro ao salvar. Verifique sua conexão."); 
+            btn.innerText = "💾 SALVAR NA PLANILHA";
+            btn.disabled = false; 
         }
-    </script>
+    }
+
+    function gerarPDFInstantaneo() {
+        const d = obterDadosForm();
+        if(!d.data || !d.missa) return alert("Preencha os dados básicos!");
+        
+        const doc = new jsPDF();
+        doc.setFontSize(18);
+        doc.text("ESCALA DE MINISTROS - MESC", 105, 20, { align: 'center' });
+        doc.setFontSize(14);
+        doc.text(`${d.data.split('-').reverse().join('/')} - ${d.hora}`, 105, 30, { align: 'center' });
+        
+        doc.setFont("helvetica", "bold");
+        doc.text(`Evento: ${d.missa}`, 20, 50);
+        doc.setFont("helvetica", "normal");
+        doc.text(`Ministros:`, 20, 60);
+        
+        const splitMinistros = doc.splitTextToSize(d.ministro, 170);
+        doc.text(splitMinistros, 20, 67);
+        
+        if(d.obs) {
+            doc.setFont("helvetica", "italic");
+            doc.text(`Obs: ${d.obs}`, 20, 100);
+        }
+        doc.save(`Escala_${d.data}.pdf`);
+    }
+
+    function compartilharEscalaRapida() {
+        const d = obterDadosForm();
+        if(!d.data || !d.missa) return alert("Preencha os dados primeiro!");
+        
+        const dataBR = d.data.split('-').reverse().join('/');
+        const gData = d.data.replace(/-/g,'');
+        const gHora = d.hora.replace(':','');
+        const linkAgenda = `https://www.google.com/calendar/render?action=TEMPLATE&text=MESC:+${d.missa}&dates=${gData}T${gHora}00/${gData}T${gHora}00&details=Ministros:+${d.ministro}`;
+
+        let msg = `*📍 NOVA ESCALA MESC - ${dataBR}*\n\n`;
+        msg += `⏰ *${d.hora}* - ${d.missa}\n`;
+        msg += `👤 *Ministros:* ${d.ministro}\n`;
+        if(d.obs) msg += `📝 *Obs:* ${d.obs}\n`;
+        msg += `\n📅 *Salvar Agenda:* ${linkAgenda}`;
+
+        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
+    }
+
+    async function compartilharEscala() {
+        const dataSel = document.getElementById('dataConsulta').value;
+        if(!dataSel) return alert("Selecione a data para consultar!");
+
+        try {
+            const res = await fetch(URL_API);
+            const bancoDados = await res.json();
+            
+            // Lógica de cálculo da regra (1º Domingo, etc)
+            const d = new Date(dataSel + "T12:00:00");
+            const diasSemana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+            const diaSemanaNome = diasSemana[d.getDay()];
+            const ordem = Math.ceil(d.getDate() / 7);
+            const regraHoje = `${ordem}º ${diaSemanaNome}`; 
+
+            const extras = bancoDados.extras.filter(row => row[1] && row[1].includes(dataSel));
+            const fixos = bancoDados.regras.filter(row => row[0] == regraHoje);
+
+            if(extras.length === 0 && fixos.length === 0) return alert("Nenhuma escala encontrada para este dia.");
+
+            let msg = `*📍 ESCALA MESC - ${dataSel.split('-').reverse().join('/')}*\n`;
+            msg += `*(${regraHoje})*\n\n`;
+
+            const totalDia = [
+                ...fixos.map(f => ({hora: f[1], missa: f[2], min: f[3], obs: ""})), 
+                ...extras.map(e => ({hora: e[2], missa: e[4], min: e[3], obs: e[5]}))
+            ];
+
+            totalDia.forEach(item => {
+                const gData = dataSel.replace(/-/g,'');
+                const gHora = item.hora.replace(':','');
+                const linkAgenda = `https://www.google.com/calendar/render?action=TEMPLATE&text=MESC:+${item.missa}&dates=${gData}T${gHora}00/${gData}T${gHora}00&details=Ministros:+${item.min}`;
+
+                msg += `⏰ *${item.hora}* - ${item.missa}\n`;
+                msg += `👤 *Ministros:* ${item.min}\n`;
+                if(item.obs) msg += `📝 *Obs:* ${item.obs}\n`;
+                msg += `📅 *Salvar Agenda:* ${linkAgenda}\n`;
+                msg += `─────────────────\n`;
+            });
+
+            window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
+        } catch (e) { alert("Erro ao consultar a planilha. Verifique se o Script está publicado corretamente."); }
+    }
+</script>
+
 </body>
 </html>
