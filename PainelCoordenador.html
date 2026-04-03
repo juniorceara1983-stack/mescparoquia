@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ADM - MESC Pro Plus</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        :root { --primary: #1e3a8a; --bg: #f1f5f9; --success: #25d366; --pdf: #e11d48; --gold: #b45309; }
+        :root { --primary: #1e3a8a; --bg: #f1f5f9; --success: #25d366; --gold: #b45309; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 15px; margin: 0; }
         .container { max-width: 480px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); border-top: 10px solid var(--primary); }
         .header { text-align: center; margin-bottom: 20px; }
@@ -91,24 +90,17 @@
     function abrirModal(id) { document.getElementById(id).style.display = 'flex'; }
     function fecharModal(id) { document.getElementById(id).style.display = 'none'; }
 
-    // LIMPEZA DE TEXTO (Nomes e Eventos)
     function limparTotal(texto) {
         if (!texto) return "";
         return texto.toString().replace(/[\r\n]+/g, " ").replace(/\s\s+/g, " ").trim();
     }
 
-    // EXTRAÇÃO DE HORA (Evita 10:06 e pega o que você digitou na planilha)
     function extrairHora(valor) {
         if (!valor) return "00:00";
         let s = valor.toString();
-        // Se o Google enviou uma data inteira junto, cortamos para pegar só o tempo
         if (s.includes("T")) s = s.split("T")[1];
         const match = s.match(/\d{2}:\d{2}/);
         return match ? match[0] : s.substring(0, 5);
-    }
-
-    function dispararZap(texto) {
-        window.location.href = `whatsapp://send?text=${encodeURIComponent(texto)}`;
     }
 
     async function salvarEscala(acao, modalId) {
@@ -117,21 +109,31 @@
         const ministros = Array.from(inputs).map(i => limparTotal(i.value)).filter(v => v !== "").join(", ");
         
         const d = {
-            data: isExtra ? document.getElementById('novaData').value : document.getElementById('regraFixo').value,
+            action: acao,
             hora: isExtra ? document.getElementById('novaHora').value : document.getElementById('horaFixo').value,
             missa: limparTotal(isExtra ? document.getElementById('novoEvento').value : document.getElementById('eventoFixo').value),
-            ministro: ministros,
-            obs: isExtra ? limparTotal(document.getElementById('obs').value) : ""
+            ministro: ministros
         };
+
+        if (isExtra) {
+            d.data = document.getElementById('novaData').value;
+            d.obs = limparTotal(document.getElementById('obs').value);
+        } else {
+            d.regra = document.getElementById('regraFixo').value; 
+        }
 
         if (!d.hora || !d.missa) return alert("Preencha Horário e Missa!");
         const btn = document.getElementById(isExtra ? 'btnSalvar' : 'btnSalvarRegra');
         btn.innerText = "SALVANDO..."; btn.disabled = true;
 
         try {
-            await fetch(URL_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: acao, ...d }) });
-            alert("Salvo na Planilha!"); location.reload();
-        } catch (e) { alert("Erro!"); btn.disabled = false; btn.innerText = "SALVAR"; }
+            await fetch(URL_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(d) });
+            alert("Salvo na Planilha!"); 
+            location.reload();
+        } catch (e) { 
+            alert("Erro ao salvar!"); 
+            btn.disabled = false; btn.innerText = "SALVAR"; 
+        }
     }
 
     async function compartilharEscala() {
@@ -147,20 +149,10 @@
             const dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
             const regraHoje = `${Math.ceil(dObj.getDate() / 7)}º ${dias[dObj.getDay()]}`; 
 
-            // FILTRO PARA EVENTOS EXTRAS (Usa data: 2026-04-05)
-            const extras = banco.extras.filter(r => {
-                if (!r[1]) return false;
-                return r[1].toString().substring(0, 10) === dataSel;
-            });
+            const extras = banco.extras.filter(r => r[1] && r[1].toString().substring(0, 10) === dataSel);
+            const fixos = banco.regras.filter(r => r[0] && r[0].toString().trim().toLowerCase() === regraHoje.toLowerCase());
 
-            // FILTRO PARA REGRAS FIXAS (Usa texto: 1º Domingo)
-            // Aqui é onde corrigimos para ele ler o que você digitou direto na planilha
-            const fixos = banco.regras.filter(r => {
-                if (!r[0]) return false;
-                return r[0].toString().trim().toLowerCase() === regraHoje.toLowerCase();
-            });
-
-            if (extras.length === 0 && fixos.length === 0) return alert("Nenhuma escala encontrada para: " + regraHoje);
+            if (extras.length === 0 && fixos.length === 0) return alert("Nenhuma escala para: " + regraHoje);
 
             let msg = "";
             const lista = [
@@ -168,24 +160,19 @@
                 ...extras.map(e => ({ h: e[2], m: e[4], n: e[3], o: e[5], r: `${dia}/${mes}/${ano}` }))
             ];
 
-            // Ordenar por horário para não ficar bagunçado
             lista.sort((a, b) => a.h.toString().localeCompare(b.h.toString()));
 
             lista.forEach(item => {
-                const horaF = extrairHora(item.h);
-                const missaF = limparTotal(item.m);
-                const minF = limparTotal(item.n);
-                
                 msg += `*📍 NOVA ESCALA - ${item.r}*\n`;
-                msg += `⏰ *Horário:* ${horaF}\n`;
-                msg += `⛪ *Missa:* ${missaF}\n`;
-                msg += `👤 *Ministros:* ${minF}\n`;
+                msg += `⏰ *Horário:* ${extrairHora(item.h)}\n`;
+                msg += `⛪ *Missa:* ${limparTotal(item.m)}\n`;
+                msg += `👤 *Ministros:* ${limparTotal(item.n)}\n`;
                 if (item.o) msg += `📝 *Obs:* ${limparTotal(item.o)}\n`;
                 msg += `─────────────────\n\n`;
             });
 
-            dispararZap(msg);
-        } catch (e) { alert("Erro ao conectar com a planilha."); }
+            window.location.href = `whatsapp://send?text=${encodeURIComponent(msg)}`;
+        } catch (e) { alert("Erro ao carregar dados da planilha."); }
     }
 </script>
 </body>
