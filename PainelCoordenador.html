@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>COORDENADOR - MESC</title>
+    <title>ADM - MESC</title>
     <style>
         :root { --primary: #1e3a8a; --bg: #f1f5f9; --success: #25d366; --gold: #b45309; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 15px; margin: 0; }
@@ -82,7 +82,6 @@
 </div>
 
 <script>
-    // ATUALIZADO COM O SEU LINK NOVO
     const URL_API = "https://script.google.com/macros/s/AKfycbz4HkqqwosJnPdRTBdNC0wL9tsSxz5YDRphQX-VDPtWq2FUlmPLAIC05hYlBUJTkk_y/exec";
 
     function abrirModal(id) { document.getElementById(id).style.display = 'flex'; }
@@ -111,29 +110,22 @@
             payload.regra = document.getElementById('regraFixo').value;
         }
 
-        if (!payload.hora || !payload.missa) return alert("Por favor, preencha Horário e Nome do Evento.");
-
         const btn = document.querySelector(`#${modalId} .btn`);
-        const originalText = btn.innerText;
         btn.innerText = "⏳ SALVANDO..."; btn.disabled = true;
 
         try {
-            await fetch(URL_API, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify(payload)
-            });
-            alert("Sucesso! Os dados foram enviados para a planilha.");
+            await fetch(URL_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+            alert("Enviado com sucesso!");
             location.reload();
         } catch (e) {
-            alert("Erro ao conectar. Tente novamente.");
-            btn.disabled = false; btn.innerText = originalText;
+            alert("Erro ao salvar.");
+            btn.disabled = false; btn.innerText = "TENTAR NOVAMENTE";
         }
     }
 
     async function compartilharEscala() {
         const dataSel = document.getElementById('dataConsulta').value;
-        if (!dataSel) return alert("Selecione uma data para consultar.");
+        if (!dataSel) return alert("Escolha uma data!");
 
         try {
             const res = await fetch(`${URL_API}?t=${new Date().getTime()}`);
@@ -144,37 +136,27 @@
             const diasSemana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
             const regraHoje = `${Math.ceil(dObj.getDate() / 7)}º ${diasSemana[dObj.getDay()]}`; 
 
-            // Filtro Extras (Aba Lançamentos) - Ajustado para o formato de data da planilha
+            // Filtro Extras (Aba Lançamentos) - Data está na coluna B (índice 1)
             const extras = banco.extras.filter(r => r[1] && r[1].toString().includes(dataSel));
             
-            // Filtro Regras (Aba Escala_Fixa)
+            // Filtro Regras (Aba Escala_Fixa) - Regra está na coluna A (índice 0)
             const fixos = banco.regras.filter(r => r[0] && r[0].toString().trim().toLowerCase() === regraHoje.toLowerCase());
 
-            if (extras.length === 0 && fixos.length === 0) {
-                return alert("Nenhuma escala encontrada para " + regraHoje);
-            }
+            if (extras.length === 0 && fixos.length === 0) return alert("Nada para " + regraHoje);
 
-            let msg = "";
-            const listaGeral = [
-                ...fixos.map(f => ({ h: f[1], m: f[2], n: f[3], r: regraHoje, o: "" })), 
-                ...extras.map(e => ({ h: e[2], m: e[4], n: e[3], r: `${dia}/${mes}/${ano}`, o: e[5] }))
+            let msg = `*📍 ESCALA - ${dia}/${mes}/${ano}*\n\n`;
+            
+            const lista = [
+                ...fixos.map(f => ({ h: f[1], m: f[2], n: f[3], r: regraHoje })), 
+                ...extras.map(e => ({ h: e[2], m: e[4], n: e[3], r: "EXTRA" }))
             ];
 
-            listaGeral.sort((a, b) => a.h.localeCompare(b.h));
-
-            listaGeral.forEach(item => {
-                msg += `*📍 ESCALA - ${item.r}*\n`;
-                msg += `⏰ *Hora:* ${item.h}\n`;
-                msg += `⛪ *Missa:* ${limpar(item.m)}\n`;
-                msg += `👤 *Ministros:* ${limpar(item.n)}\n`;
-                if (item.o) msg += `📝 *Obs:* ${limpar(item.o)}\n`;
-                msg += `─────────────────\n\n`;
+            lista.forEach(item => {
+                msg += `⏰ *Hora:* ${item.h}\n⛪ *Missa:* ${limpar(item.m)}\n👤 *Ministros:* ${limpar(item.n)}\n─────────────────\n\n`;
             });
 
             window.location.href = `whatsapp://send?text=${encodeURIComponent(msg)}`;
-        } catch (e) { 
-            alert("Erro ao buscar dados. Verifique se as abas 'Lançamentos' e 'Escala_Fixa' estão corretas no script."); 
-        }
+        } catch (e) { alert("Erro ao buscar dados."); }
     }
 </script>
 </body>
