@@ -82,8 +82,8 @@
 </div>
 
 <script>
-    // SEU LINK GERADO
-    const URL_API = "https://script.google.com/macros/s/AKfycbzniSa2_eD4pY05IfXXtTsI0nHjBbD65Woup61wlYEwdSAR-8nBivreiQWGwTMjW2NI/exec";
+    // ATUALIZADO COM O SEU LINK NOVO
+    const URL_API = "https://script.google.com/macros/s/AKfycbz4HkqqwosJnPdRTBdNC0wL9tsSxz5YDRphQX-VDPtWq2FUlmPLAIC05hYlBUJTkk_y/exec";
 
     function abrirModal(id) { document.getElementById(id).style.display = 'flex'; }
     function fecharModal(id) { document.getElementById(id).style.display = 'none'; }
@@ -136,7 +136,6 @@
         if (!dataSel) return alert("Selecione uma data para consultar.");
 
         try {
-            // t= gera um numero aleatorio para o google nao mandar dado velho (cache)
             const res = await fetch(`${URL_API}?t=${new Date().getTime()}`);
             const banco = await res.json();
             
@@ -145,14 +144,14 @@
             const diasSemana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
             const regraHoje = `${Math.ceil(dObj.getDate() / 7)}º ${diasSemana[dObj.getDay()]}`; 
 
-            // Filtro Extras (Coluna 1 da planilha)
+            // Filtro Extras (Aba Lançamentos) - Ajustado para o formato de data da planilha
             const extras = banco.extras.filter(r => r[1] && r[1].toString().includes(dataSel));
             
-            // Filtro Regras (Coluna 0 da planilha)
+            // Filtro Regras (Aba Escala_Fixa)
             const fixos = banco.regras.filter(r => r[0] && r[0].toString().trim().toLowerCase() === regraHoje.toLowerCase());
 
             if (extras.length === 0 && fixos.length === 0) {
-                return alert("Nenhuma escala encontrada na planilha para " + regraHoje);
+                return alert("Nenhuma escala encontrada para " + regraHoje);
             }
 
             let msg = "";
@@ -161,7 +160,6 @@
                 ...extras.map(e => ({ h: e[2], m: e[4], n: e[3], r: `${dia}/${mes}/${ano}`, o: e[5] }))
             ];
 
-            // Ordenar por hora
             listaGeral.sort((a, b) => a.h.localeCompare(b.h));
 
             listaGeral.forEach(item => {
@@ -175,7 +173,7 @@
 
             window.location.href = `whatsapp://send?text=${encodeURIComponent(msg)}`;
         } catch (e) { 
-            alert("Erro ao buscar dados na planilha. Verifique se as abas 'Extras' e 'Regras' existem."); 
+            alert("Erro ao buscar dados. Verifique se as abas 'Lançamentos' e 'Escala_Fixa' estão corretas no script."); 
         }
     }
 </script>
