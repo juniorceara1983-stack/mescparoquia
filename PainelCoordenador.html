@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADM - MESC Pro Plus</title>
+    <title>COORDENADOR - MESC</title>
     <style>
         :root { --primary: #1e3a8a; --bg: #f1f5f9; --success: #25d366; --gold: #b45309; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 15px; margin: 0; }
         .container { max-width: 480px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); border-top: 10px solid var(--primary); }
-        .header { text-align: center; margin-bottom: 20px; }
+        h2 { text-align: center; color: var(--primary); margin: 0 0 5px 0; }
+        p.subtitle { text-align: center; color: #64748b; margin: 0 0 20px 0; font-size: 14px; }
         label { display: block; margin-top: 15px; font-weight: 700; color: #475569; }
-        input, textarea, select { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; }
+        input, textarea, select { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; font-size: 16px; }
         .btn { width: 100%; padding: 18px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-regra { background: var(--gold); color: white; }
@@ -18,161 +19,164 @@
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; }
         .modal-content { background: white; padding: 20px; border-radius: 20px; width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
         .grid-ministros { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-        .signature { text-align: center; margin-top: 20px; font-size: 0.7rem; color: #94a3b8; }
+        .footer-credits { text-align: center; font-size: 10px; color: #94a3b8; margin-top: 20px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header">
-        <h2 style="color:var(--primary); margin:0;">COORDENADOR MESC</h2>
-        <p style="color:#64748b;">Paróquia PNSPS - Maracanaú</p>
-    </div>
-
-    <label>Consultar Escala do Dia</label>
+    <h2>COORDENADOR MESC</h2>
+    <p class="subtitle">Paróquia PNSPS - Maracanaú</p>
+    
+    <label>📅 Consultar Escala do Dia</label>
     <input type="date" id="dataConsulta">
     <button class="btn btn-zap" onclick="compartilharEscala()">📲 ENVIAR PARA WHATSAPP</button>
 
-    <div style="margin: 20px 0; border-top: 1px solid #eee;"></div>
+    <div style="margin: 25px 0; border-top: 2px solid #eee;"></div>
 
     <button class="btn btn-primary" onclick="abrirModal('modalEvento')">➕ NOVO EVENTO (EXTRA)</button>
-    <button class="btn btn-regra" onclick="abrirModal('modalRegra')">⚙️ GERENCIAR REGRAS FIXAS</button>
-    <div class="signature">By: Jr&Iz</div>
+    <button class="btn btn-regra" onclick="abrirModal('modalRegra')">⚙️ REGRAS FIXAS</button>
+    
+    <div class="footer-credits">By: Jr&Iz</div>
 </div>
 
 <div id="modalEvento" class="modal">
     <div class="modal-content">
-        <button onclick="fecharModal('modalEvento')" style="border:none; background:none; font-weight:bold; color:var(--primary);">⬅ Voltar</button>
-        <h3>Novo Evento Extra</h3>
-        <label>Data</label> <input type="date" id="novaData">
+        <button onclick="fecharModal('modalEvento')" style="border:none; background:none; font-weight:bold; cursor:pointer; color:var(--primary);">⬅ Voltar</button>
+        <h3>Missa ou Evento Extra</h3>
+        <label>Data do Evento</label> <input type="date" id="novaData">
         <label>Horário</label> <input type="time" id="novaHora">
-        <label>Missa / Evento</label> <input type="text" id="novoEvento">
-        <label>Ministros (Até 10)</label>
+        <label>Nome da Missa / Evento</label> <input type="text" id="novoEvento" placeholder="Ex: Missa de Sétimo Dia">
+        <label>Ministros Escalados</label>
         <div class="grid-ministros">
             <input type="text" class="m-input" placeholder="1"> <input type="text" class="m-input" placeholder="2">
             <input type="text" class="m-input" placeholder="3"> <input type="text" class="m-input" placeholder="4">
             <input type="text" class="m-input" placeholder="5"> <input type="text" class="m-input" placeholder="6">
-            <input type="text" class="m-input" placeholder="7"> <input type="text" class="m-input" placeholder="8">
-            <input type="text" class="m-input" placeholder="9"> <input type="text" class="m-input" placeholder="10">
         </div>
         <label>Observações</label> <textarea id="obs" rows="2"></textarea>
-        <button class="btn btn-primary" id="btnSalvar" onclick="salvarEscala('addEscala', 'modalEvento')">💾 SALVAR</button>
+        <button class="btn btn-primary" id="btnSalvarExtra" onclick="salvarNaPlanilha('addEscala', 'modalEvento')">💾 SALVAR NA PLANILHA</button>
     </div>
 </div>
 
 <div id="modalRegra" class="modal">
     <div class="modal-content">
-        <button onclick="fecharModal('modalRegra')" style="border:none; background:none; font-weight:bold; color:var(--gold);">⬅ Voltar</button>
-        <h3>Regra Fixa</h3>
+        <button onclick="fecharModal('modalRegra')" style="border:none; background:none; font-weight:bold; cursor:pointer; color:var(--gold);">⬅ Voltar</button>
+        <h3>Configurar Regra Fixa</h3>
+        <label>Selecione a Regra</label>
         <select id="regraFixo">
-            <option value="1º Sábado">1º Sábado</option> <option value="2º Sábado">2º Sábado</option>
-            <option value="3º Sábado">3º Sábado</option> <option value="4º Sábado">4º Sábado</option>
-            <option value="1º Domingo">1º Domingo</option> <option value="2º Domingo">2º Domingo</option>
-            <option value="3º Domingo">3º Domingo</option> <option value="4º Domingo">4º Domingo</option>
+            <option value="1º Sábado">1º Sábado</option><option value="2º Sábado">2º Sábado</option>
+            <option value="3º Sábado">3º Sábado</option><option value="4º Sábado">4º Sábado</option>
+            <option value="1º Domingo">1º Domingo</option><option value="2º Domingo">2º Domingo</option>
+            <option value="3º Domingo">3º Domingo</option><option value="4º Domingo">4º Domingo</option>
         </select>
-        <label>Horário</label> <input type="time" id="horaFixo">
-        <label>Evento</label> <input type="text" id="eventoFixo">
-        <label>Ministros Fixos</label>
+        <label>Horário Fixo</label> <input type="time" id="horaFixo">
+        <label>Nome do Evento</label> <input type="text" id="eventoFixo" placeholder="Ex: Missa Dominical">
+        <label>Ministros da Equipe</label>
         <div class="grid-ministros">
             <input type="text" class="r-input" placeholder="1"> <input type="text" class="r-input" placeholder="2">
             <input type="text" class="r-input" placeholder="3"> <input type="text" class="r-input" placeholder="4">
             <input type="text" class="r-input" placeholder="5"> <input type="text" class="r-input" placeholder="6">
-            <input type="text" class="r-input" placeholder="7"> <input type="text" class="r-input" placeholder="8">
-            <input type="text" class="r-input" placeholder="9"> <input type="text" class="r-input" placeholder="10">
         </div>
-        <button class="btn btn-regra" id="btnSalvarRegra" onclick="salvarEscala('addRegra', 'modalRegra')">💾 SALVAR REGRA</button>
+        <button class="btn btn-regra" id="btnSalvarRegra" onclick="salvarNaPlanilha('addRegra', 'modalRegra')">💾 SALVAR REGRA</button>
     </div>
 </div>
 
 <script>
-    const URL_API = "https://script.google.com/macros/s/AKfycbzwaZk-NZE0omqUf2PrU08c_-gi0H4yuxFqFFL7A5RKKilXSQcsBU-P-lAZMAd-vg0C/exec";
+    // SEU LINK GERADO
+    const URL_API = "https://script.google.com/macros/s/AKfycbzniSa2_eD4pY05IfXXtTsI0nHjBbD65Woup61wlYEwdSAR-8nBivreiQWGwTMjW2NI/exec";
 
     function abrirModal(id) { document.getElementById(id).style.display = 'flex'; }
     function fecharModal(id) { document.getElementById(id).style.display = 'none'; }
 
-    function limparTotal(texto) {
-        if (!texto) return "";
-        return texto.toString().replace(/[\r\n]+/g, " ").replace(/\s\s+/g, " ").trim();
+    function limpar(t) { 
+        return t ? t.toString().replace(/[\r\n]+/g, " ").replace(/\s\s+/g, " ").trim() : ""; 
     }
 
-    function extrairHora(valor) {
-        if (!valor) return "00:00";
-        let s = valor.toString();
-        if (s.includes("T")) s = s.split("T")[1];
-        const match = s.match(/\d{2}:\d{2}/);
-        return match ? match[0] : s.substring(0, 5);
-    }
-
-    async function salvarEscala(acao, modalId) {
+    async function salvarNaPlanilha(acao, modalId) {
         const isExtra = modalId === 'modalEvento';
         const inputs = document.querySelectorAll(isExtra ? '.m-input' : '.r-input');
-        const ministros = Array.from(inputs).map(i => limparTotal(i.value)).filter(v => v !== "").join(", ");
+        const ministros = Array.from(inputs).map(i => limpar(i.value)).filter(v => v !== "").join(", ");
         
-        const d = {
+        const payload = {
             action: acao,
             hora: isExtra ? document.getElementById('novaHora').value : document.getElementById('horaFixo').value,
-            missa: limparTotal(isExtra ? document.getElementById('novoEvento').value : document.getElementById('eventoFixo').value),
+            missa: limpar(isExtra ? document.getElementById('novoEvento').value : document.getElementById('eventoFixo').value),
             ministro: ministros
         };
 
         if (isExtra) {
-            d.data = document.getElementById('novaData').value;
-            d.obs = limparTotal(document.getElementById('obs').value);
+            payload.data = document.getElementById('novaData').value;
+            payload.obs = limpar(document.getElementById('obs').value);
         } else {
-            d.regra = document.getElementById('regraFixo').value; 
+            payload.regra = document.getElementById('regraFixo').value;
         }
 
-        if (!d.hora || !d.missa) return alert("Preencha Horário e Missa!");
-        const btn = document.getElementById(isExtra ? 'btnSalvar' : 'btnSalvarRegra');
-        btn.innerText = "SALVANDO..."; btn.disabled = true;
+        if (!payload.hora || !payload.missa) return alert("Por favor, preencha Horário e Nome do Evento.");
+
+        const btn = document.querySelector(`#${modalId} .btn`);
+        const originalText = btn.innerText;
+        btn.innerText = "⏳ SALVANDO..."; btn.disabled = true;
 
         try {
-            await fetch(URL_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(d) });
-            alert("Salvo na Planilha!"); 
+            await fetch(URL_API, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify(payload)
+            });
+            alert("Sucesso! Os dados foram enviados para a planilha.");
             location.reload();
-        } catch (e) { 
-            alert("Erro ao salvar!"); 
-            btn.disabled = false; btn.innerText = "SALVAR"; 
+        } catch (e) {
+            alert("Erro ao conectar. Tente novamente.");
+            btn.disabled = false; btn.innerText = originalText;
         }
     }
 
     async function compartilharEscala() {
         const dataSel = document.getElementById('dataConsulta').value;
-        if (!dataSel) return alert("Selecione a data!");
+        if (!dataSel) return alert("Selecione uma data para consultar.");
 
         try {
+            // t= gera um numero aleatorio para o google nao mandar dado velho (cache)
             const res = await fetch(`${URL_API}?t=${new Date().getTime()}`);
             const banco = await res.json();
             
             const [ano, mes, dia] = dataSel.split('-');
             const dObj = new Date(ano, mes - 1, dia, 12, 0, 0);
-            const dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-            const regraHoje = `${Math.ceil(dObj.getDate() / 7)}º ${dias[dObj.getDay()]}`; 
+            const diasSemana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+            const regraHoje = `${Math.ceil(dObj.getDate() / 7)}º ${diasSemana[dObj.getDay()]}`; 
 
-            const extras = banco.extras.filter(r => r[1] && r[1].toString().substring(0, 10) === dataSel);
+            // Filtro Extras (Coluna 1 da planilha)
+            const extras = banco.extras.filter(r => r[1] && r[1].toString().includes(dataSel));
+            
+            // Filtro Regras (Coluna 0 da planilha)
             const fixos = banco.regras.filter(r => r[0] && r[0].toString().trim().toLowerCase() === regraHoje.toLowerCase());
 
-            if (extras.length === 0 && fixos.length === 0) return alert("Nenhuma escala para: " + regraHoje);
+            if (extras.length === 0 && fixos.length === 0) {
+                return alert("Nenhuma escala encontrada na planilha para " + regraHoje);
+            }
 
             let msg = "";
-            const lista = [
-                ...fixos.map(f => ({ h: f[1], m: f[2], n: f[3], o: "", r: regraHoje })), 
-                ...extras.map(e => ({ h: e[2], m: e[4], n: e[3], o: e[5], r: `${dia}/${mes}/${ano}` }))
+            const listaGeral = [
+                ...fixos.map(f => ({ h: f[1], m: f[2], n: f[3], r: regraHoje, o: "" })), 
+                ...extras.map(e => ({ h: e[2], m: e[4], n: e[3], r: `${dia}/${mes}/${ano}`, o: e[5] }))
             ];
 
-            lista.sort((a, b) => a.h.toString().localeCompare(b.h.toString()));
+            // Ordenar por hora
+            listaGeral.sort((a, b) => a.h.localeCompare(b.h));
 
-            lista.forEach(item => {
-                msg += `*📍 NOVA ESCALA - ${item.r}*\n`;
-                msg += `⏰ *Horário:* ${extrairHora(item.h)}\n`;
-                msg += `⛪ *Missa:* ${limparTotal(item.m)}\n`;
-                msg += `👤 *Ministros:* ${limparTotal(item.n)}\n`;
-                if (item.o) msg += `📝 *Obs:* ${limparTotal(item.o)}\n`;
+            listaGeral.forEach(item => {
+                msg += `*📍 ESCALA - ${item.r}*\n`;
+                msg += `⏰ *Hora:* ${item.h}\n`;
+                msg += `⛪ *Missa:* ${limpar(item.m)}\n`;
+                msg += `👤 *Ministros:* ${limpar(item.n)}\n`;
+                if (item.o) msg += `📝 *Obs:* ${limpar(item.o)}\n`;
                 msg += `─────────────────\n\n`;
             });
 
             window.location.href = `whatsapp://send?text=${encodeURIComponent(msg)}`;
-        } catch (e) { alert("Erro ao carregar dados da planilha."); }
+        } catch (e) { 
+            alert("Erro ao buscar dados na planilha. Verifique se as abas 'Extras' e 'Regras' existem."); 
+        }
     }
 </script>
 </body>
