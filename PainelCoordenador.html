@@ -290,61 +290,64 @@
         }
     }
 
-    async function compartilharEscala() {
-        const dataSel = document.getElementById('dataConsulta').value;
-        if (!dataSel) return alert("Selecione a data!");
+async function compartilharEscala() {
+    const dataSel = document.getElementById('dataConsulta').value;
+    if (!dataSel) return alert("Selecione a data!");
 
-        try {
-            const res = await fetch(URL_API + "?t=" + new Date().getTime());
-            const bancoDados = await res.json();
+    try {
+        // O "?t=" evita que o celular pegue uma escala antiga do cache
+        const res = await fetch(URL_API + "?t=" + new Date().getTime());
+        const bancoDados = await res.json();
+        
+        const d = new Date(dataSel + "T12:00:00");
+        const diasSemana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+        const regraHoje = `${Math.ceil(d.getDate() / 7)}º ${diasSemana[d.getDay()]}`; 
+
+        const extras = bancoDados.extras.filter(row => row[1] && row[1].toString().includes(dataSel));
+        const fixos = bancoDados.regras.filter(row => row[0].toString().trim().toLowerCase() === regraHoje.toLowerCase());
+
+        if (extras.length === 0 && fixos.length === 0) return alert("Nenhuma escala para hoje.");
+
+        let msg = `*📍 ESCALA MESC - ${dataSel.split('-').reverse().join('/')}*\n*(${regraHoje})*\n\n`;
+
+        const totalDia = [
+            ...fixos.map(f => ({hora: f[1], missa: f[2], min: f[3], obs: ""})), 
+            ...extras.map(e => ({hora: e[2], missa: e[4], min: e[3], obs: e[5]}))
+        ];
+
+        totalDia.forEach(item => {
+            // FIX DO HORÁRIO: Forçamos a string e pegamos o padrão 00:00 ignorando o resto
+            let rawHora = item.hora.toString();
+            let horaF = "00:00";
             
-            const d = new Date(dataSel + "T12:00:00");
-            const diasSemana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-            const diaSemanaNome = diasSemana[d.getDay()];
-            const ordem = Math.ceil(d.getDate() / 7);
-            const regraHoje = `${ordem}º ${diaSemanaNome}`; 
+            if (rawHora.includes("T")) {
+                horaF = rawHora.split("T")[1].substring(0, 5);
+            } else {
+                // Tenta achar o padrão de hora (XX:XX) na string
+                const match = rawHora.match(/\d{2}:\d{2}/);
+                horaF = match ? match[0] : rawHora.substring(0, 5);
+            }
 
-            const extras = bancoDados.extras.filter(row => row[1] && row[1].toString().includes(dataSel));
-            const fixos = bancoDados.regras.filter(row => row[0].toString().trim().toLowerCase() === regraHoje.toLowerCase());
+            // FIX DOS NOMES: Remove quebras de linha e espaços duplos
+            let minL = item.min.toString().replace(/\n|\r/g, " ").replace(/\s+/g, " ").trim();
+            let missaL = item.missa.toString().replace(/\n|\r/g, " ").replace(/\s+/g, " ").trim();
 
-            if (extras.length === 0 && fixos.length === 0) return alert("Nenhuma escala encontrada.");
+            const gData = dataSel.replace(/-/g,'');
+            const gHora = horaF.replace(':','');
+            const linkA = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('MESC: '+missaL)}&dates=${gData}T${gHora}00/${gData}T${gHora}00&details=${encodeURIComponent('Ministros: '+minL)}`;
 
-            let msg = `*📍 ESCALA MESC - ${dataSel.split('-').reverse().join('/')}*\n`;
-            msg += `*(${regraHoje})*\n\n`;
+            msg += `⏰ *${horaF}* - ${missaL}\n`;
+            msg += `👥 *Ministros:* ${minL}\n`;
+            if (item.obs) msg += `📝 *Obs:* ${item.obs.toString().replace(/\n|\r/g, " ").trim()}\n`;
+            msg += `📅 *Agenda:* ${linkA}\n`;
+            msg += `─────────────────\n\n`;
+        });
 
-            const totalDia = [
-                ...fixos.map(f => ({hora: f[1], missa: f[2], min: f[3], obs: ""})), 
-                ...extras.map(e => ({hora: e[2], missa: e[4], min: e[3], obs: e[5]}))
-            ];
-
-            totalDia.forEach(item => {
-                let textoHora = item.hora.toString();
-                let horaFinal = "00:00";
-                if (textoHora.includes("T")) {
-                    horaFinal = textoHora.split("T")[1].substring(0, 5);
-                } else {
-                    const match = textoHora.match(/\d{2}:\d{2}/);
-                    horaFinal = match ? match[0] : textoHora.substring(0, 5);
-                }
-
-                let ministrosLimpos = limparTexto(item.min);
-                const gData = dataSel.replace(/-/g,'');
-                const gHora = horaFinal.replace(':','');
-                const linkAgenda = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('MESC: ' + item.missa)}&dates=${gData}T${gHora}00/${gData}T${gHora}00&details=${encodeURIComponent('Ministros: ' + ministrosLimpos)}`;
-
-                msg += `⏰ *Horário:* ${horaFinal}\n`;
-                msg += `⛪ *Missa:* ${limparTexto(item.missa)}\n`;
-                msg += `👥 *Ministros:* ${ministrosLimpos}\n`;
-                if (item.obs) msg += `📝 *Obs:* ${limparTexto(item.obs)}\n`;
-                msg += `📅 *Salvar Agenda:* ${linkAgenda}\n`;
-                msg += `─────────────────\n\n`;
-            });
-
-            window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
-        } catch (e) {
-            alert("Erro ao carregar escala.");
-        }
+        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
+    } catch (e) {
+        alert("Erro ao ler dados da planilha.");
     }
+        }
 
     function gerarPDFInstantaneo(modalId) {
         const d = obterDadosDoModal(modalId);
