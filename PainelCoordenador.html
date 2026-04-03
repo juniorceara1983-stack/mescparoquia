@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADM - MESC (Coordenador)</title>
+    <link rel="manifest" href="manifest-adm-mesc.json">
+    <style>
+        :root { --primary: #1e3a8a; --bg: #f1f5f9; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 15px; margin: 0; }
+        
+        .container { 
+            max-width: 450px; 
+            margin: auto; 
+            background: white; 
+            padding: 25px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 15px rgba(0,0,0,0.1); 
+            border-top: 10px solid var(--primary);
+        }
+
+        .header { text-align: center; margin-bottom: 25px; }
+        h2 { color: var(--primary); margin: 5px 0; font-size: 1.4rem; }
+        p { color: #64748b; font-size: 0.85rem; margin-top: 0; }
+
+        label { 
+            display: block; 
+            margin-top: 15px; 
+            font-weight: 700; 
+            font-size: 0.85rem; 
+            color: #475569; 
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.05); 
+        }
+
+        /* Efeito de Alto Relevo nos Inputs */
+        input, select { 
+            width: 100%; 
+            padding: 14px; 
+            margin-top: 5px; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 12px; 
+            box-sizing: border-box; 
+            font-size: 1rem; 
+            background: #ffffff;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+
+        input:focus { 
+            outline: none; 
+            border-color: var(--primary); 
+            box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1); 
+        }
+
+        /* Botão de Ação com Relevo */
+        button { 
+            width: 100%; 
+            padding: 16px; 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            border-radius: 12px; 
+            font-weight: bold; 
+            font-size: 1rem; 
+            margin-top: 25px; 
+            cursor: pointer; 
+            box-shadow: 0 4px 6px rgba(30, 58, 138, 0.2);
+            transition: transform 0.2s, background 0.3s;
+        }
+
+        button:active { transform: scale(0.98); }
+        button:disabled { background: #94a3b8; cursor: not-allowed; }
+
+        .signature { text-align: center; margin-top: 25px; font-size: 0.7rem; color: #94a3b8; letter-spacing: 1px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h2>COORDENADOR MESC</h2>
+            <p>PNSPS - Gestão de Escalas</p>
+        </div>
+
+        <form id="formEscala">
+            <label>Data do Serviço</label>
+            <input type="date" id="data" required>
+
+            <label>Horário</label>
+            <input type="time" id="hora" required>
+
+            <label>Nome do Ministro</label>
+            <input type="text" id="ministro" placeholder="Digite o nome..." required>
+
+            <label>Celebração / Local</label>
+            <input type="text" id="missa" placeholder="Ex: Missa das 19h / Comunidade" required>
+
+            <button type="button" id="btnSalvar" onclick="salvar()">AGENDAR MINISTRO</button>
+        </form>
+
+        <div class="signature">By: Jr&Iz</div>
+    </div>
+
+    <script>
+        // Substitua pela sua URL do Google Apps Script
+        const URL_API = "SUA_URL_DO_GOOGLE_SCRIPT_AQUI";
+
+        async function salvar() {
+            const btn = document.getElementById('btnSalvar');
+            const data = document.getElementById('data').value;
+            const hora = document.getElementById('hora').value;
+            const ministro = document.getElementById('ministro').value;
+            const missa = document.getElementById('missa').value;
+
+            // Validação simples
+            if(!data || !hora || !ministro || !missa) {
+                return alert("Por favor, preencha todos os campos da escala.");
+            }
+
+            btn.innerText = "ENVIANDO...";
+            btn.disabled = true;
+
+            const payload = {
+                action: "addEscala",
+                data: data,
+                hora: hora,
+                ministro: ministro,
+                missa: missa
+            };
+
+            try {
+                // Usando o modo 'no-cors' se necessário, ou fetch padrão
+                await fetch(URL_API, {
+                    method: 'POST',
+                    mode: 'no-cors', // Importante para Google Script
+                    body: JSON.stringify(payload)
+                });
+
+                alert("Escala salva com sucesso na planilha!");
+                // Limpa apenas o nome do ministro e local para facilitar a próxima escala
+                document.getElementById('ministro').value = "";
+                document.getElementById('missa').value = "";
+                
+            } catch (error) {
+                console.error(error);
+                alert("Erro ao salvar. Verifique a conexão.");
+            } finally {
+                btn.innerText = "AGENDAR MINISTRO";
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
