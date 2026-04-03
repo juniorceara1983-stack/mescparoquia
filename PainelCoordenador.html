@@ -134,65 +134,62 @@
         };
     }
 
-    async function salvarEvento() {
-        const btn = document.getElementById('btnSalvar');
-        const dados = obterDadosForm();
-        if(!dados.data || !dados.missa) return alert("Preencha Data e Evento!");
+async function compartilharEscala() {
+    const dataSel = document.getElementById('dataConsulta').value;
+    if(!dataSel) return alert("Selecione a data!");
 
-        btn.innerText = "SALVANDO..."; btn.disabled = true;
-        try {
-            await fetch(URL_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify({action: "addEscala", ...dados}) });
-            alert("Escala salva com sucesso!");
-            location.reload();
-        } catch (e) { 
-            alert("Erro ao salvar. Verifique sua conexão."); 
-            btn.innerText = "💾 SALVAR NA PLANILHA";
-            btn.disabled = false; 
-        }
-    }
+    try {
+        const res = await fetch(URL_API);
+        const bancoDados = await res.json();
+        
+        const d = new Date(dataSel + "T12:00:00");
+        const diasSemana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+        const diaSemanaNome = diasSemana[d.getDay()];
+        const ordem = Math.ceil(d.getDate() / 7);
+        const regraHoje = `${ordem}º ${diaSemanaNome}`; 
 
-    function gerarPDFInstantaneo() {
-        const d = obterDadosForm();
-        if(!d.data || !d.missa) return alert("Preencha os dados básicos!");
-        
-        const doc = new jsPDF();
-        doc.setFontSize(18);
-        doc.text("ESCALA DE MINISTROS - MESC", 105, 20, { align: 'center' });
-        doc.setFontSize(14);
-        doc.text(`${d.data.split('-').reverse().join('/')} - ${d.hora}`, 105, 30, { align: 'center' });
-        
-        doc.setFont("helvetica", "bold");
-        doc.text(`Evento: ${d.missa}`, 20, 50);
-        doc.setFont("helvetica", "normal");
-        doc.text(`Ministros:`, 20, 60);
-        
-        const splitMinistros = doc.splitTextToSize(d.ministro, 170);
-        doc.text(splitMinistros, 20, 67);
-        
-        if(d.obs) {
-            doc.setFont("helvetica", "italic");
-            doc.text(`Obs: ${d.obs}`, 20, 100);
-        }
-        doc.save(`Escala_${d.data}.pdf`);
-    }
+        const extras = bancoDados.extras.filter(row => row[1] && row[1].includes(dataSel));
+        const fixos = bancoDados.regras.filter(row => row[0] == regraHoje);
 
-    function compartilharEscalaRapida() {
-        const d = obterDadosForm();
-        if(!d.data || !d.missa) return alert("Preencha os dados primeiro!");
-        
-        const dataBR = d.data.split('-').reverse().join('/');
-        const gData = d.data.replace(/-/g,'');
-        const gHora = d.hora.replace(':','');
-        const linkAgenda = `https://www.google.com/calendar/render?action=TEMPLATE&text=MESC:+${d.missa}&dates=${gData}T${gHora}00/${gData}T${gHora}00&details=Ministros:+${d.ministro}`;
+        if(extras.length === 0 && fixos.length === 0) return alert("Nenhuma escala para este dia.");
 
-        let msg = `*📍 NOVA ESCALA MESC - ${dataBR}*\n\n`;
-        msg += `⏰ *${d.hora}* - ${d.missa}\n`;
-        msg += `👤 *Ministros:* ${d.ministro}\n`;
-        if(d.obs) msg += `📝 *Obs:* ${d.obs}\n`;
-        msg += `\n📅 *Salvar Agenda:* ${linkAgenda}`;
+        let msg = `*📍 ESCALA MESC - ${dataSel.split('-').reverse().join('/')}*\n`;
+        msg += `*(${regraHoje})*\n\n`;
+
+        const totalDia = [
+            ...fixos.map(f => ({hora: f[1], missa: f[2], min: f[3], obs: ""})), 
+            ...extras.map(e => ({hora: e[2], missa: e[4], min: e[3], obs: e[5]}))
+        ];
+
+        totalDia.forEach(item => {
+            // --- LIMPEZA DA HORA ---
+            // Se a hora vier como data completa (1899...), pegamos só os números da hora
+            let horaLimpa = item.hora.toString();
+            if (horaLimpa.includes("T")) {
+                horaLimpa = horaLimpa.split("T")[1].substring(0, 5);
+            } else if (horaLimpa.length > 8) {
+                // Caso venha num formato de data longo, tenta extrair HH:mm
+                const match = horaLimpa.match(/\d{2}:\d{2}/);
+                if (match) horaLimpa = match[0];
+            }
+
+            const gData = dataSel.replace(/-/g,'');
+            const gHora = horaLimpa.replace(':','');
+            
+            // Link da agenda simplificado e funcional
+            const linkAgenda = `https://www.google.com/calendar/render?action=TEMPLATE&text=MESC:+${encodeURIComponent(item.missa)}&dates=${gData}T${gHora}00Z/${gData}T${gHora}00Z&details=${encodeURIComponent("Ministros: " + item.min)}`;
+
+            msg += `⏰ *Horário:* ${horaLimpa}\n`;
+            msg += `⛪ *Evento:* ${item.missa}\n`;
+            msg += `👥 *Ministros:* ${item.min}\n`;
+            if(item.obs) msg += `📝 *Obs:* ${item.obs}\n`;
+            msg += `📅 *Salvar na Agenda:* ${linkAgenda}\n`;
+            msg += `\n─────────────────\n\n`;
+        });
 
         window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
-    }
+    } catch (e) { alert("Erro ao carregar escala. Verifique a planilha."); }
+}
 
     async function compartilharEscala() {
         const dataSel = document.getElementById('dataConsulta').value;
