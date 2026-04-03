@@ -162,35 +162,36 @@ async function compartilharEscala() {
         ];
 
         totalDia.forEach(item => {
-            // --- LIMPEZA DA HORA ---
-            // Se a hora vier como data completa (1899...), pegamos só os números da hora
-            let horaLimpa = item.hora.toString();
-            if (horaLimpa.includes("T")) {
-                horaLimpa = horaLimpa.split("T")[1].substring(0, 5);
-            } else if (horaLimpa.length > 8) {
-                // Caso venha num formato de data longo, tenta extrair HH:mm
-                const match = horaLimpa.match(/\d{2}:\d{2}/);
-                if (match) horaLimpa = match[0];
+            // --- LIMPEZA DE HORÁRIO (Remove o 1899-12-30) ---
+            let h = item.hora.toString();
+            let horaFormatada = "00:00";
+
+            if (h.includes("T")) {
+                horaFormatada = h.split("T")[1].substring(0, 5);
+            } else {
+                // Tenta extrair apenas HH:mm caso venha em outro formato
+                const match = h.match(/\d{2}:\d{2}/);
+                horaFormatada = match ? match[0] : h;
             }
 
             const gData = dataSel.replace(/-/g,'');
-            const gHora = horaLimpa.replace(':','');
+            const gHora = horaFormatada.replace(':','');
             
-            // Link da agenda simplificado e funcional
-            const linkAgenda = `https://www.google.com/calendar/render?action=TEMPLATE&text=MESC:+${encodeURIComponent(item.missa)}&dates=${gData}T${gHora}00Z/${gData}T${gHora}00Z&details=${encodeURIComponent("Ministros: " + item.min)}`;
+            // Link da agenda corrigido
+            const linkAgenda = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('MESC: ' + item.missa)}&dates=${gData}T${gHora}00/${gData}T${gHora}00&details=${encodeURIComponent('Ministros: ' + item.min)}`;
 
-            msg += `⏰ *Horário:* ${horaLimpa}\n`;
-            msg += `⛪ *Evento:* ${item.missa}\n`;
+            msg += `⏰ *Horário:* ${horaFormatada}\n`;
+            msg += `⛪ *Missa:* ${item.missa}\n`;
             msg += `👥 *Ministros:* ${item.min}\n`;
             if(item.obs) msg += `📝 *Obs:* ${item.obs}\n`;
-            msg += `📅 *Salvar na Agenda:* ${linkAgenda}\n`;
+            msg += `📅 *Salvar Agenda:* ${linkAgenda}\n`;
             msg += `\n─────────────────\n\n`;
         });
 
         window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
-    } catch (e) { alert("Erro ao carregar escala. Verifique a planilha."); }
+    } catch (e) { alert("Erro ao carregar escala."); }
 }
-
+    
     async function compartilharEscala() {
         const dataSel = document.getElementById('dataConsulta').value;
         if(!dataSel) return alert("Selecione a data para consultar!");
