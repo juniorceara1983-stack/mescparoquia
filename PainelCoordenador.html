@@ -3,304 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADM - MESC Pro Plus - Gestão de Escalas</title>
-    
+    <title>ADM - MESC Pro Plus</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
     <style>
-        :root { 
-            --primary: #1e3a8a; 
-            --bg: #f1f5f9; 
-            --success: #25d366; 
-            --pdf: #e11d48; 
-            --gold: #b45309; 
-            --white: #ffffff;
-            --slate: #475569;
-        }
-
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: var(--bg); 
-            padding: 15px; 
-            margin: 0; 
-            color: #1e293b;
-        }
-        
-        .container { 
-            max-width: 480px; 
-            margin: 20px auto; 
-            background: var(--white); 
-            padding: 30px; 
-            border-radius: 25px; 
-            box-shadow: 0 15px 25px rgba(0,0,0,0.15); 
-            border-top: 12px solid var(--primary); 
-        }
-        
-        .header { 
-            text-align: center; 
-            margin-bottom: 25px; 
-        }
-
-        .header h2 {
-            color: var(--primary);
-            margin: 0;
-            letter-spacing: 1px;
-            font-size: 1.6rem;
-        }
-
-        .header p {
-            color: var(--slate);
-            font-size: 0.95rem;
-            margin-top: 5px;
-        }
-        
-        label { 
-            display: block; 
-            margin-top: 15px; 
-            font-weight: 700; 
-            font-size: 0.9rem; 
-            color: var(--slate); 
-        }
-        
-        input, textarea, select { 
-            width: 100%; 
-            padding: 14px; 
-            margin-top: 8px; 
-            border: 2px solid #e2e8f0; 
-            border-radius: 12px; 
-            box-sizing: border-box; 
-            background: #f8fafc; 
-            font-size: 1rem;
-            transition: 0.3s;
-        }
-
-        input:focus {
-            border-color: var(--primary);
-            outline: none;
-            background: var(--white);
-        }
-
-        .btn { 
-            width: 100%; 
-            padding: 18px; 
-            border: none; 
-            border-radius: 15px; 
-            font-weight: bold; 
-            font-size: 1rem;
-            cursor: pointer; 
-            transition: all 0.3s ease; 
-            margin-top: 12px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            gap: 10px; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        
+        :root { --primary: #1e3a8a; --bg: #f1f5f9; --success: #25d366; --pdf: #e11d48; --gold: #b45309; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 15px; margin: 0; }
+        .container { max-width: 480px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); border-top: 10px solid var(--primary); }
+        .header { text-align: center; margin-bottom: 20px; }
+        label { display: block; margin-top: 15px; font-weight: 700; color: #475569; }
+        input, textarea, select { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; }
+        .btn { width: 100%; padding: 18px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-regra { background: var(--gold); color: white; }
         .btn-zap { background: var(--success); color: white; }
-        .btn-pdf { background: var(--pdf); color: white; }
-
-        .btn:hover { opacity: 0.9; transform: translateY(-2px); }
-        .btn:active { transform: scale(0.97); }
-
-        /* Estilos dos Modais */
-        .modal { 
-            display: none; 
-            position: fixed; 
-            z-index: 9999; 
-            left: 0; 
-            top: 0; 
-            width: 100%; 
-            height: 100%; 
-            background: rgba(15, 23, 42, 0.8); 
-            backdrop-filter: blur(5px); 
-            align-items: center; 
-            justify-content: center; 
-        }
-        
-        .modal-content { 
-            background: var(--white); 
-            padding: 25px; 
-            border-radius: 25px; 
-            width: 92%; 
-            max-width: 450px; 
-            max-height: 85vh; 
-            overflow-y: auto; 
-            position: relative; 
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-        }
-        
-        .grid-ministros { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 10px; 
-            margin-top: 12px; 
-            background: #f1f5f9;
-            padding: 15px;
-            border-radius: 15px;
-        }
-        
-        .grid-ministros input { 
-            padding: 10px; 
-            font-size: 0.85rem; 
-            border: 1px solid #cbd5e1;
-            margin-top: 0;
-        }
-        
-        .modal-footer { 
-            display: grid; 
-            grid-template-columns: 1fr 1fr; 
-            gap: 12px; 
-            margin-top: 20px; 
-        }
-        
-        .signature { 
-            text-align: center; 
-            margin-top: 30px; 
-            font-size: 0.75rem; 
-            color: #94a3b8; 
-            font-weight: 600;
-        }
-
-        .divider {
-            margin: 30px 0;
-            border-top: 2px dashed #e2e8f0;
-        }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 20px; width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
+        .grid-ministros { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+        .signature { text-align: center; margin-top: 20px; font-size: 0.7rem; color: #94a3b8; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <h2>COORDENADOR MESC</h2>
-        <p>Paróquia PNSPS - Maracanaú</p>
+        <h2 style="color:var(--primary); margin:0;">COORDENADOR MESC</h2>
+        <p style="color:#64748b;">Paróquia PNSPS - Maracanaú</p>
     </div>
 
-    <div class="section">
-        <label for="dataConsulta">Consultar Escala do Dia</label>
-        <input type="date" id="dataConsulta">
-        
-        <button class="btn btn-zap" onclick="compartilharEscala()">
-            <span>📲</span> ENVIAR PARA WHATSAPP
-        </button>
-    </div>
+    <label>Consultar Escala do Dia</label>
+    <input type="date" id="dataConsulta">
+    <button class="btn btn-zap" onclick="compartilharEscala()">📲 ENVIAR PARA WHATSAPP</button>
 
-    <div class="divider"></div>
+    <div style="margin: 20px 0; border-top: 1px solid #eee;"></div>
 
-    <div class="section">
-        <button class="btn btn-primary" onclick="abrirModal('modalEvento')">
-            <span>➕</span> NOVO EVENTO (EXTRA)
-        </button>
-        
-        <button class="btn btn-regra" onclick="abrirModal('modalRegra')">
-            <span>⚙️</span> GERENCIAR REGRAS FIXAS
-        </button>
-    </div>
-    
-    <div class="signature">Desenvolvido por: Jr & Iz</div>
+    <button class="btn btn-primary" onclick="abrirModal('modalEvento')">➕ NOVO EVENTO (EXTRA)</button>
+    <button class="btn btn-regra" onclick="abrirModal('modalRegra')">⚙️ GERENCIAR REGRAS FIXAS</button>
+    <div class="signature">By: Jr&Iz</div>
 </div>
 
 <div id="modalEvento" class="modal">
     <div class="modal-content">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <button onclick="fecharModal('modalEvento')" style="background:none; border:none; cursor:pointer; color:var(--primary); font-weight:bold; font-size:1.1rem;">⬅ Voltar</button>
-            <h3 style="color:var(--primary); margin:0;">Novo Evento Extra</h3>
-        </div>
-        
-        <label>Data do Evento</label>
-        <input type="date" id="novaData">
-        
-        <label>Horário</label>
-        <input type="time" id="novaHora">
-        
-        <label>Nome da Missa / Evento</label>
-        <input type="text" id="novoEvento" placeholder="Ex: Missa de Sétimo Dia">
-
-        <label>Ministros Escalados (Até 10)</label>
+        <button onclick="fecharModal('modalEvento')" style="border:none; background:none; font-weight:bold; color:var(--primary);">⬅ Voltar</button>
+        <h3>Novo Evento Extra</h3>
+        <label>Data</label> <input type="date" id="novaData">
+        <label>Horário</label> <input type="time" id="novaHora">
+        <label>Missa / Evento</label> <input type="text" id="novoEvento">
+        <label>Ministros (Até 10)</label>
         <div class="grid-ministros">
-            <input type="text" class="m-input" placeholder="1. Nome">
-            <input type="text" class="m-input" placeholder="2. Nome">
-            <input type="text" class="m-input" placeholder="3. Nome">
-            <input type="text" class="m-input" placeholder="4. Nome">
-            <input type="text" class="m-input" placeholder="5. Nome">
-            <input type="text" class="m-input" placeholder="6. Nome">
-            <input type="text" class="m-input" placeholder="7. Nome">
-            <input type="text" class="m-input" placeholder="8. Nome">
-            <input type="text" class="m-input" placeholder="9. Nome">
-            <input type="text" class="m-input" placeholder="10. Nome">
+            <input type="text" class="m-input" placeholder="1"> <input type="text" class="m-input" placeholder="2">
+            <input type="text" class="m-input" placeholder="3"> <input type="text" class="m-input" placeholder="4">
+            <input type="text" class="m-input" placeholder="5"> <input type="text" class="m-input" placeholder="6">
+            <input type="text" class="m-input" placeholder="7"> <input type="text" class="m-input" placeholder="8">
+            <input type="text" class="m-input" placeholder="9"> <input type="text" class="m-input" placeholder="10">
         </div>
-
-        <label>Observações Importantes</label>
-        <textarea id="obs" rows="3" placeholder="Ex: Cor litúrgica, avisos..."></textarea>
-
-        <div class="modal-footer">
-            <button class="btn btn-pdf" onclick="gerarPDFInstantaneo('modalEvento')">
-                <span>📄</span> PDF
-            </button>
-            <button class="btn btn-zap" onclick="compartilharEscalaRapida('modalEvento')">
-                <span>📲</span> Zap
-            </button>
-        </div>
-
-        <button class="btn btn-primary" id="btnSalvar" onclick="salvarEscala('addEscala', 'modalEvento')">
-            <span>💾</span> SALVAR NA PLANILHA
-        </button>
+        <label>Observações</label> <textarea id="obs" rows="2"></textarea>
+        <button class="btn btn-primary" id="btnSalvar" onclick="salvarEscala('addEscala', 'modalEvento')">💾 SALVAR</button>
     </div>
 </div>
 
 <div id="modalRegra" class="modal">
     <div class="modal-content">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <button onclick="fecharModal('modalRegra')" style="background:none; border:none; cursor:pointer; color:var(--gold); font-weight:bold; font-size:1.1rem;">⬅ Voltar</button>
-            <h3 style="color:var(--gold); margin:0;">Regra de Escala Fixa</h3>
-        </div>
-        
-        <label>Frequência da Regra</label>
+        <button onclick="fecharModal('modalRegra')" style="border:none; background:none; font-weight:bold; color:var(--gold);">⬅ Voltar</button>
+        <h3>Regra Fixa</h3>
         <select id="regraFixo">
-            <option value="1º Sábado">1º Sábado</option>
-            <option value="2º Sábado">2º Sábado</option>
-            <option value="3º Sábado">3º Sábado</option>
-            <option value="4º Sábado">4º Sábado</option>
-            <option value="1º Domingo">1º Domingo</option>
-            <option value="2º Domingo">2º Domingo</option>
-            <option value="3º Domingo">3º Domingo</option>
-            <option value="4º Domingo">4º Domingo</option>
+            <option value="1º Sábado">1º Sábado</option> <option value="2º Sábado">2º Sábado</option>
+            <option value="3º Sábado">3º Sábado</option> <option value="4º Sábado">4º Sábado</option>
+            <option value="1º Domingo">1º Domingo</option> <option value="2º Domingo">2º Domingo</option>
+            <option value="3º Domingo">3º Domingo</option> <option value="4º Domingo">4º Domingo</option>
         </select>
-
-        <label>Horário Padrão</label>
-        <input type="time" id="horaFixo">
-        
-        <label>Nome do Evento Fixo</label>
-        <input type="text" id="eventoFixo" placeholder="Ex: Missa com Crianças">
-
-        <label>Ministros Fixos (Até 10)</label>
+        <label>Horário</label> <input type="time" id="horaFixo">
+        <label>Evento</label> <input type="text" id="eventoFixo">
+        <label>Ministros Fixos</label>
         <div class="grid-ministros">
-            <input type="text" class="r-input" placeholder="1. Nome">
-            <input type="text" class="r-input" placeholder="2. Nome">
-            <input type="text" class="r-input" placeholder="3. Nome">
-            <input type="text" class="r-input" placeholder="4. Nome">
-            <input type="text" class="r-input" placeholder="5. Nome">
-            <input type="text" class="r-input" placeholder="6. Nome">
-            <input type="text" class="r-input" placeholder="7. Nome">
-            <input type="text" class="r-input" placeholder="8. Nome">
-            <input type="text" class="r-input" placeholder="9. Nome">
-            <input type="text" class="r-input" placeholder="10. Nome">
+            <input type="text" class="r-input" placeholder="1"> <input type="text" class="r-input" placeholder="2">
+            <input type="text" class="r-input" placeholder="3"> <input type="text" class="r-input" placeholder="4">
+            <input type="text" class="r-input" placeholder="5"> <input type="text" class="r-input" placeholder="6">
+            <input type="text" class="r-input" placeholder="7"> <input type="text" class="r-input" placeholder="8">
+            <input type="text" class="r-input" placeholder="9"> <input type="text" class="r-input" placeholder="10">
         </div>
-
-        <div class="modal-footer">
-            <button class="btn btn-pdf" onclick="gerarPDFInstantaneo('modalRegra')">
-                <span>📄</span> PDF
-            </button>
-            <button class="btn btn-zap" onclick="compartilharEscalaRapida('modalRegra')">
-                <span>📲</span> Zap
-            </button>
-        </div>
-
-        <button class="btn btn-regra" id="btnSalvarRegra" onclick="salvarEscala('addRegra', 'modalRegra')">
-            <span>💾</span> SALVAR REGRA FIXA
-        </button>
+        <button class="btn btn-regra" id="btnSalvarRegra" onclick="salvarEscala('addRegra', 'modalRegra')">💾 SALVAR REGRA</button>
     </div>
 </div>
 
@@ -310,118 +91,92 @@
     function abrirModal(id) { document.getElementById(id).style.display = 'flex'; }
     function fecharModal(id) { document.getElementById(id).style.display = 'none'; }
 
-    // Limpeza de texto: Remove quebras de linha que quebram o nome dos ministros
-    function limparTexto(txt) {
-        if (!txt) return "";
-        return txt.toString().replace(/\n|\r/g, ", ").replace(/\s+/g, " ").trim();
+    // LIMPEZA AGRESSIVA DE QUEBRA DE LINHA
+    function limparTotal(texto) {
+        if (!texto) return "";
+        return texto.toString().replace(/[\r\n]+/g, " ").replace(/\s\s+/g, " ").trim();
     }
 
-    // Extração de hora: Pega o texto bruto da planilha (07:00) ignorando datas do Google
-    function extrairHoraBruta(valor) {
+    // EXTRAÇÃO DE HORA BLINDADA CONTRA O ERRO 10:06
+    function extrairHora(valor) {
         if (!valor) return "00:00";
         let s = valor.toString();
-        // Se for o formato do Google (Data + Hora), pega só o final
         if (s.includes("T")) s = s.split("T")[1];
-        // Procura padrão 00:00:00 ou 00:00 e corta
         const match = s.match(/\d{2}:\d{2}/);
         return match ? match[0] : s.substring(0, 5);
     }
 
-    // Função de envio: Abre o WhatsApp DIRETO no celular
     function dispararZap(texto) {
         const url = `whatsapp://send?text=${encodeURIComponent(texto)}`;
-        // Tenta abrir o app direto. Se falhar (ex: PC), usa o navegador.
-        const win = window.open(url, '_blank');
-        if(!win) {
-            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank');
-        }
-    }
-
-    function obterDadosDoModal(modalId) {
-        const isExtra = modalId === 'modalEvento';
-        const seletor = isExtra ? '.m-input' : '.r-input';
-        const listaMinistros = Array.from(document.querySelectorAll(seletor)).map(i => i.value.trim()).filter(v => v !== "").join(", ");
-        return {
-            data: isExtra ? document.getElementById('novaData').value : document.getElementById('regraFixo').value,
-            hora: isExtra ? document.getElementById('novaHora').value : document.getElementById('horaFixo').value,
-            missa: limparTexto(isExtra ? document.getElementById('novoEvento').value : document.getElementById('eventoFixo').value),
-            ministro: listaMinistros,
-            obs: isExtra ? limparTexto(document.getElementById('obs').value) : ""
-        };
+        window.location.href = url;
     }
 
     async function salvarEscala(acao, modalId) {
-        const btnId = modalId === 'modalEvento' ? 'btnSalvar' : 'btnSalvarRegra';
-        const btn = document.getElementById(btnId);
-        const d = obterDadosDoModal(modalId);
-        if (!d.hora || !d.missa) return alert("Preencha Horário e Missa.");
-        btn.innerText = "⏳ SALVANDO..."; btn.disabled = true;
+        const isExtra = modalId === 'modalEvento';
+        const inputs = document.querySelectorAll(isExtra ? '.m-input' : '.r-input');
+        const ministros = Array.from(inputs).map(i => limparTotal(i.value)).filter(v => v !== "").join(", ");
+        
+        const d = {
+            data: isExtra ? document.getElementById('novaData').value : document.getElementById('regraFixo').value,
+            hora: isExtra ? document.getElementById('novaHora').value : document.getElementById('horaFixo').value,
+            missa: limparTotal(isExtra ? document.getElementById('novoEvento').value : document.getElementById('eventoFixo').value),
+            ministro: ministros,
+            obs: isExtra ? limparTotal(document.getElementById('obs').value) : ""
+        };
+
+        if (!d.hora || !d.missa) return alert("Preencha Horário e Missa!");
+        const btn = document.getElementById(isExtra ? 'btnSalvar' : 'btnSalvarRegra');
+        btn.innerText = "SALVANDO..."; btn.disabled = true;
+
         const payload = { action: acao, ...d };
         if (acao === 'addRegra') { payload.regra = d.data; delete payload.data; }
+
         try {
             await fetch(URL_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-            alert("✅ Salvo com sucesso!"); location.reload();
-        } catch (e) { alert("❌ Erro ao salvar."); btn.disabled = false; btn.innerText = "SALVAR"; }
+            alert("Salvo!"); location.reload();
+        } catch (e) { alert("Erro!"); btn.disabled = false; btn.innerText = "SALVAR"; }
     }
 
     async function compartilharEscala() {
         const dataSel = document.getElementById('dataConsulta').value;
-        if (!dataSel) return alert("Selecione uma data.");
+        if (!dataSel) return alert("Selecione a data!");
 
         try {
             const res = await fetch(`${URL_API}?t=${new Date().getTime()}`);
-            const bancoDados = await res.json();
+            const banco = await res.json();
             
             const [ano, mes, dia] = dataSel.split('-');
             const dObj = new Date(ano, mes - 1, dia, 12, 0, 0);
-            const diasSemana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-            const regraHoje = `${Math.ceil(dObj.getDate() / 7)}º ${diasSemana[dObj.getDay()]}`; 
+            const dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+            const regraHoje = `${Math.ceil(dObj.getDate() / 7)}º ${dias[dObj.getDay()]}`; 
 
-            const extras = bancoDados.extras.filter(row => row[1] && row[1].toString().split('T')[0] === dataSel);
-            const fixos = bancoDados.regras.filter(row => row[0].toString().trim().toLowerCase() === regraHoje.toLowerCase());
+            const extras = banco.extras.filter(r => r[1] && r[1].toString().split('T')[0] === dataSel);
+            const fixos = banco.regras.filter(r => r[0].toString().trim().toLowerCase() === regraHoje.toLowerCase());
 
-            if (extras.length === 0 && fixos.length === 0) return alert("Nenhuma escala para este dia.");
+            if (extras.length === 0 && fixos.length === 0) return alert("Nada encontrado.");
 
-            let msg = `*📍 ESCALA MESC - ${dia}/${mes}/${ano}*\n*(${regraHoje})*\n\n`;
+            let msg = "";
             const lista = [
-                ...fixos.map(f => ({ hora: f[1], missa: f[2], min: f[3], obs: "" })), 
-                ...extras.map(e => ({ hora: e[2], missa: e[4], min: e[3], obs: e[5] }))
+                ...fixos.map(f => ({ h: f[1], m: f[2], n: f[3], o: "" })), 
+                ...extras.map(e => ({ h: e[2], m: e[4], n: e[3], o: e[5] }))
             ];
-            lista.sort((a, b) => a.hora.toString().localeCompare(b.hora.toString()));
 
             lista.forEach(item => {
-                const h = extrairHoraBruta(item.hora);
-                const min = limparTexto(item.min);
-                const missa = limparTexto(item.missa);
-                const gData = dataSel.replace(/-/g, '');
-                const linkA = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('MESC: '+missa)}&dates=${gData}T${h.replace(':','')+'00'}/${gData}T${h.replace(':','')+'00'}&details=${encodeURIComponent('Ministros: '+min)}`;
-
-                msg += `⏰ *${h}* - ${missa}\n👥 *Ministros:* ${min}\n`;
-                if (item.obs) msg += `📝 *Obs:* ${limparTexto(item.obs)}\n`;
-                msg += `📅 *Agenda:* ${linkA}\n─────────────────\n\n`;
+                const horaF = extrairHora(item.h);
+                const missaF = limparTotal(item.m);
+                const minF = limparTotal(item.n);
+                
+                // FORMATO EXATO PEDIDO:
+                msg += `*📍 NOVA ESCALA - ${regraHoje}*\n`;
+                msg += `⏰ *Horário:* ${horaF}\n`;
+                msg += `⛪ *Missa:* ${missaF}\n`;
+                msg += `👤 *Ministros:* ${minF}\n`;
+                if (item.o) msg += `📝 *Obs:* ${limparTotal(item.o)}\n`;
+                msg += `─────────────────\n\n`;
             });
 
             dispararZap(msg);
-        } catch (e) { alert("Erro ao carregar escala."); }
-    }
-
-    function gerarPDFInstantaneo(modalId) {
-        const d = obterDadosDoModal(modalId);
-        const { jsPDF } = window.jspdf; const doc = new jsPDF();
-        doc.setFontSize(18); doc.text("ESCALA DE MINISTROS", 105, 20, { align: 'center' });
-        doc.setFontSize(12); doc.text(`Data: ${d.data} | Hora: ${d.hora}`, 20, 40);
-        doc.text(`Evento: ${d.missa}`, 20, 50);
-        doc.text(`Ministros:`, 20, 70);
-        doc.text(doc.splitTextToSize(d.ministro, 170), 20, 80);
-        doc.save(`Escala_${d.data}.pdf`);
-    }
-
-    function compartilharEscalaRapida(modalId) {
-        const d = obterDadosDoModal(modalId);
-        if (!d.hora) return alert("Preencha os dados.");
-        const ref = d.data.includes('-') ? d.data.split('-').reverse().join('/') : d.data;
-        let txt = `*📍 NOVA ESCALA - ${ref}*\n⏰ *Horário:* ${d.hora}\n⛪ *Missa:* ${d.missa}\n👥 *Ministros:* ${d.ministro}`;
-        dispararZap(txt);
+        } catch (e) { alert("Erro ao carregar."); }
     }
 </script>
 </body>
