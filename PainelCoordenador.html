@@ -6,8 +6,19 @@
     <title>ADM - MESC Pro Plus</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        :root { --primary: #1e3a8a; --bg: #f1f5f9; --success: #25d366; --pdf: #e11d48; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 15px; margin: 0; }
+        :root { 
+            --primary: #1e3a8a; 
+            --bg: #f1f5f9; 
+            --success: #25d366; 
+            --pdf: #e11d48; 
+            --gold: #b45309; 
+        }
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: var(--bg); 
+            padding: 15px; 
+            margin: 0; 
+        }
         
         .container { 
             max-width: 450px; 
@@ -21,39 +32,97 @@
         
         .header { text-align: center; margin-bottom: 20px; }
         
-        label { display: block; margin-top: 12px; font-weight: 700; font-size: 0.85rem; color: #475569; }
+        label { 
+            display: block; 
+            margin-top: 12px; 
+            font-weight: 700; 
+            font-size: 0.85rem; 
+            color: #475569; 
+        }
         
-        input, textarea { 
-            width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #e2e8f0; border-radius: 10px; 
-            box-sizing: border-box; background: #ffffff; box-shadow: inset 0 2px 4px rgba(0,0,0,0.03); font-family: inherit;
+        input, textarea, select { 
+            width: 100%; 
+            padding: 12px; 
+            margin-top: 5px; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 10px; 
+            box-sizing: border-box; 
+            background: #ffffff; 
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.03); 
+            font-family: inherit;
         }
 
         .btn { 
-            width: 100%; padding: 16px; border: none; border-radius: 12px; font-weight: bold; 
-            cursor: pointer; transition: 0.2s; margin-top: 10px; display: flex; 
-            align-items: center; justify-content: center; gap: 8px; 
+            width: 100%; 
+            padding: 16px; 
+            border: none; 
+            border-radius: 12px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: 0.2s; 
+            margin-top: 10px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 8px; 
         }
         
         .btn-primary { background: var(--primary); color: white; }
+        .btn-regra { background: var(--gold); color: white; }
         .btn-zap { background: var(--success); color: white; font-size: 0.9rem; }
         .btn-pdf { background: var(--pdf); color: white; font-size: 0.9rem; }
         .btn:active { transform: scale(0.98); }
 
         .modal { 
-            display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; 
-            height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(3px); 
-            align-items: center; justify-content: center; 
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0; 
+            top: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.6); 
+            backdrop-filter: blur(3px); 
+            align-items: center; 
+            justify-content: center; 
         }
+        
         .modal-content { 
-            background: white; padding: 20px; border-radius: 20px; width: 90%; 
-            max-width: 400px; max-height: 90vh; overflow-y: auto; position: relative; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 20px; 
+            width: 90%; 
+            max-width: 400px; 
+            max-height: 90vh; 
+            overflow-y: auto; 
+            position: relative; 
         }
         
-        .grid-ministros { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-        .grid-ministros input { padding: 8px; font-size: 0.85rem; }
+        .grid-ministros { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 8px; 
+            margin-top: 10px; 
+        }
         
-        .modal-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .signature { text-align: center; margin-top: 20px; font-size: 0.7rem; color: #94a3b8; }
+        .grid-ministros input { 
+            padding: 8px; 
+            font-size: 0.85rem; 
+        }
+        
+        .modal-footer { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 10px; 
+            margin-top: 15px; 
+        }
+        
+        .signature { 
+            text-align: center; 
+            margin-top: 20px; 
+            font-size: 0.7rem; 
+            color: #94a3b8; 
+        }
     </style>
 </head>
 <body>
@@ -71,21 +140,23 @@
 
     <div style="margin: 25px 0; border-top: 1px solid #eee;"></div>
 
-    <button class="btn btn-primary" onclick="abrirModal()">➕ NOVO EVENTO / ESCALA</button>
+    <button class="btn btn-primary" onclick="abrirModal('modalEvento')">➕ NOVO EVENTO (EXTRA)</button>
+    <button class="btn btn-regra" onclick="abrirModal('modalRegra')">⚙️ GERENCIAR REGRAS FIXAS</button>
+    
     <div class="signature">By: Jr&Iz</div>
 </div>
 
 <div id="modalEvento" class="modal">
     <div class="modal-content">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-            <button onclick="fecharModal()" style="background:none; border:none; cursor:pointer; color:var(--primary); font-weight:bold; font-size:1rem;">⬅ Voltar</button>
-            <h3 style="color:var(--primary); margin:0;">Novo Evento</h3>
+            <button onclick="fecharModal('modalEvento')" style="background:none; border:none; cursor:pointer; color:var(--primary); font-weight:bold; font-size:1rem;">⬅ Voltar</button>
+            <h3 style="color:var(--primary); margin:0;">Novo Evento Extra</h3>
             <span style="width: 50px;"></span>
         </div>
         
         <label>Data</label> <input type="date" id="novaData">
         <label>Horário</label> <input type="time" id="novaHora">
-        <label>Evento / Missa</label> <input type="text" id="novoEvento" placeholder="Ex: Missa de Domingo">
+        <label>Evento / Missa</label> <input type="text" id="novoEvento" placeholder="Ex: Missa de Sétimo Dia">
 
         <label>Ministros (Até 10)</label>
         <div class="grid-ministros">
@@ -102,14 +173,60 @@
         </div>
 
         <label>Observações</label>
-        <textarea id="obs" rows="2" placeholder="Ex: Cor Branca / Reunião após missa"></textarea>
+        <textarea id="obs" rows="2" placeholder="Ex: Cor Branca"></textarea>
 
         <div class="modal-footer">
-            <button class="btn btn-pdf" onclick="gerarPDFInstantaneo()">📄 PDF</button>
-            <button class="btn btn-zap" onclick="compartilharEscalaRapida()">📲 WhatsApp</button>
+            <button class="btn btn-pdf" onclick="gerarPDFInstantaneo('modalEvento')">📄 PDF</button>
+            <button class="btn btn-zap" onclick="compartilharEscalaRapida('modalEvento')">📲 WhatsApp</button>
         </div>
 
-        <button class="btn btn-primary" id="btnSalvar" onclick="salvarEvento()">💾 SALVAR NA PLANILHA</button>
+        <button class="btn btn-primary" id="btnSalvar" onclick="salvarEscala('addEscala', 'modalEvento')">💾 SALVAR NA PLANILHA</button>
+    </div>
+</div>
+
+<div id="modalRegra" class="modal">
+    <div class="modal-content">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+            <button onclick="fecharModal('modalRegra')" style="background:none; border:none; cursor:pointer; color:var(--gold); font-weight:bold; font-size:1rem;">⬅ Voltar</button>
+            <h3 style="color:var(--gold); margin:0;">Cadastrar Regra Fixa</h3>
+            <span style="width: 50px;"></span>
+        </div>
+        
+        <label>Regra (Ex: 2º Domingo)</label>
+        <select id="regraFixo">
+            <option value="1º Sábado">1º Sábado</option>
+            <option value="2º Sábado">2º Sábado</option>
+            <option value="3º Sábado">3º Sábado</option>
+            <option value="4º Sábado">4º Sábado</option>
+            <option value="1º Domingo">1º Domingo</option>
+            <option value="2º Domingo">2º Domingo</option>
+            <option value="3º Domingo">3º Domingo</option>
+            <option value="4º Domingo">4º Domingo</option>
+        </select>
+
+        <label>Horário Fixo</label> <input type="time" id="horaFixo">
+        <label>Nome do Evento</label> <input type="text" id="eventoFixo" placeholder="Ex: Missa com Crianças">
+
+        <label>Ministros Fixos (Até 10)</label>
+        <div class="grid-ministros">
+            <input type="text" class="r-input" placeholder="1. Nome">
+            <input type="text" class="r-input" placeholder="2. Nome">
+            <input type="text" class="r-input" placeholder="3. Nome">
+            <input type="text" class="r-input" placeholder="4. Nome">
+            <input type="text" class="r-input" placeholder="5. Nome">
+            <input type="text" class="r-input" placeholder="6. Nome">
+            <input type="text" class="r-input" placeholder="7. Nome">
+            <input type="text" class="r-input" placeholder="8. Nome">
+            <input type="text" class="r-input" placeholder="9. Nome">
+            <input type="text" class="r-input" placeholder="10. Nome">
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-pdf" onclick="gerarPDFInstantaneo('modalRegra')">📄 PDF</button>
+            <button class="btn btn-zap" onclick="compartilharEscalaRapida('modalRegra')">📲 WhatsApp</button>
+        </div>
+
+        <button class="btn btn-regra" id="btnSalvarRegra" onclick="salvarEscala('addRegra', 'modalRegra')">💾 SALVAR REGRA FIXA</button>
     </div>
 </div>
 
@@ -117,48 +234,65 @@
     const URL_API = "https://script.google.com/macros/s/AKfycbzwaZk-NZE0omqUf2PrU08c_-gi0H4yuxFqFFL7A5RKKilXSQcsBU-P-lAZMAd-vg0C/exec";
     const { jsPDF } = window.jspdf;
 
-    function abrirModal() { document.getElementById('modalEvento').style.display = 'flex'; }
-    function fecharModal() { document.getElementById('modalEvento').style.display = 'none'; }
+    function abrirModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function fecharModal(id) { document.getElementById(id).style.display = 'none'; }
 
-    // Função auxiliar para limpar textos e evitar nomes quebrados
     function limparTexto(txt) {
         if (!txt) return "";
         return txt.toString()
-            .replace(/\r?\n|\r/g, " ") // Remove quebras de linha
-            .replace(/\s+/g, " ")      // Remove espaços duplos
-            .trim();                   // Remove espaços nas pontas
+            .replace(/\r?\n|\r/g, " ")
+            .replace(/\s+/g, " ")
+            .trim();
     }
 
-    function obterDadosForm() {
-        const inputs = document.querySelectorAll('.m-input');
+    function obterDadosDoModal(modalId) {
+        const isExtra = modalId === 'modalEvento';
+        const seletor = isExtra ? '.m-input' : '.r-input';
+        const inputs = document.querySelectorAll(seletor);
         const listaMinistros = Array.from(inputs)
             .map(i => i.value.trim())
             .filter(v => v !== "")
             .join(", ");
+
         return {
-            data: document.getElementById('novaData').value,
-            hora: document.getElementById('novaHora').value,
-            missa: limparTexto(document.getElementById('novoEvento').value),
+            data: isExtra ? document.getElementById('novaData').value : document.getElementById('regraFixo').value,
+            hora: isExtra ? document.getElementById('novaHora').value : document.getElementById('horaFixo').value,
+            missa: limparTexto(isExtra ? document.getElementById('novoEvento').value : document.getElementById('eventoFixo').value),
             ministro: listaMinistros,
-            obs: limparTexto(document.getElementById('obs').value)
+            obs: isExtra ? limparTexto(document.getElementById('obs').value) : ""
         };
     }
 
-    async function salvarEvento() {
-        const btn = document.getElementById('btnSalvar');
-        const dados = obterDadosForm();
-        if(!dados.data || !dados.missa) return alert("Preencha Data e Evento!");
-        btn.innerText = "SALVANDO..."; btn.disabled = true;
+    async function salvarEscala(acao, modalId) {
+        const btnId = modalId === 'modalEvento' ? 'btnSalvar' : 'btnSalvarRegra';
+        const btn = document.getElementById(btnId);
+        const d = obterDadosDoModal(modalId);
+
+        if (!d.hora || !d.missa) return alert("Preencha Horário e Missa!");
+
+        btn.innerText = "SALVANDO...";
+        btn.disabled = true;
+
+        const payload = { action: acao, ...d };
+        if (acao === 'addRegra') {
+            payload.regra = d.data;
+            delete payload.data;
+        }
+
         try {
-            await fetch(URL_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify({action: "addEscala", ...dados}) });
-            alert("Escala salva!");
+            await fetch(URL_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+            alert("Salvo com sucesso!");
             location.reload();
-        } catch (e) { alert("Erro ao salvar."); btn.disabled = false; }
+        } catch (e) {
+            alert("Erro ao salvar.");
+            btn.disabled = false;
+            btn.innerText = "SALVAR";
+        }
     }
 
     async function compartilharEscala() {
         const dataSel = document.getElementById('dataConsulta').value;
-        if(!dataSel) return alert("Selecione a data!");
+        if (!dataSel) return alert("Selecione a data!");
 
         try {
             const res = await fetch(URL_API + "?t=" + new Date().getTime());
@@ -173,7 +307,7 @@
             const extras = bancoDados.extras.filter(row => row[1] && row[1].toString().includes(dataSel));
             const fixos = bancoDados.regras.filter(row => row[0].toString().trim().toLowerCase() === regraHoje.toLowerCase());
 
-            if(extras.length === 0 && fixos.length === 0) return alert("Nenhuma escala para este dia.");
+            if (extras.length === 0 && fixos.length === 0) return alert("Nenhuma escala encontrada.");
 
             let msg = `*📍 ESCALA MESC - ${dataSel.split('-').reverse().join('/')}*\n`;
             msg += `*(${regraHoje})*\n\n`;
@@ -184,21 +318,16 @@
             ];
 
             totalDia.forEach(item => {
-                // CORREÇÃO DO HORÁRIO (Pega apenas os primeiros 5 caracteres, ex: "07:00")
                 let textoHora = item.hora.toString();
                 let horaFinal = "00:00";
-
                 if (textoHora.includes("T")) {
                     horaFinal = textoHora.split("T")[1].substring(0, 5);
                 } else {
                     const match = textoHora.match(/\d{2}:\d{2}/);
-                    // Se achar o padrão 00:00, usa ele. Se não, corta os 5 primeiros caracteres.
                     horaFinal = match ? match[0] : textoHora.substring(0, 5);
                 }
 
-                // CORREÇÃO DOS NOMES (Limpa quebras de linha e espaços duplos)
                 let ministrosLimpos = limparTexto(item.min);
-
                 const gData = dataSel.replace(/-/g,'');
                 const gHora = horaFinal.replace(':','');
                 const linkAgenda = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('MESC: ' + item.missa)}&dates=${gData}T${gHora}00/${gData}T${gHora}00&details=${encodeURIComponent('Ministros: ' + ministrosLimpos)}`;
@@ -206,34 +335,49 @@
                 msg += `⏰ *Horário:* ${horaFinal}\n`;
                 msg += `⛪ *Missa:* ${limparTexto(item.missa)}\n`;
                 msg += `👥 *Ministros:* ${ministrosLimpos}\n`;
-                if(item.obs) msg += `📝 *Obs:* ${limparTexto(item.obs)}\n`;
+                if (item.obs) msg += `📝 *Obs:* ${limparTexto(item.obs)}\n`;
                 msg += `📅 *Salvar Agenda:* ${linkAgenda}\n`;
                 msg += `─────────────────\n\n`;
             });
 
             window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
-        } catch (e) { 
-            alert("Erro ao carregar escala. Tente novamente."); 
+        } catch (e) {
+            alert("Erro ao carregar escala.");
         }
     }
 
-    function gerarPDFInstantaneo() {
-        const d = obterDadosForm();
-        if(!d.data || !d.missa) return alert("Preencha os dados básicos!");
+    function gerarPDFInstantaneo(modalId) {
+        const d = obterDadosDoModal(modalId);
+        if (!d.hora || !d.missa) return alert("Preencha os dados!");
+        
         const doc = new jsPDF();
+        doc.setFontSize(18);
         doc.text("ESCALA DE MINISTROS", 105, 20, { align: 'center' });
-        doc.text(`Evento: ${d.missa}`, 20, 50);
-        doc.text(`Ministros: ${d.ministro}`, 20, 60);
+        doc.setFontSize(12);
+        doc.text(`Referência: ${d.data}`, 20, 40);
+        doc.text(`Horário: ${d.hora}`, 20, 50);
+        doc.text(`Missa: ${d.missa}`, 20, 60);
+        doc.text(`Ministros:`, 20, 80);
+        
+        const splitMinistros = doc.splitTextToSize(d.ministro, 170);
+        doc.text(splitMinistros, 20, 90);
+        
         doc.save(`Escala_${d.data}.pdf`);
     }
 
-    function compartilharEscalaRapida() {
-        const d = obterDadosForm();
-        if(!d.data) return alert("Selecione a data!");
-        const dataBR = d.data.split('-').reverse().join('/');
-        let msg = `*📍 NOVA ESCALA - ${dataBR}*\n⏰ *${d.hora}* - ${d.missa}\n👤 *Ministros:* ${d.ministro}`;
+    function compartilharEscalaRapida(modalId) {
+        const d = obterDadosDoModal(modalId);
+        if (!d.hora) return alert("Preencha os dados!");
+        
+        const ref = d.data.includes('-') ? d.data.split('-').reverse().join('/') : d.data;
+        let msg = `*📍 NOVA ESCALA - ${ref}*\n`;
+        msg += `⏰ *Horário:* ${d.hora}\n`;
+        msg += `⛪ *Missa:* ${d.missa}\n`;
+        msg += `👤 *Ministros:* ${d.ministro}`;
+        
         window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
     }
 </script>
+
 </body>
 </html>
