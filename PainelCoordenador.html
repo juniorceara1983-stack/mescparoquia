@@ -48,7 +48,6 @@
             border-radius: 10px; 
             box-sizing: border-box; 
             background: #ffffff; 
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.03); 
             font-family: inherit;
         }
 
@@ -148,11 +147,8 @@
 
 <div id="modalEvento" class="modal">
     <div class="modal-content">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-            <button onclick="fecharModal('modalEvento')" style="background:none; border:none; cursor:pointer; color:var(--primary); font-weight:bold; font-size:1rem;">⬅ Voltar</button>
-            <h3 style="color:var(--primary); margin:0;">Novo Evento Extra</h3>
-            <span style="width: 50px;"></span>
-        </div>
+        <button onclick="fecharModal('modalEvento')" style="background:none; border:none; cursor:pointer; color:var(--primary); font-weight:bold;">⬅ Voltar</button>
+        <h3 style="color:var(--primary); margin:10px 0;">Novo Evento Extra</h3>
         
         <label>Data</label> <input type="date" id="novaData">
         <label>Horário</label> <input type="time" id="novaHora">
@@ -160,48 +156,35 @@
 
         <label>Ministros (Até 10)</label>
         <div class="grid-ministros">
-            <input type="text" class="m-input" placeholder="1. Nome">
-            <input type="text" class="m-input" placeholder="2. Nome">
-            <input type="text" class="m-input" placeholder="3. Nome">
-            <input type="text" class="m-input" placeholder="4. Nome">
-            <input type="text" class="m-input" placeholder="5. Nome">
-            <input type="text" class="m-input" placeholder="6. Nome">
-            <input type="text" class="m-input" placeholder="7. Nome">
-            <input type="text" class="m-input" placeholder="8. Nome">
-            <input type="text" class="m-input" placeholder="9. Nome">
-            <input type="text" class="m-input" placeholder="10. Nome">
+            <input type="text" class="m-input" placeholder="1. Nome"> <input type="text" class="m-input" placeholder="2. Nome">
+            <input type="text" class="m-input" placeholder="3. Nome"> <input type="text" class="m-input" placeholder="4. Nome">
+            <input type="text" class="m-input" placeholder="5. Nome"> <input type="text" class="m-input" placeholder="6. Nome">
+            <input type="text" class="m-input" placeholder="7. Nome"> <input type="text" class="m-input" placeholder="8. Nome">
+            <input type="text" class="m-input" placeholder="9. Nome"> <input type="text" class="m-input" placeholder="10. Nome">
         </div>
 
         <label>Observações</label>
-        <textarea id="obs" rows="2" placeholder="Ex: Cor Branca"></textarea>
+        <textarea id="obs" rows="2"></textarea>
 
         <div class="modal-footer">
             <button class="btn btn-pdf" onclick="gerarPDFInstantaneo('modalEvento')">📄 PDF</button>
-            <button class="btn btn-zap" onclick="compartilharEscalaRapida('modalEvento')">📲 WhatsApp</button>
+            <button class="btn btn-zap" onclick="compartilharEscalaRapida('modalEvento')">📲 Zap</button>
         </div>
-
         <button class="btn btn-primary" id="btnSalvar" onclick="salvarEscala('addEscala', 'modalEvento')">💾 SALVAR NA PLANILHA</button>
     </div>
 </div>
 
 <div id="modalRegra" class="modal">
     <div class="modal-content">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-            <button onclick="fecharModal('modalRegra')" style="background:none; border:none; cursor:pointer; color:var(--gold); font-weight:bold; font-size:1rem;">⬅ Voltar</button>
-            <h3 style="color:var(--gold); margin:0;">Cadastrar Regra Fixa</h3>
-            <span style="width: 50px;"></span>
-        </div>
+        <button onclick="fecharModal('modalRegra')" style="background:none; border:none; cursor:pointer; color:var(--gold); font-weight:bold;">⬅ Voltar</button>
+        <h3 style="color:var(--gold); margin:10px 0;">Cadastrar Regra Fixa</h3>
         
         <label>Regra (Ex: 2º Domingo)</label>
         <select id="regraFixo">
-            <option value="1º Sábado">1º Sábado</option>
-            <option value="2º Sábado">2º Sábado</option>
-            <option value="3º Sábado">3º Sábado</option>
-            <option value="4º Sábado">4º Sábado</option>
-            <option value="1º Domingo">1º Domingo</option>
-            <option value="2º Domingo">2º Domingo</option>
-            <option value="3º Domingo">3º Domingo</option>
-            <option value="4º Domingo">4º Domingo</option>
+            <option value="1º Sábado">1º Sábado</option> <option value="2º Sábado">2º Sábado</option>
+            <option value="3º Sábado">3º Sábado</option> <option value="4º Sábado">4º Sábado</option>
+            <option value="1º Domingo">1º Domingo</option> <option value="2º Domingo">2º Domingo</option>
+            <option value="3º Domingo">3º Domingo</option> <option value="4º Domingo">4º Domingo</option>
         </select>
 
         <label>Horário Fixo</label> <input type="time" id="horaFixo">
@@ -209,23 +192,17 @@
 
         <label>Ministros Fixos (Até 10)</label>
         <div class="grid-ministros">
-            <input type="text" class="r-input" placeholder="1. Nome">
-            <input type="text" class="r-input" placeholder="2. Nome">
-            <input type="text" class="r-input" placeholder="3. Nome">
-            <input type="text" class="r-input" placeholder="4. Nome">
-            <input type="text" class="r-input" placeholder="5. Nome">
-            <input type="text" class="r-input" placeholder="6. Nome">
-            <input type="text" class="r-input" placeholder="7. Nome">
-            <input type="text" class="r-input" placeholder="8. Nome">
-            <input type="text" class="r-input" placeholder="9. Nome">
-            <input type="text" class="r-input" placeholder="10. Nome">
+            <input type="text" class="r-input" placeholder="1. Nome"> <input type="text" class="r-input" placeholder="2. Nome">
+            <input type="text" class="r-input" placeholder="3. Nome"> <input type="text" class="r-input" placeholder="4. Nome">
+            <input type="text" class="r-input" placeholder="5. Nome"> <input type="text" class="r-input" placeholder="6. Nome">
+            <input type="text" class="r-input" placeholder="7. Nome"> <input type="text" class="r-input" placeholder="8. Nome">
+            <input type="text" class="r-input" placeholder="9. Nome"> <input type="text" class="r-input" placeholder="10. Nome">
         </div>
 
         <div class="modal-footer">
             <button class="btn btn-pdf" onclick="gerarPDFInstantaneo('modalRegra')">📄 PDF</button>
-            <button class="btn btn-zap" onclick="compartilharEscalaRapida('modalRegra')">📲 WhatsApp</button>
+            <button class="btn btn-zap" onclick="compartilharEscalaRapida('modalRegra')">📲 Zap</button>
         </div>
-
         <button class="btn btn-regra" id="btnSalvarRegra" onclick="salvarEscala('addRegra', 'modalRegra')">💾 SALVAR REGRA FIXA</button>
     </div>
 </div>
@@ -237,22 +214,17 @@
     function abrirModal(id) { document.getElementById(id).style.display = 'flex'; }
     function fecharModal(id) { document.getElementById(id).style.display = 'none'; }
 
+    // LIMPEZA RIGOROSA (Lógica do novo arquivo)
     function limparTexto(txt) {
         if (!txt) return "";
-        return txt.toString()
-            .replace(/\r?\n|\r/g, " ")
-            .replace(/\s+/g, " ")
-            .trim();
+        return txt.toString().replace(/\r?\n|\r/g, " ").replace(/\s+/g, " ").trim();
     }
 
     function obterDadosDoModal(modalId) {
         const isExtra = modalId === 'modalEvento';
         const seletor = isExtra ? '.m-input' : '.r-input';
         const inputs = document.querySelectorAll(seletor);
-        const listaMinistros = Array.from(inputs)
-            .map(i => i.value.trim())
-            .filter(v => v !== "")
-            .join(", ");
+        const listaMinistros = Array.from(inputs).map(i => i.value.trim()).filter(v => v !== "").join(", ");
 
         return {
             data: isExtra ? document.getElementById('novaData').value : document.getElementById('regraFixo').value,
@@ -267,120 +239,90 @@
         const btnId = modalId === 'modalEvento' ? 'btnSalvar' : 'btnSalvarRegra';
         const btn = document.getElementById(btnId);
         const d = obterDadosDoModal(modalId);
-
         if (!d.hora || !d.missa) return alert("Preencha Horário e Missa!");
 
-        btn.innerText = "SALVANDO...";
-        btn.disabled = true;
-
+        btn.innerText = "SALVANDO..."; btn.disabled = true;
         const payload = { action: acao, ...d };
-        if (acao === 'addRegra') {
-            payload.regra = d.data;
-            delete payload.data;
-        }
+        if (acao === 'addRegra') { payload.regra = d.data; delete payload.data; }
 
         try {
             await fetch(URL_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-            alert("Salvo com sucesso!");
-            location.reload();
-        } catch (e) {
-            alert("Erro ao salvar.");
-            btn.disabled = false;
-            btn.innerText = "SALVAR";
-        }
+            alert("Salvo!"); location.reload();
+        } catch (e) { alert("Erro ao salvar."); btn.disabled = false; btn.innerText = "SALVAR"; }
     }
 
-async function compartilharEscala() {
-    const dataSel = document.getElementById('dataConsulta').value;
-    if (!dataSel) return alert("Selecione a data!");
+    async function compartilharEscala() {
+        const dataSel = document.getElementById('dataConsulta').value;
+        if (!dataSel) return alert("Selecione a data!");
 
-    try {
-        // O "?t=" evita que o celular pegue uma escala antiga do cache
-        const res = await fetch(URL_API + "?t=" + new Date().getTime());
-        const bancoDados = await res.json();
-        
-        const d = new Date(dataSel + "T12:00:00");
-        const diasSemana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-        const regraHoje = `${Math.ceil(d.getDate() / 7)}º ${diasSemana[d.getDay()]}`; 
-
-        const extras = bancoDados.extras.filter(row => row[1] && row[1].toString().includes(dataSel));
-        const fixos = bancoDados.regras.filter(row => row[0].toString().trim().toLowerCase() === regraHoje.toLowerCase());
-
-        if (extras.length === 0 && fixos.length === 0) return alert("Nenhuma escala para hoje.");
-
-        let msg = `*📍 ESCALA MESC - ${dataSel.split('-').reverse().join('/')}*\n*(${regraHoje})*\n\n`;
-
-        const totalDia = [
-            ...fixos.map(f => ({hora: f[1], missa: f[2], min: f[3], obs: ""})), 
-            ...extras.map(e => ({hora: e[2], missa: e[4], min: e[3], obs: e[5]}))
-        ];
-
-        totalDia.forEach(item => {
-            // FIX DO HORÁRIO: Forçamos a string e pegamos o padrão 00:00 ignorando o resto
-            let rawHora = item.hora.toString();
-            let horaF = "00:00";
+        try {
+            const res = await fetch(URL_API + "?t=" + new Date().getTime());
+            const bancoDados = await res.json();
             
-            if (rawHora.includes("T")) {
-                horaF = rawHora.split("T")[1].substring(0, 5);
+            const d = new Date(dataSel + "T12:00:00");
+            const diasSemana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+            const regraHoje = `${Math.ceil(d.getDate() / 7)}º ${diasSemana[d.getDay()]}`; 
+
+            const extras = bancoDados.extras.filter(row => row[1] && row[1].toString().includes(dataSel));
+            const fixos = bancoDados.regras.filter(row => row[0].toString().trim().toLowerCase() === regraHoje.toLowerCase());
+
+            if (extras.length === 0 && fixos.length === 0) return alert("Nenhuma escala.");
+
+            let msg = `*📍 ESCALA MESC - ${dataSel.split('-').reverse().join('/')}*\n*(${regraHoje})*\n\n`;
+
+            const totalDia = [
+                ...fixos.map(f => ({hora: f[1], missa: f[2], min: f[3], obs: ""})), 
+                ...extras.map(e => ({hora: e[2], missa: e[4], min: e[3], obs: e[5]}))
+            ];
+
+            totalDia.forEach(item => {
+                // LÓGICA DE HORA PURA (Evita o erro do 10:06)
+                let hStr = item.hora.toString();
+                let horaF = hStr.match(/\d{2}:\d{2}/) ? hStr.match(/\d{2}:\d{2}/)[0] : hStr.substring(0, 5);
+                
+                let minL = limparTexto(item.min);
+                let missaL = limparTexto(item.missa);
+
+                const gData = dataSel.replace(/-/g,'');
+                const linkA = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('MESC: '+missaL)}&dates=${gData}T${horaF.replace(':','')+'00'}/${gData}T${horaF.replace(':','')+'00'}&details=${encodeURIComponent('Ministros: '+minL)}`;
+
+                msg += `⏰ *${horaF}* - ${missaL}\n👥 *Ministros:* ${minL}\n`;
+                if (item.obs) msg += `📝 *Obs:* ${limparTexto(item.obs)}\n`;
+                msg += `📅 *Agenda:* ${linkA}\n─────────────────\n\n`;
+            });
+
+            // LÓGICA DE COMPARTILHAMENTO NATIVO (Do seu novo arquivo)
+            if (navigator.share) {
+                navigator.share({ text: msg }).catch(() => window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`));
             } else {
-                // Tenta achar o padrão de hora (XX:XX) na string
-                const match = rawHora.match(/\d{2}:\d{2}/);
-                horaF = match ? match[0] : rawHora.substring(0, 5);
+                window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
             }
-
-            // FIX DOS NOMES: Remove quebras de linha e espaços duplos
-            let minL = item.min.toString().replace(/\n|\r/g, " ").replace(/\s+/g, " ").trim();
-            let missaL = item.missa.toString().replace(/\n|\r/g, " ").replace(/\s+/g, " ").trim();
-
-            const gData = dataSel.replace(/-/g,'');
-            const gHora = horaF.replace(':','');
-            const linkA = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('MESC: '+missaL)}&dates=${gData}T${gHora}00/${gData}T${gHora}00&details=${encodeURIComponent('Ministros: '+minL)}`;
-
-            msg += `⏰ *${horaF}* - ${missaL}\n`;
-            msg += `👥 *Ministros:* ${minL}\n`;
-            if (item.obs) msg += `📝 *Obs:* ${item.obs.toString().replace(/\n|\r/g, " ").trim()}\n`;
-            msg += `📅 *Agenda:* ${linkA}\n`;
-            msg += `─────────────────\n\n`;
-        });
-
-        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
-    } catch (e) {
-        alert("Erro ao ler dados da planilha.");
+        } catch (e) { alert("Erro ao carregar escala."); }
     }
-        }
 
     function gerarPDFInstantaneo(modalId) {
         const d = obterDadosDoModal(modalId);
-        if (!d.hora || !d.missa) return alert("Preencha os dados!");
-        
         const doc = new jsPDF();
-        doc.setFontSize(18);
         doc.text("ESCALA DE MINISTROS", 105, 20, { align: 'center' });
-        doc.setFontSize(12);
-        doc.text(`Referência: ${d.data}`, 20, 40);
-        doc.text(`Horário: ${d.hora}`, 20, 50);
-        doc.text(`Missa: ${d.missa}`, 20, 60);
-        doc.text(`Ministros:`, 20, 80);
-        
-        const splitMinistros = doc.splitTextToSize(d.ministro, 170);
-        doc.text(splitMinistros, 20, 90);
-        
+        doc.text(`Ref: ${d.data} | Hora: ${d.hora}`, 20, 40);
+        doc.text(`Missa: ${d.missa}`, 20, 50);
+        doc.text(`Ministros:`, 20, 70);
+        doc.text(doc.splitTextToSize(d.ministro, 170), 20, 80);
         doc.save(`Escala_${d.data}.pdf`);
     }
 
     function compartilharEscalaRapida(modalId) {
         const d = obterDadosDoModal(modalId);
         if (!d.hora) return alert("Preencha os dados!");
-        
         const ref = d.data.includes('-') ? d.data.split('-').reverse().join('/') : d.data;
-        let msg = `*📍 NOVA ESCALA - ${ref}*\n`;
-        msg += `⏰ *Horário:* ${d.hora}\n`;
-        msg += `⛪ *Missa:* ${d.missa}\n`;
-        msg += `👤 *Ministros:* ${d.ministro}`;
+        let msg = `*📍 ESCALA - ${ref}*\n⏰ *${d.hora}* - ${d.missa}\n👥 *Ministros:* ${d.ministro}`;
         
-        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
+        if (navigator.share) {
+            navigator.share({ text: msg }).catch(() => window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`));
+        } else {
+            window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
+        }
     }
 </script>
-
 </body>
 </html>
