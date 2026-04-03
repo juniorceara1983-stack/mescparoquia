@@ -91,24 +91,24 @@
     function abrirModal(id) { document.getElementById(id).style.display = 'flex'; }
     function fecharModal(id) { document.getElementById(id).style.display = 'none'; }
 
-    // LIMPEZA AGRESSIVA DE QUEBRA DE LINHA
+    // LIMPEZA DE TEXTO (Nomes e Eventos)
     function limparTotal(texto) {
         if (!texto) return "";
         return texto.toString().replace(/[\r\n]+/g, " ").replace(/\s\s+/g, " ").trim();
     }
 
-    // EXTRAÇÃO DE HORA BLINDADA CONTRA O ERRO 10:06
+    // EXTRAÇÃO DE HORA (Evita 10:06 e pega o que você digitou na planilha)
     function extrairHora(valor) {
         if (!valor) return "00:00";
         let s = valor.toString();
+        // Se o Google enviou uma data inteira junto, cortamos para pegar só o tempo
         if (s.includes("T")) s = s.split("T")[1];
         const match = s.match(/\d{2}:\d{2}/);
         return match ? match[0] : s.substring(0, 5);
     }
 
     function dispararZap(texto) {
-        const url = `whatsapp://send?text=${encodeURIComponent(texto)}`;
-        window.location.href = url;
+        window.location.href = `whatsapp://send?text=${encodeURIComponent(texto)}`;
     }
 
     async function salvarEscala(acao, modalId) {
@@ -128,12 +128,9 @@
         const btn = document.getElementById(isExtra ? 'btnSalvar' : 'btnSalvarRegra');
         btn.innerText = "SALVANDO..."; btn.disabled = true;
 
-        const payload = { action: acao, ...d };
-        if (acao === 'addRegra') { payload.regra = d.data; delete payload.data; }
-
         try {
-            await fetch(URL_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-            alert("Salvo!"); location.reload();
+            await fetch(URL_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: acao, ...d }) });
+            alert("Salvo na Planilha!"); location.reload();
         } catch (e) { alert("Erro!"); btn.disabled = false; btn.innerText = "SALVAR"; }
     }
 
@@ -150,24 +147,36 @@
             const dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
             const regraHoje = `${Math.ceil(dObj.getDate() / 7)}º ${dias[dObj.getDay()]}`; 
 
-            const extras = banco.extras.filter(r => r[1] && r[1].toString().split('T')[0] === dataSel);
-            const fixos = banco.regras.filter(r => r[0].toString().trim().toLowerCase() === regraHoje.toLowerCase());
+            // FILTRO PARA EVENTOS EXTRAS (Usa data: 2026-04-05)
+            const extras = banco.extras.filter(r => {
+                if (!r[1]) return false;
+                return r[1].toString().substring(0, 10) === dataSel;
+            });
 
-            if (extras.length === 0 && fixos.length === 0) return alert("Nada encontrado.");
+            // FILTRO PARA REGRAS FIXAS (Usa texto: 1º Domingo)
+            // Aqui é onde corrigimos para ele ler o que você digitou direto na planilha
+            const fixos = banco.regras.filter(r => {
+                if (!r[0]) return false;
+                return r[0].toString().trim().toLowerCase() === regraHoje.toLowerCase();
+            });
+
+            if (extras.length === 0 && fixos.length === 0) return alert("Nenhuma escala encontrada para: " + regraHoje);
 
             let msg = "";
             const lista = [
-                ...fixos.map(f => ({ h: f[1], m: f[2], n: f[3], o: "" })), 
-                ...extras.map(e => ({ h: e[2], m: e[4], n: e[3], o: e[5] }))
+                ...fixos.map(f => ({ h: f[1], m: f[2], n: f[3], o: "", r: regraHoje })), 
+                ...extras.map(e => ({ h: e[2], m: e[4], n: e[3], o: e[5], r: `${dia}/${mes}/${ano}` }))
             ];
+
+            // Ordenar por horário para não ficar bagunçado
+            lista.sort((a, b) => a.h.toString().localeCompare(b.h.toString()));
 
             lista.forEach(item => {
                 const horaF = extrairHora(item.h);
                 const missaF = limparTotal(item.m);
                 const minF = limparTotal(item.n);
                 
-                // FORMATO EXATO PEDIDO:
-                msg += `*📍 NOVA ESCALA - ${regraHoje}*\n`;
+                msg += `*📍 NOVA ESCALA - ${item.r}*\n`;
                 msg += `⏰ *Horário:* ${horaF}\n`;
                 msg += `⛪ *Missa:* ${missaF}\n`;
                 msg += `👤 *Ministros:* ${minF}\n`;
@@ -176,7 +185,7 @@
             });
 
             dispararZap(msg);
-        } catch (e) { alert("Erro ao carregar."); }
+        } catch (e) { alert("Erro ao conectar com a planilha."); }
     }
 </script>
 </body>
