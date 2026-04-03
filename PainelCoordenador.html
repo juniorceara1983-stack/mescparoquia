@@ -120,15 +120,27 @@
     function abrirModal() { document.getElementById('modalEvento').style.display = 'flex'; }
     function fecharModal() { document.getElementById('modalEvento').style.display = 'none'; }
 
+    // Função auxiliar para limpar textos e evitar nomes quebrados
+    function limparTexto(txt) {
+        if (!txt) return "";
+        return txt.toString()
+            .replace(/\r?\n|\r/g, " ") // Remove quebras de linha
+            .replace(/\s+/g, " ")      // Remove espaços duplos
+            .trim();                   // Remove espaços nas pontas
+    }
+
     function obterDadosForm() {
         const inputs = document.querySelectorAll('.m-input');
-        const listaMinistros = Array.from(inputs).map(i => i.value).filter(v => v !== "").join(", ");
+        const listaMinistros = Array.from(inputs)
+            .map(i => i.value.trim())
+            .filter(v => v !== "")
+            .join(", ");
         return {
             data: document.getElementById('novaData').value,
             hora: document.getElementById('novaHora').value,
-            missa: document.getElementById('novoEvento').value,
+            missa: limparTexto(document.getElementById('novoEvento').value),
             ministro: listaMinistros,
-            obs: document.getElementById('obs').value
+            obs: limparTexto(document.getElementById('obs').value)
         };
     }
 
@@ -149,7 +161,6 @@
         if(!dataSel) return alert("Selecione a data!");
 
         try {
-            // Adicionado timestamp (?t=) para evitar cache do navegador
             const res = await fetch(URL_API + "?t=" + new Date().getTime());
             const bancoDados = await res.json();
             
@@ -173,7 +184,7 @@
             ];
 
             totalDia.forEach(item => {
-                // LIMPEZA DE HORÁRIO REFORÇADA
+                // CORREÇÃO DO HORÁRIO (Pega apenas os primeiros 5 caracteres, ex: "07:00")
                 let textoHora = item.hora.toString();
                 let horaFinal = "00:00";
 
@@ -181,17 +192,21 @@
                     horaFinal = textoHora.split("T")[1].substring(0, 5);
                 } else {
                     const match = textoHora.match(/\d{2}:\d{2}/);
-                    horaFinal = match ? match[0] : textoHora;
+                    // Se achar o padrão 00:00, usa ele. Se não, corta os 5 primeiros caracteres.
+                    horaFinal = match ? match[0] : textoHora.substring(0, 5);
                 }
+
+                // CORREÇÃO DOS NOMES (Limpa quebras de linha e espaços duplos)
+                let ministrosLimpos = limparTexto(item.min);
 
                 const gData = dataSel.replace(/-/g,'');
                 const gHora = horaFinal.replace(':','');
-                const linkAgenda = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('MESC: ' + item.missa)}&dates=${gData}T${gHora}00/${gData}T${gHora}00&details=${encodeURIComponent('Ministros: ' + item.min)}`;
+                const linkAgenda = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('MESC: ' + item.missa)}&dates=${gData}T${gHora}00/${gData}T${gHora}00&details=${encodeURIComponent('Ministros: ' + ministrosLimpos)}`;
 
                 msg += `⏰ *Horário:* ${horaFinal}\n`;
-                msg += `⛪ *Missa:* ${item.missa}\n`;
-                msg += `👥 *Ministros:* ${item.min}\n`;
-                if(item.obs) msg += `📝 *Obs:* ${item.obs}\n`;
+                msg += `⛪ *Missa:* ${limparTexto(item.missa)}\n`;
+                msg += `👥 *Ministros:* ${ministrosLimpos}\n`;
+                if(item.obs) msg += `📝 *Obs:* ${limparTexto(item.obs)}\n`;
                 msg += `📅 *Salvar Agenda:* ${linkAgenda}\n`;
                 msg += `─────────────────\n\n`;
             });
@@ -208,7 +223,7 @@
         const doc = new jsPDF();
         doc.text("ESCALA DE MINISTROS", 105, 20, { align: 'center' });
         doc.text(`Evento: ${d.missa}`, 20, 50);
-        doc.text(`Ministros: ${d.min || d.ministro}`, 20, 60);
+        doc.text(`Ministros: ${d.ministro}`, 20, 60);
         doc.save(`Escala_${d.data}.pdf`);
     }
 
@@ -220,6 +235,5 @@
         window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
     }
 </script>
-
 </body>
 </html>
