@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADM - MESC</title>
+    <title>COORDENADOR - MESC</title>
     <style>
         :root { --primary: #1e3a8a; --bg: #f1f5f9; --success: #25d366; --gold: #b45309; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 15px; margin: 0; }
@@ -62,12 +62,18 @@
     <div class="modal-content">
         <button onclick="fecharModal('modalRegra')" style="border:none; background:none; font-weight:bold; cursor:pointer; color:var(--gold);">⬅ Voltar</button>
         <h3>Configurar Regra Fixa</h3>
-        <label>Selecione a Regra</label>
-        <select id="regraFixo">
-            <option value="1º Sábado">1º Sábado</option><option value="2º Sábado">2º Sábado</option>
-            <option value="3º Sábado">3º Sábado</option><option value="4º Sábado">4º Sábado</option>
-            <option value="1º Domingo">1º Domingo</option><option value="2º Domingo">2º Domingo</option>
-            <option value="3º Domingo">3º Domingo</option><option value="4º Domingo">4º Domingo</option>
+        <label>Qual semana?</label>
+        <select id="numSemana">
+            <option value="1º">1º</option><option value="2º">2º</option>
+            <option value="3º">3º</option><option value="4º">4º</option>
+            <option value="5º">5º</option>
+        </select>
+        <label>Qual dia?</label>
+        <select id="diaSemana">
+            <option value="Segunda">Segunda</option><option value="Terça">Terça</option>
+            <option value="Quarta">Quarta</option><option value="Quinta">Quinta</option>
+            <option value="Sexta">Sexta</option><option value="Sábado">Sábado</option>
+            <option value="Domingo">Domingo</option>
         </select>
         <label>Horário Fixo</label> <input type="time" id="horaFixo">
         <label>Nome do Evento</label> <input type="text" id="eventoFixo" placeholder="Ex: Missa Dominical">
@@ -107,7 +113,7 @@
             payload.data = document.getElementById('novaData').value;
             payload.obs = limpar(document.getElementById('obs').value);
         } else {
-            payload.regra = document.getElementById('regraFixo').value;
+            payload.regra = document.getElementById('numSemana').value + " " + document.getElementById('diaSemana').value;
         }
 
         const btn = document.querySelector(`#${modalId} .btn`);
@@ -115,7 +121,7 @@
 
         try {
             await fetch(URL_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-            alert("Enviado com sucesso!");
+            alert("Salvo na planilha!");
             location.reload();
         } catch (e) {
             alert("Erro ao salvar.");
@@ -133,22 +139,21 @@
             
             const [ano, mes, dia] = dataSel.split('-');
             const dObj = new Date(ano, mes - 1, dia, 12, 0, 0);
-            const diasSemana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-            const regraHoje = `${Math.ceil(dObj.getDate() / 7)}º ${diasSemana[dObj.getDay()]}`; 
-
-            // Filtro Extras (Aba Lançamentos) - Data está na coluna B (índice 1)
-            const extras = banco.extras.filter(r => r[1] && r[1].toString().includes(dataSel));
+            const diasS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
             
-            // Filtro Regras (Aba Escala_Fixa) - Regra está na coluna A (índice 0)
-            const fixos = banco.regras.filter(r => r[0] && r[0].toString().trim().toLowerCase() === regraHoje.toLowerCase());
+            // Lógica para saber qual semana do mês (1ª a 5ª)
+            const numSemana = Math.ceil(dObj.getDate() / 7);
+            const regraHoje = `${numSemana}º ${diasS[dObj.getDay()]}`; 
 
-            if (extras.length === 0 && fixos.length === 0) return alert("Nada para " + regraHoje);
+            const extrasFound = banco.extras.filter(r => r[1] && r[1].toString().includes(dataSel));
+            const fixosFound = banco.regras.filter(r => r[0] && r[0].toString().trim().toLowerCase() === regraHoje.toLowerCase());
 
-            let msg = `*📍 ESCALA - ${dia}/${mes}/${ano}*\n\n`;
-            
+            if (extrasFound.length === 0 && fixosFound.length === 0) return alert("Nada para " + regraHoje);
+
+            let msg = `*📍 ESCALA - ${dia}/${mes}/${ano}*\n*(${regraHoje})*\n\n`;
             const lista = [
-                ...fixos.map(f => ({ h: f[1], m: f[2], n: f[3], r: regraHoje })), 
-                ...extras.map(e => ({ h: e[2], m: e[4], n: e[3], r: "EXTRA" }))
+                ...fixosFound.map(f => ({ h: f[1], m: f[2], n: f[3] })), 
+                ...extrasFound.map(e => ({ h: e[2], m: e[4], n: e[3] }))
             ];
 
             lista.forEach(item => {
