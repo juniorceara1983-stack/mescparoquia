@@ -134,27 +134,54 @@
         } catch (e) { alert("Erro ao salvar."); }
     }
 
-    async function compartilharEscala() {
+   async function compartilharEscala() {
         const dataSel = document.getElementById('dataConsulta').value;
         if (!dataSel) return alert("Escolha uma data!");
         document.getElementById('btnZap').innerText = "⏳ BUSCANDO...";
 
         try {
+            // Adicionamos um timestamp para evitar que o navegador use o cache antigo
             const res = await fetch(`${URL_API}?t=${new Date().getTime()}`);
+            if (!res.ok) throw new Error("Erro na rede");
+            
             const banco = await res.json();
+            
             const [ano, mes, dia] = dataSel.split('-');
             const dObj = new Date(ano, mes-1, dia, 12, 0, 0);
             const diasS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
             const regraHoje = `${Math.ceil(dObj.getDate()/7)}º ${diasS[dObj.getDay()]}`; 
 
-            const extras = banco.extras.filter(r => r[1] && r[1].toString().includes(dataSel));
-            const fixos = banco.regras.filter(r => r[0] && r[0].toString().trim().toLowerCase() === regraHoje.toLowerCase());
+            // Filtra os dados vindo do banco (Garante que não dê erro se a linha for vazia)
+            const extras = (banco.extras || []).filter(r => r[1] && r[1].toString().includes(dataSel));
+            const fixos = (banco.regras || []).filter(r => r[0] && r[0].toString().trim().toLowerCase() === regraHoje.toLowerCase());
 
             if (extras.length === 0 && fixos.length === 0) {
                 document.getElementById('btnZap').innerText = "📲 VER E ENVIAR ESCALA";
-                return alert("Nada para " + regraHoje);
+                return alert("Nada encontrado para " + regraHoje);
             }
 
+            mensagemFinal = `*📍 ESCALA - ${dia}/${mes}/${ano}*\n*(${regraHoje})*\n\n`;
+            
+            const listaG = [
+                ...fixos.map(f => ({ h: f[1], m: f[2], n: f[3] })), 
+                ...extras.map(e => ({ h: e[2], m: e[4], n: e[3] }))
+            ];
+
+            listaG.sort((a, b) => a.h.localeCompare(b.h));
+
+            listaG.forEach(it => {
+                mensagemFinal += `⏰ *Hora:* ${it.h}\n⛪ *Missa:* ${fixText(it.m)}\n👤 *Ministros:* ${fixText(it.n)}\n─────────────────\n\n`;
+            });
+
+            document.getElementById('previewText').innerText = mensagemFinal;
+            abrirModal('modalPreview');
+
+        } catch (e) { 
+            console.error(e);
+            alert("Erro ao ler a planilha. Verifique se o Script foi publicado como 'Qualquer pessoa'."); 
+        }
+        document.getElementById('btnZap').innerText = "📲 VER E ENVIAR ESCALA";
+    }
             mensagemFinal = `*📍 ESCALA - ${dia}/${mes}/${ano}*\n*(${regraHoje})*\n\n`;
             const listaG = [
                 ...fixos.map(f => ({ h: f[1], m: f[2], n: f[3] })), 
