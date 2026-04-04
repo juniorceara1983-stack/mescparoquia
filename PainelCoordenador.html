@@ -30,7 +30,7 @@
     
     <label>📅 Consultar Escala do Dia</label>
     <input type="date" id="dataConsulta">
-    <button class="btn btn-zap" onclick="compartilharEscala()">📲 ENVIAR PARA WHATSAPP</button>
+    <button class="btn btn-zap" id="btnZap" onclick="compartilharEscala()">📲 ENVIAR PARA WHATSAPP</button>
 
     <div style="margin: 25px 0; border-top: 2px solid #eee;"></div>
 
@@ -56,7 +56,7 @@
             <input type="text" class="m-input" placeholder="9"> <input type="text" class="m-input" placeholder="10">
         </div>
         <label>Observações</label> <textarea id="obs" rows="2"></textarea>
-        <button class="btn btn-primary" onclick="salvarNaPlanilha('addEscala', 'modalEvento')">💾 SALVAR NA PLANILHA</button>
+        <button class="btn btn-primary" id="btnSalvarExtra" onclick="salvarNaPlanilha('addEscala', 'modalEvento')">💾 SALVAR NA PLANILHA</button>
     </div>
 </div>
 
@@ -87,7 +87,7 @@
             <input type="text" class="r-input" placeholder="7"> <input type="text" class="r-input" placeholder="8">
             <input type="text" class="r-input" placeholder="9"> <input type="text" class="r-input" placeholder="10">
         </div>
-        <button class="btn btn-regra" onclick="salvarNaPlanilha('addRegra', 'modalRegra')">💾 SALVAR REGRA</button>
+        <button class="btn btn-regra" id="btnSalvarRegra" onclick="salvarNaPlanilha('addRegra', 'modalRegra')">💾 SALVAR REGRA</button>
     </div>
 </div>
 
@@ -97,12 +97,9 @@
     function abrirModal(id) { document.getElementById(id).style.display = 'flex'; }
     function fecharModal(id) { document.getElementById(id).style.display = 'none'; }
 
-    // Função para deixar a primeira letra de cada palavra maiúscula
     function capitalizar(texto) {
         if (!texto) return "";
-        return texto.toLowerCase().split(' ').map(palavra => {
-            return palavra.charAt(0).toUpperCase() + palavra.slice(1);
-        }).join(' ');
+        return texto.toLowerCase().replace(/(^\w{1})|(\s+\w{1})/g, letra => letra.toUpperCase());
     }
 
     function limpar(t) { 
@@ -112,12 +109,7 @@
     async function salvarNaPlanilha(acao, modalId) {
         const isExtra = modalId === 'modalEvento';
         const inputs = document.querySelectorAll(isExtra ? '.m-input' : '.r-input');
-        
-        // Pega os nomes, limpa espaços e capitaliza a primeira letra antes de juntar
-        const ministros = Array.from(inputs)
-            .map(i => capitalizar(limpar(i.value)))
-            .filter(v => v !== "")
-            .join(", ");
+        const ministros = Array.from(inputs).map(i => capitalizar(limpar(i.value))).filter(v => v !== "").join(", ");
         
         const payload = {
             action: acao,
@@ -138,7 +130,7 @@
 
         try {
             await fetch(URL_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-            alert("Salvo na planilha!");
+            alert("Sucesso!");
             location.reload();
         } catch (e) {
             alert("Erro ao salvar.");
@@ -149,6 +141,9 @@
     async function compartilharEscala() {
         const dataSel = document.getElementById('dataConsulta').value;
         if (!dataSel) return alert("Escolha uma data!");
+
+        const btnZap = document.getElementById('btnZap');
+        btnZap.innerText = "⏳ BUSCANDO..."; btnZap.disabled = true;
 
         try {
             const res = await fetch(`${URL_API}?t=${new Date().getTime()}`);
@@ -163,7 +158,10 @@
             const extrasFound = banco.extras.filter(r => r[1] && r[1].toString().includes(dataSel));
             const fixosFound = banco.regras.filter(r => r[0] && r[0].toString().trim().toLowerCase() === regraHoje.toLowerCase());
 
-            if (extrasFound.length === 0 && fixosFound.length === 0) return alert("Nada para " + regraHoje);
+            if (extrasFound.length === 0 && fixosFound.length === 0) {
+                btnZap.innerText = "📲 ENVIAR PARA WHATSAPP"; btnZap.disabled = false;
+                return alert("Nenhuma escala para " + regraHoje);
+            }
 
             let msg = `*📍 ESCALA - ${dia}/${mes}/${ano}*\n*(${regraHoje})*\n\n`;
             const lista = [
@@ -172,11 +170,15 @@
             ];
 
             lista.forEach(item => {
-                msg += `⏰ *Hora:* ${item.h}\n⛪ *Missa:* ${item.m}\n👤 *Ministros:* ${item.n}\n─────────────────\n\n`;
+                msg += `⏰ *Hora:* ${item.h}\n⛪ *Missa:* ${capitalizar(limpar(item.m))}\n👤 *Ministros:* ${capitalizar(limpar(item.n))}\n─────────────────\n\n`;
             });
 
+            btnZap.innerText = "📲 ENVIAR PARA WHATSAPP"; btnZap.disabled = false;
             window.location.href = `whatsapp://send?text=${encodeURIComponent(msg)}`;
-        } catch (e) { alert("Erro ao buscar dados."); }
+        } catch (e) { 
+            btnZap.innerText = "📲 ENVIAR PARA WHATSAPP"; btnZap.disabled = false;
+            alert("Erro ao conectar com a planilha."); 
+        }
     }
 </script>
 </body>
