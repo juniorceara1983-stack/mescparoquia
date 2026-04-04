@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MINISTRO - MESC</title>
+    <style>
+        :root { --primary: #0f766e; --bg: #f0fdfa; --accent: #115e59; --muted: #64748b; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 15px; margin: 0; }
+        .container { max-width: 520px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 15px rgba(0,0,0,0.08); border-top: 10px solid var(--primary); }
+        h2 { text-align: center; color: var(--accent); margin: 0 0 5px 0; }
+        p.subtitle { text-align: center; color: var(--muted); margin: 0 0 18px 0; font-size: 14px; }
+        label { display: block; margin-top: 14px; font-weight: 700; color: #475569; }
+        input { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; font-size: 16px; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+        .btn:active { transform: scale(0.98); }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-google { background: #4285F4; color: white; }
+        .card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 12px; margin-top: 15px; }
+        .card-header { font-weight: bold; color: var(--primary); margin-bottom: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; }
+        .info-row { font-size: 14px; margin-bottom: 4px; color: #334155; }
+        #status { text-align: center; font-size: 12px; margin-top: 10px; color: var(--muted); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>MINISTRO MESC</h2>
+    <p class="subtitle">Minha Escala Individual</p>
+
+    <label>👤 Seu Nome (Exatamente como na escala)</label>
+    <input type="text" id="nomeMinistro" placeholder="Digite seu nome...">
+    
+    <button class="btn btn-primary" onclick="buscarEscala()">🔄 ATUALIZAR MINHA ESCALA</button>
+    <div id="status"></div>
+
+    <div id="listaEscala"></div>
+</div>
+
+<script>
+    const URL_API = "https://script.google.com/macros/s/AKfycbzSlivfWisF_LHXOYaYPx6-RBPsnYcYzBUvxJachwYlXRqAp2P5uje6MR2Zzf7hYB0u/exec";
+
+    function buscarEscala() {
+        const nome = document.getElementById('nomeMinistro').value.trim().toLowerCase();
+        if (!nome) return alert("Digite seu nome!");
+        
+        document.getElementById('status').innerText = "⏳ Buscando na planilha...";
+        document.getElementById('listaEscala').innerHTML = "";
+
+        fetch(`${URL_API}?t=${new Date().getTime()}`)
+            .then(res => res.json())
+            .then(banco => {
+                const extras = banco.extras || [];
+                const regras = banco.regras || [];
+                
+                // Filtra eventos onde o nome do ministro aparece
+                const meusExtras = extras.filter(e => e[3] && e[3].toLowerCase().includes(nome));
+                const minhasRegras = regras.filter(r => r[3] && r[3].toLowerCase().includes(nome));
+
+                if (meusExtras.length === 0 && minhasRegras.length === 0) {
+                    document.getElementById('status').innerText = "Nenhuma escala encontrada.";
+                    return;
+                }
+
+                renderizar(meusExtras, minhasRegras);
+                document.getElementById('status').innerText = "Escala carregada!";
+            })
+            .catch(e => {
+                alert("Erro ao conectar.");
+                document.getElementById('status').innerText = "";
+            });
+    }
+
+    function renderizar(extras, regras) {
+        const lista = document.getElementById('listaEscala');
+        
+        // Renderiza Eventos Extras
+        extras.forEach(e => {
+            const dataFmt = e[1].split('-').reverse().join('/');
+            criarCard(lista, dataFmt, e[2], e[4], "Extra", e[1]);
+        });
+
+        // Renderiza Regras Fixas (Mês atual)
+        regras.forEach(r => {
+            criarCard(lista, r[0], r[1], r[2], "Fixa", null);
+        });
+    }
+
+    function criarCard(container, data, hora, missa, tipo, dataRaw) {
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.innerHTML = `
+            <div class="card-header">${tipo}: ${missa}</div>
+            <div class="info-row">📅 <b>Data:</b> ${data}</div>
+            <div class="info-row">⏰ <b>Hora:</b> ${hora}</div>
+            <button class="btn btn-google" onclick="addGoogleAgenda('${data}', '${hora}', '${missa}')">
+                📅 SALVAR NO GOOGLE AGENDA
+            </button>
+        `;
+        container.appendChild(div);
+    }
+
+    function addGoogleAgenda(data, hora, missa) {
+        // Trata a data para o formato do Google (YYYYMMDD)
+        let dataRef = new Date();
+        if(data.includes('/')) {
+            const parts = data.split('/');
+            dataRef = new Date(parts[2], parts[1]-1, parts[0]);
+        }
+        
+        const dataFormatada = dataRef.toISOString().replace(/-|:|\.\d+/g, "").split("T")[0];
+        const horaLimpa = hora.replace(":", "");
+        
+        // Monta o link do Google Calendar
+        const detalhes = encodeURIComponent(`Escala MESC - Missa: ${missa}`);
+        const titulo = encodeURIComponent(`MESC: ${missa}`);
+        const dates = `${dataFormatada}T${horaLimpa}00Z/${dataFormatada}T${parseInt(horaLimpa)+100}00Z`;
+        
+        const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${titulo}&dates=${dates}&details=${detalhes}&location=Paróquia+PNSPS&sf=true&output=xml`;
+        
+        window.open(url, '_blank');
+    }
+</script>
+</body>
+</html>
