@@ -86,14 +86,15 @@
 </div>
 
 <script>
-    const URL_API = "https://script.google.com/macros/s/AKfycbxSlivfWisF_LHXOYaYPx6-RBPsnYcYzBUvxJachwYlXRqAp2P5uje6MR2Zzf7hYB0u/exec";
+    const URL_API = "https://script.google.com/macros/s/AKfycbz4HkqqwosJnPdRTBdNC0wL9tsSxz5YDRphQX-VDPtWq2FUlmPLAIC05hYlBUJTkk_y/exec";
 
     function abrirModal(id) { document.getElementById(id).style.display = 'flex'; }
     function fecharModal(id) { document.getElementById(id).style.display = 'none'; }
 
     function fixText(t) {
         if(!t) return "";
-        return t.toLowerCase().replace(/(^\w|\s\w)/g, m => m.toUpperCase()).trim();
+        let s = t.toString().trim();
+        return s.toLowerCase().replace(/(^\w|\s\w)/g, m => m.toUpperCase());
     }
 
     async function salvarNaPlanilha(acao, modalId) {
@@ -123,39 +124,65 @@
     }
 
     async function compartilharEscala() {
-        const dataSel = document.getElementById('dataConsulta').value;
-        if (!dataSel) return alert("Escolha uma data!");
-        document.getElementById('btnZap').innerText = "⏳ BUSCANDO...";
+        const dataInput = document.getElementById('dataConsulta').value;
+        if (!dataInput) return alert("Escolha uma data!");
+        
+        const btnZap = document.getElementById('btnZap');
+        btnZap.innerText = "⏳ BUSCANDO...";
+        btnZap.disabled = true;
 
         try {
             const res = await fetch(`${URL_API}?t=${new Date().getTime()}`);
+            if (!res.ok) throw new Error("Erro na rede");
             const banco = await res.json();
-            const [ano, mes, dia] = dataSel.split('-');
-            const dObj = new Date(ano, mes-1, dia, 12, 0, 0);
+            
+            // Corrige a data e calcula a regra
+            const [ano, mes, dia] = dataInput.split('-');
+            const dObj = new Date(ano, mes - 1, dia, 12, 0, 0);
             const diasS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-            const regraHoje = `${Math.ceil(dObj.getDate()/7)}º ${diasS[dObj.getDay()]}`; 
+            const numeroDaSemana = Math.ceil(dObj.getDate() / 7);
+            const regraHoje = `${numeroDaSemana}º ${diasS[dObj.getDay()]}`; 
 
-            const extras = banco.extras.filter(r => r[1] && r[1].toString().includes(dataSel));
-            const fixos = banco.regras.filter(r => r[0] && r[0].toString().trim().toLowerCase() === regraHoje.toLowerCase());
+            // Filtra as Regras (Aba Escala_Fixa)
+            // r[0]=Regra, r[1]=Hora, r[2]=Missa, r[3]=Ministros
+            const fixos = banco.regras.filter(r => 
+                r[0] && r[0].toString().trim().toLowerCase() === regraHoje.toLowerCase()
+            );
 
-            if (extras.length === 0 && fixos.length === 0) {
-                document.getElementById('btnZap').innerText = "📲 ENVIAR PARA WHATSAPP";
-                return alert("Nada para " + regraHoje);
+            // Filtra os Extras (Aba Lançamentos)
+            // r[1]=Data, r[2]=Hora, r[3]=Ministros, r[4]=Missa
+            const extras = banco.extras.filter(r => 
+                r[1] && r[1].toString().includes(dataInput)
+            );
+
+            if (fixos.length === 0 && extras.length === 0) {
+                btnZap.innerText = "📲 ENVIAR PARA WHATSAPP";
+                btnZap.disabled = false;
+                return alert("Nenhuma escala para " + regraHoje);
             }
 
             let msg = `*📍 ESCALA - ${dia}/${mes}/${ano}*\n*(${regraHoje})*\n\n`;
-            const listaG = [
-                ...fixos.map(f => ({ h: f[1], m: f[2], n: f[3] })), 
+            
+            let listaGeral = [
+                ...fixos.map(f => ({ h: f[1], m: f[2], n: f[3] })),
                 ...extras.map(e => ({ h: e[2], m: e[4], n: e[3] }))
             ];
 
-            listaG.forEach(it => {
+            // Ordena pelo horário para ficar bonito
+            listaGeral.sort((a, b) => a.h.localeCompare(b.h));
+
+            listaGeral.forEach(it => {
                 msg += `⏰ *Hora:* ${it.h}\n⛪ *Missa:* ${fixText(it.m)}\n👤 *Ministros:* ${fixText(it.n)}\n─────────────────\n\n`;
             });
 
             window.location.href = `whatsapp://send?text=${encodeURIComponent(msg)}`;
-        } catch (e) { alert("Erro na planilha."); }
-        document.getElementById('btnZap').innerText = "📲 ENVIAR PARA WHATSAPP";
+        } catch (e) { 
+            console.error(e);
+            alert("Erro ao ler dados. Verifique sua internet ou o link do Script."); 
+        }
+        
+        btnZap.innerText = "📲 ENVIAR PARA WHATSAPP";
+        btnZap.disabled = false;
     }
 </script>
 </body>
