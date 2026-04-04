@@ -19,6 +19,7 @@
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; }
         .modal-content { background: white; padding: 20px; border-radius: 20px; width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
         .grid-ministros { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+        .preview-box { background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; white-space: pre-wrap; font-family: monospace; font-size: 14px; margin-bottom: 15px; max-height: 300px; overflow-y: auto; color: #1e293b; }
         .footer-credits { text-align: center; font-size: 10px; color: #94a3b8; margin-top: 20px; }
     </style>
 </head>
@@ -29,11 +30,20 @@
     <p class="subtitle">Paróquia PNSPS - Maracanaú</p>
     <label>📅 Consultar Escala do Dia</label>
     <input type="date" id="dataConsulta">
-    <button class="btn btn-zap" id="btnZap" onclick="compartilharEscala()">📲 ENVIAR PARA WHATSAPP</button>
+    <button class="btn btn-zap" id="btnZap" onclick="compartilharEscala()">📲 VER E ENVIAR ESCALA</button>
     <div style="margin: 25px 0; border-top: 2px solid #eee;"></div>
     <button class="btn btn-primary" onclick="abrirModal('modalEvento')">➕ NOVO EVENTO (EXTRA)</button>
     <button class="btn btn-regra" onclick="abrirModal('modalRegra')">⚙️ REGRAS FIXAS</button>
     <div class="footer-credits">By: Jr&Iz</div>
+</div>
+
+<div id="modalPreview" class="modal">
+    <div class="modal-content">
+        <h3>Resumo da Escala</h3>
+        <div id="previewText" class="preview-box"></div>
+        <button class="btn btn-zap" onclick="confirmarEnvioZap()">✅ ENVIAR AGORA</button>
+        <button class="btn btn-primary" style="background:#64748b" onclick="fecharModal('modalPreview')">CANCELAR</button>
+    </div>
 </div>
 
 <div id="modalEvento" class="modal">
@@ -52,7 +62,7 @@
             <input type="text" class="m-input"> <input type="text" class="m-input">
         </div>
         <label>Obs</label> <textarea id="obs" rows="2"></textarea>
-        <button class="btn btn-primary" id="btnSalvarEvento" onclick="salvarNaPlanilha('addEscala', 'modalEvento')">💾 SALVAR EVENTO</button>
+        <button class="btn btn-primary" onclick="salvarNaPlanilha('addEscala', 'modalEvento')">💾 SALVAR EVENTO</button>
     </div>
 </div>
 
@@ -81,20 +91,20 @@
             <input type="text" class="r-input"> <input type="text" class="r-input">
             <input type="text" class="r-input"> <input type="text" class="r-input">
         </div>
-        <button class="btn btn-regra" id="btnSalvarRegra" onclick="salvarNaPlanilha('addRegra', 'modalRegra')">💾 SALVAR REGRA</button>
+        <button class="btn btn-regra" onclick="salvarNaPlanilha('addRegra', 'modalRegra')">💾 SALVAR REGRA</button>
     </div>
 </div>
 
 <script>
-    // URL DA SUA API DO GOOGLE APPS SCRIPT
     const URL_API = "https://script.google.com/macros/s/AKfycbzSlivfWisF_LHXOYaYPx6-RBPsnYcYzBUvxJachwYlXRqAp2P5uje6MR2Zzf7hYB0u/exec";
+    let mensagemPronta = "";
 
     function abrirModal(id) { document.getElementById(id).style.display = 'flex'; }
     function fecharModal(id) { document.getElementById(id).style.display = 'none'; }
 
     function fixText(t) {
         if(!t) return "";
-        return t.toLowerCase().replace(/(^\w|\s\w)/g, m => m.toUpperCase()).trim();
+        return t.toString().toLowerCase().replace(/(^\w|\s\w)/g, m => m.toUpperCase()).trim();
     }
 
     async function salvarNaPlanilha(acao, modalId) {
@@ -102,7 +112,6 @@
         const inputs = document.querySelectorAll(isE ? '.m-input' : '.r-input');
         const listaM = Array.from(inputs).map(i => fixText(i.value)).filter(v => v !== "").join(", ");
         
-        // Monta os dados para o Google
         const payload = {
             action: acao,
             hora: isE ? document.getElementById('novaHora').value : document.getElementById('horaFixo').value,
@@ -113,24 +122,17 @@
             regra: !isE ? (document.getElementById('numSemana').value + " " + document.getElementById('diaSemana').value) : ""
         };
 
-        const btn = document.querySelector(`#${modalId} button:last-child`);
-        btn.innerText = "⏳ SALVANDO..."; btn.disabled = true;
-
         try {
             await fetch(URL_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-            alert("Sucesso!");
+            alert("Salvo com sucesso!");
             location.reload();
-        } catch (e) { 
-            alert("Erro ao salvar."); 
-            btn.innerText = "💾 TENTAR NOVAMENTE"; btn.disabled = false;
-        }
+        } catch (e) { alert("Erro ao salvar."); }
     }
 
     async function compartilharEscala() {
         const dataSel = document.getElementById('dataConsulta').value;
         if (!dataSel) return alert("Escolha uma data!");
-        const btnZap = document.getElementById('btnZap');
-        btnZap.innerText = "⏳ BUSCANDO...";
+        document.getElementById('btnZap').innerText = "⏳ BUSCANDO...";
 
         try {
             const res = await fetch(`${URL_API}?t=${new Date().getTime()}`);
@@ -145,28 +147,32 @@
             const fixos = banco.regras.filter(r => r[0] && r[0].toString().trim().toLowerCase() === regraHoje.toLowerCase());
 
             if (extras.length === 0 && fixos.length === 0) {
-                btnZap.innerText = "📲 ENVIAR PARA WHATSAPP";
+                document.getElementById('btnZap').innerText = "📲 VER E ENVIAR ESCALA";
                 return alert("Nada para " + regraHoje);
             }
 
-            let msg = `*📍 ESCALA - ${dia}/${mes}/${ano}*\n*(${regraHoje})*\n\n`;
-            
-            // Unindo Fixos e Extras para a lista
+            mensagemPronta = `*📍 ESCALA - ${dia}/${mes}/${ano}*\n*(${regraHoje})*\n\n`;
             const listaG = [
                 ...fixos.map(f => ({ h: f[1], m: f[2], n: f[3] })), 
                 ...extras.map(e => ({ h: e[2], m: e[4], n: e[3] }))
             ];
-
-            // Ordenando por horário
             listaG.sort((a, b) => a.h.localeCompare(b.h));
 
             listaG.forEach(it => {
-                msg += `⏰ *Hora:* ${it.h}\n⛪ *Missa:* ${fixText(it.m)}\n👤 *Ministros:* ${fixText(it.n)}\n─────────────────\n\n`;
+                mensagemPronta += `⏰ *Hora:* ${it.h}\n⛪ *Missa:* ${fixText(it.m)}\n👤 *Ministros:* ${fixText(it.n)}\n─────────────────\n\n`;
             });
 
-            window.location.href = `whatsapp://send?text=${encodeURIComponent(msg)}`;
-        } catch (e) { alert("Erro na planilha."); }
-        btnZap.innerText = "📲 ENVIAR PARA WHATSAPP";
+            // Mostra o Preview (Igual no arquivo de análise)
+            document.getElementById('previewText').innerText = mensagemPronta;
+            abrirModal('modalPreview');
+
+        } catch (e) { alert("Erro ao ler dados da planilha."); }
+        document.getElementById('btnZap').innerText = "📲 VER E ENVIAR ESCALA";
+    }
+
+    function confirmarEnvioZap() {
+        window.location.href = `whatsapp://send?text=${encodeURIComponent(mensagemPronta)}`;
+        fecharModal('modalPreview');
     }
 </script>
 </body>
