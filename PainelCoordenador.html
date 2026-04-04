@@ -19,7 +19,8 @@
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); align-items: center; justify-content: center; }
         .modal-content { background: white; padding: 20px; border-radius: 20px; width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
         .grid-ministros { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-        .preview-box { background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; white-space: pre-wrap; font-family: monospace; font-size: 14px; margin-bottom: 15px; max-height: 300px; overflow-y: auto; color: #1e293b; }
+        /* Estilo do Preview */
+        .preview-box { background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; white-space: pre-wrap; font-family: monospace; font-size: 14px; margin-bottom: 15px; color: #1e293b; max-height: 300px; overflow-y: auto; }
         .footer-credits { text-align: center; font-size: 10px; color: #94a3b8; margin-top: 20px; }
     </style>
 </head>
@@ -39,10 +40,10 @@
 
 <div id="modalPreview" class="modal">
     <div class="modal-content">
-        <h3>Resumo da Escala</h3>
+        <h3 style="color:var(--primary); margin-top:0;">Resumo da Escala</h3>
         <div id="previewText" class="preview-box"></div>
-        <button class="btn btn-zap" onclick="confirmarEnvioZap()">✅ ENVIAR AGORA</button>
-        <button class="btn btn-primary" style="background:#64748b" onclick="fecharModal('modalPreview')">CANCELAR</button>
+        <button class="btn btn-zap" onclick="confirmarEnvioZap()">✅ ENVIAR PARA WHATSAPP</button>
+        <button class="btn btn-primary" style="background:#64748b" onclick="fecharModal('modalPreview')">VOLTAR</button>
     </div>
 </div>
 
@@ -62,7 +63,7 @@
             <input type="text" class="m-input"> <input type="text" class="m-input">
         </div>
         <label>Obs</label> <textarea id="obs" rows="2"></textarea>
-        <button class="btn btn-primary" onclick="salvarNaPlanilha('addEscala', 'modalEvento')">💾 SALVAR EVENTO</button>
+        <button class="btn btn-primary" onclick="salvarNaPlanilha('addEscala', 'modalEvento')">💾 SALVAR</button>
     </div>
 </div>
 
@@ -96,15 +97,15 @@
 </div>
 
 <script>
-    const URL_API = "https://script.google.com/macros/s/AKfycbzSlivfWisF_LHXOYaYPx6-RBPsnYcYzBUvxJachwYlXRqAp2P5uje6MR2Zzf7hYB0u/exec";
-    let mensagemPronta = "";
+    const URL_API = "https://script.google.com/macros/s/AKfycbxSlivfWisF_LHXOYaYPx6-RBPsnYcYzBUvxJachwYlXRqAp2P5uje6MR2Zzf7hYB0u/exec";
+    let mensagemFinal = ""; // Variável global para guardar o texto do Zap
 
     function abrirModal(id) { document.getElementById(id).style.display = 'flex'; }
     function fecharModal(id) { document.getElementById(id).style.display = 'none'; }
 
     function fixText(t) {
         if(!t) return "";
-        return t.toString().toLowerCase().replace(/(^\w|\s\w)/g, m => m.toUpperCase()).trim();
+        return t.toLowerCase().replace(/(^\w|\s\w)/g, m => m.toUpperCase()).trim();
     }
 
     async function salvarNaPlanilha(acao, modalId) {
@@ -116,11 +117,15 @@
             action: acao,
             hora: isE ? document.getElementById('novaHora').value : document.getElementById('horaFixo').value,
             missa: fixText(isE ? document.getElementById('novoEvento').value : document.getElementById('eventoFixo').value),
-            ministro: listaM,
-            data: isE ? document.getElementById('novaData').value : "",
-            obs: isE ? document.getElementById('obs').value : "",
-            regra: !isE ? (document.getElementById('numSemana').value + " " + document.getElementById('diaSemana').value) : ""
+            ministro: listaM
         };
+
+        if (isE) {
+            payload.data = document.getElementById('novaData').value;
+            payload.obs = document.getElementById('obs').value;
+        } else {
+            payload.regra = document.getElementById('numSemana').value + " " + document.getElementById('diaSemana').value;
+        }
 
         try {
             await fetch(URL_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
@@ -137,7 +142,6 @@
         try {
             const res = await fetch(`${URL_API}?t=${new Date().getTime()}`);
             const banco = await res.json();
-            
             const [ano, mes, dia] = dataSel.split('-');
             const dObj = new Date(ano, mes-1, dia, 12, 0, 0);
             const diasS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
@@ -151,27 +155,30 @@
                 return alert("Nada para " + regraHoje);
             }
 
-            mensagemPronta = `*📍 ESCALA - ${dia}/${mes}/${ano}*\n*(${regraHoje})*\n\n`;
+            mensagemFinal = `*📍 ESCALA - ${dia}/${mes}/${ano}*\n*(${regraHoje})*\n\n`;
             const listaG = [
                 ...fixos.map(f => ({ h: f[1], m: f[2], n: f[3] })), 
                 ...extras.map(e => ({ h: e[2], m: e[4], n: e[3] }))
             ];
+
+            // Ordena por horário
             listaG.sort((a, b) => a.h.localeCompare(b.h));
 
             listaG.forEach(it => {
-                mensagemPronta += `⏰ *Hora:* ${it.h}\n⛪ *Missa:* ${fixText(it.m)}\n👤 *Ministros:* ${fixText(it.n)}\n─────────────────\n\n`;
+                mensagemFinal += `⏰ *Hora:* ${it.h}\n⛪ *Missa:* ${fixText(it.m)}\n👤 *Ministros:* ${fixText(it.n)}\n─────────────────\n\n`;
             });
 
-            // Mostra o Preview (Igual no arquivo de análise)
-            document.getElementById('previewText').innerText = mensagemPronta;
+            // EM VEZ DE ENVIAR DIRETO, ABRE O PREVIEW
+            document.getElementById('previewText').innerText = mensagemFinal;
             abrirModal('modalPreview');
 
-        } catch (e) { alert("Erro ao ler dados da planilha."); }
+        } catch (e) { alert("Erro na planilha."); }
         document.getElementById('btnZap').innerText = "📲 VER E ENVIAR ESCALA";
     }
 
+    // Função que realmente dispara o Zap após o Preview
     function confirmarEnvioZap() {
-        window.location.href = `whatsapp://send?text=${encodeURIComponent(mensagemPronta)}`;
+        window.location.href = `whatsapp://send?text=${encodeURIComponent(mensagemFinal)}`;
         fecharModal('modalPreview');
     }
 </script>
