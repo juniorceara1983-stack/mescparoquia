@@ -3,34 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#1e3a8a">
     <title>MESC — Gestão de Escalas</title>
     <style>
-        :root { --primary: #1e3a8a; --bg: #f1f5f9; --teal: #0f766e; --gold: #b45309; --red: #b91c1c; --green: #15803d; }
-        * { box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 16px; min-height: 100vh; }
-        .wrap { max-width: 480px; margin: 0 auto; }
-        header { text-align: center; padding: 20px 0 8px; }
-        header h1 { margin: 0; color: var(--primary); font-size: 1.5rem; }
-        header p { margin: 8px 0 0; color: #64748b; font-size: 14px; }
+        :root { --primary: #1e3a8a; --bg: #f1f5f9; --teal: #0f766e; --gold: #b45309; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: var(--bg); margin: 0; padding: 16px; }
+        .wrap { max-width: 500px; margin: 0 auto; }
         
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; color: #fff; }
+        header { text-align: center; padding-bottom: 15px; }
+        h1 { color: var(--primary); margin: 0; font-size: 22px; }
+        
+        .section { margin-top: 15px; padding-top: 15px; border-top: 2px solid #e2e8f0; }
+        .section h2 { font-size: 13px; text-transform: uppercase; color: #64748b; margin-bottom: 10px; }
+        
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; color: #fff; font-size: 14px; }
         .btn-blue { background: var(--primary); }
         .btn-teal { background: var(--teal); }
         .btn-pdf { background: #475569; }
-        .btn-zap { background: var(--green); }
-        
-        .section { margin-top: 20px; padding-top: 15px; border-top: 2px solid #e2e8f0; }
-        .section h2 { font-size: 13px; text-transform: uppercase; color: #475569; margin-bottom: 12px; }
-        
-        textarea { width: 100%; border-radius: 12px; border: 1px solid #cbd5e1; padding: 12px; margin-top: 8px; font-family: inherit; resize: vertical; }
+        .btn-zap { background: #15803d; }
 
-        /* Estilo do Modal (Janela Flutuante) */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 1000; align-items: center; justify-content: center; padding: 15px; }
+        /* Modal e Formulário */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 1000; align-items: center; justify-content: center; padding: 10px; }
         .modal.open { display: flex; }
-        .modal-content { background: #fff; border-radius: 16px; width: 100%; max-width: 400px; padding: 20px; max-height: 90vh; overflow-y: auto; }
-        .modal-header { font-weight: bold; font-size: 18px; color: var(--primary); margin-bottom: 15px; display: flex; justify-content: space-between; }
-        .slot-input { width: 100%; padding: 10px; margin-bottom: 8px; border: 1px solid #e2e8f0; border-radius: 8px; }
+        .modal-content { background: #fff; border-radius: 16px; width: 100%; max-width: 450px; padding: 20px; max-height: 90vh; overflow-y: auto; }
+        
+        .form-group { margin-bottom: 15px; display: flex; gap: 10px; }
+        .form-group div { flex: 1; }
+        label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 4px; color: var(--primary); }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; }
+
+        .grid-escala { display: grid; grid-template-columns: 80px 1fr; gap: 8px; margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px; }
+        .dia-label { font-weight: bold; color: var(--teal); font-size: 13px; align-self: center; }
+        .slot-row { display: flex; flex-direction: column; gap: 4px; }
+        
         .footer { text-align: center; font-size: 10px; color: #94a3b8; margin-top: 30px; }
     </style>
 </head>
@@ -38,31 +43,26 @@
 
 <div class="wrap">
     <header>
-        <h1>MESC</h1>
-        <p>Paróquia PNSPS — Maracanaú</p>
+        <h1>MESC — Maracanaú</h1>
     </header>
-
-    <div class="section">
-        <a class="btn btn-blue" href="PainelCoordenador.html">⚙️ Painel do coordenador</a>
-    </div>
 
     <div class="section">
         <h2>Escala Fixa</h2>
         <button class="btn btn-teal" onclick="openModal('modalFixa')">📝 Criar escala fixa</button>
-        <button class="btn btn-pdf" onclick="alert('Gerando PDF Fixa...')">📄 Baixar PDF escala fixa</button>
-        <button class="btn btn-zap" onclick="enviarZap('Fixa')">📲 Enviar escala ZAP fixo</button>
+        <button class="btn btn-pdf">📄 Baixar PDF escala fixa</button>
+        <button class="btn btn-zap">📲 Enviar escala ZAP fixo</button>
     </div>
 
     <div class="section">
         <h2>Escala Extra</h2>
         <button class="btn btn-teal" onclick="openModal('modalExtra')">📝 Criar escala extra</button>
-        <button class="btn btn-pdf" onclick="alert('Gerando PDF Extra...')">📄 Baixar PDF escala extra</button>
-        <button class="btn btn-zap" onclick="enviarZap('Extra')">📲 Enviar escala ZAP extra</button>
+        <button class="btn btn-pdf">📄 Baixar PDF escala extra</button>
+        <button class="btn btn-zap">📲 Enviar escala ZAP extra</button>
     </div>
 
     <div class="section">
-        <h2>Add comentário</h2>
-        <textarea rows="3" placeholder="Digite aqui observações importantes..."></textarea>
+        <h2>Comentário</h2>
+        <textarea rows="2" placeholder="Ex: Avisos para a equipe..."></textarea>
     </div>
 
     <div class="footer">By: Jr&amp;Iz</div>
@@ -70,43 +70,52 @@
 
 <div id="modalFixa" class="modal" onclick="closeModal('modalFixa')">
     <div class="modal-content" onclick="event.stopPropagation()">
-        <div class="modal-header">Escala Fixa (10 Slots)</div>
-        <div id="slotsFixa"></div>
-        <button class="btn btn-blue" onclick="closeModal('modalFixa')">Salvar</button>
-    </div>
-</div>
+        <h3 id="modalTitle" style="margin-top:0; color:var(--primary)">Configurar Escala</h3>
+        
+        <div class="form-group">
+            <div>
+                <label>Data Inicial</label>
+                <input type="date">
+            </div>
+            <div>
+                <label>Horário</label>
+                <input type="time">
+            </div>
+        </div>
 
-<div id="modalExtra" class="modal" onclick="closeModal('modalExtra')">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <div class="modal-header">Escala Extra (10 Slots)</div>
-        <div id="slotsExtra"></div>
-        <button class="btn btn-blue" onclick="closeModal('modalExtra')">Salvar</button>
+        <div id="gridSlots">
+            </div>
+
+        <button class="btn btn-blue" style="margin-top:20px" onclick="closeModal('modalFixa')">Salvar na Planilha</button>
     </div>
 </div>
 
 <script>
-    // Gerar os 10 campos de nomes para cada modal
-    function generateSlots(containerId) {
-        const container = document.getElementById(containerId);
-        for (let i = 1; i <= 10; i++) {
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.placeholder = 'Nome ' + i;
-            input.className = 'slot-input';
-            container.appendChild(input);
-        }
+    const dias = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"];
+
+    function buildGrid() {
+        const container = document.getElementById('gridSlots');
+        dias.forEach(dia => {
+            const div = document.createElement('div');
+            div.className = 'grid-escala';
+            
+            let options = '';
+            for(let i=1; i<=5; i++) {
+                options += `<input type="text" placeholder="${i}° Ministro - ${dia}" class="slot-input" style="margin-bottom:4px">`;
+            }
+
+            div.innerHTML = `
+                <div class="dia-label">${dia}</div>
+                <div class="slot-row">${options}</div>
+            `;
+            container.appendChild(div);
+        });
     }
 
-    generateSlots('slotsFixa');
-    generateSlots('slotsExtra');
+    buildGrid();
 
     function openModal(id) { document.getElementById(id).classList.add('open'); }
     function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-
-    function enviarZap(tipo) {
-        const msg = encodeURIComponent("MESC Maracanaú: Escala " + tipo + " atualizada!");
-        window.location.href = "whatsapp://send?text=" + msg;
-    }
 </script>
 
 </body>
