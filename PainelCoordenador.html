@@ -47,14 +47,16 @@
         <label>Data do Evento</label> <input type="date" id="novaData">
         <label>Horário</label> <input type="time" id="novaHora">
         <label>Nome da Missa / Evento</label> <input type="text" id="novoEvento" placeholder="Ex: Missa de Sétimo Dia">
-        <label>Ministros Escalados</label>
+        <label>Ministros Escalados (10)</label>
         <div class="grid-ministros">
             <input type="text" class="m-input" placeholder="1"> <input type="text" class="m-input" placeholder="2">
             <input type="text" class="m-input" placeholder="3"> <input type="text" class="m-input" placeholder="4">
             <input type="text" class="m-input" placeholder="5"> <input type="text" class="m-input" placeholder="6">
+            <input type="text" class="m-input" placeholder="7"> <input type="text" class="m-input" placeholder="8">
+            <input type="text" class="m-input" placeholder="9"> <input type="text" class="m-input" placeholder="10">
         </div>
         <label>Observações</label> <textarea id="obs" rows="2"></textarea>
-        <button class="btn btn-primary" id="btnSalvarExtra" onclick="salvarNaPlanilha('addEscala', 'modalEvento')">💾 SALVAR NA PLANILHA</button>
+        <button class="btn btn-primary" onclick="salvarNaPlanilha('addEscala', 'modalEvento')">💾 SALVAR NA PLANILHA</button>
     </div>
 </div>
 
@@ -77,21 +79,31 @@
         </select>
         <label>Horário Fixo</label> <input type="time" id="horaFixo">
         <label>Nome do Evento</label> <input type="text" id="eventoFixo" placeholder="Ex: Missa Dominical">
-        <label>Ministros da Equipe</label>
+        <label>Ministros da Equipe (10)</label>
         <div class="grid-ministros">
             <input type="text" class="r-input" placeholder="1"> <input type="text" class="r-input" placeholder="2">
             <input type="text" class="r-input" placeholder="3"> <input type="text" class="r-input" placeholder="4">
             <input type="text" class="r-input" placeholder="5"> <input type="text" class="r-input" placeholder="6">
+            <input type="text" class="r-input" placeholder="7"> <input type="text" class="r-input" placeholder="8">
+            <input type="text" class="r-input" placeholder="9"> <input type="text" class="r-input" placeholder="10">
         </div>
-        <button class="btn btn-regra" id="btnSalvarRegra" onclick="salvarNaPlanilha('addRegra', 'modalRegra')">💾 SALVAR REGRA</button>
+        <button class="btn btn-regra" onclick="salvarNaPlanilha('addRegra', 'modalRegra')">💾 SALVAR REGRA</button>
     </div>
 </div>
 
 <script>
-    const URL_API = "https://script.google.com/macros/s/AKfycbx0OZVaTvXsJupmdHJ5th67NjFFCHhTX2rciQtqaxpGjfuggvu-VO6IFzPtqQy2XuSc/exec";
+    const URL_API = "https://script.google.com/macros/s/AKfycbz4HkqqwosJnPdRTBdNC0wL9tsSxz5YDRphQX-VDPtWq2FUlmPLAIC05hYlBUJTkk_y/exec";
 
     function abrirModal(id) { document.getElementById(id).style.display = 'flex'; }
     function fecharModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    // Função para deixar a primeira letra de cada palavra maiúscula
+    function capitalizar(texto) {
+        if (!texto) return "";
+        return texto.toLowerCase().split(' ').map(palavra => {
+            return palavra.charAt(0).toUpperCase() + palavra.slice(1);
+        }).join(' ');
+    }
 
     function limpar(t) { 
         return t ? t.toString().replace(/[\r\n]+/g, " ").replace(/\s\s+/g, " ").trim() : ""; 
@@ -100,12 +112,17 @@
     async function salvarNaPlanilha(acao, modalId) {
         const isExtra = modalId === 'modalEvento';
         const inputs = document.querySelectorAll(isExtra ? '.m-input' : '.r-input');
-        const ministros = Array.from(inputs).map(i => limpar(i.value)).filter(v => v !== "").join(", ");
+        
+        // Pega os nomes, limpa espaços e capitaliza a primeira letra antes de juntar
+        const ministros = Array.from(inputs)
+            .map(i => capitalizar(limpar(i.value)))
+            .filter(v => v !== "")
+            .join(", ");
         
         const payload = {
             action: acao,
             hora: isExtra ? document.getElementById('novaHora').value : document.getElementById('horaFixo').value,
-            missa: limpar(isExtra ? document.getElementById('novoEvento').value : document.getElementById('eventoFixo').value),
+            missa: capitalizar(limpar(isExtra ? document.getElementById('novoEvento').value : document.getElementById('eventoFixo').value)),
             ministro: ministros
         };
 
@@ -140,8 +157,6 @@
             const [ano, mes, dia] = dataSel.split('-');
             const dObj = new Date(ano, mes - 1, dia, 12, 0, 0);
             const diasS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-            
-            // Lógica para saber qual semana do mês (1ª a 5ª)
             const numSemana = Math.ceil(dObj.getDate() / 7);
             const regraHoje = `${numSemana}º ${diasS[dObj.getDay()]}`; 
 
@@ -157,7 +172,7 @@
             ];
 
             lista.forEach(item => {
-                msg += `⏰ *Hora:* ${item.h}\n⛪ *Missa:* ${limpar(item.m)}\n👤 *Ministros:* ${limpar(item.n)}\n─────────────────\n\n`;
+                msg += `⏰ *Hora:* ${item.h}\n⛪ *Missa:* ${item.m}\n👤 *Ministros:* ${item.n}\n─────────────────\n\n`;
             });
 
             window.location.href = `whatsapp://send?text=${encodeURIComponent(msg)}`;
