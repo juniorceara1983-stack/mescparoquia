@@ -43,7 +43,7 @@
         <label>Data</label> <input type="date" id="novaData">
         <label>Hora</label> <input type="time" id="novaHora">
         <label>Evento</label> <input type="text" id="novoEvento" placeholder="Ex: Missa de Sétimo Dia">
-        <label>Ministros (Até 10)</label>
+        <label>Ministros (10)</label>
         <div class="grid-ministros">
             <input type="text" class="m-input"> <input type="text" class="m-input">
             <input type="text" class="m-input"> <input type="text" class="m-input">
@@ -73,7 +73,7 @@
         </select>
         <label>Hora</label> <input type="time" id="horaFixo">
         <label>Missa</label> <input type="text" id="eventoFixo">
-        <label>Ministros (Até 10)</label>
+        <label>Ministros (10)</label>
         <div class="grid-ministros">
             <input type="text" class="r-input"> <input type="text" class="r-input">
             <input type="text" class="r-input"> <input type="text" class="r-input">
@@ -86,7 +86,7 @@
 </div>
 
 <script>
-    const URL_API = "https://script.google.com/macros/s/AKfycbxSlivfWisF_LHXOYaYPx6-RBPsnYcYzBUvxJachwYlXRqAp2P5uje6MR2Zzf7hYB0u/exec";
+    const URL_API = "https://script.google.com/macros/s/AKfycbz4HkqqwosJnPdRTBdNC0wL9tsSxz5YDRphQX-VDPtWq2FUlmPLAIC05hYlBUJTkk_y/exec";
 
     function abrirModal(id) { document.getElementById(id).style.display = 'flex'; }
     function fecharModal(id) { document.getElementById(id).style.display = 'none'; }
@@ -123,39 +123,65 @@
     }
 
     async function compartilharEscala() {
-        const dataSel = document.getElementById('dataConsulta').value;
-        if (!dataSel) return alert("Escolha uma data!");
-        document.getElementById('btnZap').innerText = "⏳ BUSCANDO...";
+        const dataInput = document.getElementById('dataConsulta').value;
+        if (!dataInput) return alert("Escolha uma data!");
+        
+        const btnZap = document.getElementById('btnZap');
+        btnZap.innerText = "⏳ BUSCANDO...";
+        btnZap.disabled = true;
 
         try {
             const res = await fetch(`${URL_API}?t=${new Date().getTime()}`);
             const banco = await res.json();
-            const [ano, mes, dia] = dataSel.split('-');
-            const dObj = new Date(ano, mes-1, dia, 12, 0, 0);
+            
+            // Tratamento da data para evitar erro de fuso horário
+            const partes = dataInput.split('-');
+            const dObj = new Date(partes[0], partes[1] - 1, partes[2], 12, 0, 0);
+            
             const diasS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-            const regraHoje = `${Math.ceil(dObj.getDate()/7)}º ${diasS[dObj.getDay()]}`; 
+            const diaDaSemanaTexto = diasS[dObj.getDay()];
+            const numeroDaSemana = Math.ceil(dObj.getDate() / 7);
+            const regraHoje = `${numeroDaSemana}º ${diaDaSemanaTexto}`; 
 
-            const extras = banco.extras.filter(r => r[1] && r[1].toString().includes(dataSel));
-            const fixos = banco.regras.filter(r => r[0] && r[0].toString().trim().toLowerCase() === regraHoje.toLowerCase());
+            // Filtro Extras: Procura a data exata (YYYY-MM-DD)
+            const extras = banco.extras.filter(r => r[1] && r[1].toString().includes(dataInput));
+            
+            // Filtro Regras: Procura o texto (Ex: "2º Domingo") ignorando espaços extras
+            const fixos = banco.regras.filter(r => {
+                if(!r[0]) return false;
+                return r[0].toString().trim().toLowerCase() === regraHoje.toLowerCase();
+            });
 
             if (extras.length === 0 && fixos.length === 0) {
-                document.getElementById('btnZap').innerText = "📲 ENVIAR PARA WHATSAPP";
-                return alert("Nada para " + regraHoje);
+                btnZap.innerText = "📲 ENVIAR PARA WHATSAPP";
+                btnZap.disabled = false;
+                return alert("Nenhuma escala para: " + regraHoje + " (" + partes[2]+"/"+partes[1]+")");
             }
 
-            let msg = `*📍 ESCALA - ${dia}/${mes}/${ano}*\n*(${regraHoje})*\n\n`;
+            let msg = `*📍 ESCALA - ${partes[2]}/${partes[1]}/${partes[0]}*\n*(${regraHoje})*\n\n`;
+            
+            // r[1]=Hora, r[2]=Missa, r[3]=Ministros (Na aba Regras)
+            // r[2]=Hora, r[4]=Missa, r[3]=Ministros (Na aba Lançamentos)
             const listaG = [
                 ...fixos.map(f => ({ h: f[1], m: f[2], n: f[3] })), 
                 ...extras.map(e => ({ h: e[2], m: e[4], n: e[3] }))
             ];
+
+            // Ordena por horário
+            listaG.sort((a, b) => a.h.localeCompare(b.h));
 
             listaG.forEach(it => {
                 msg += `⏰ *Hora:* ${it.h}\n⛪ *Missa:* ${fixText(it.m)}\n👤 *Ministros:* ${fixText(it.n)}\n─────────────────\n\n`;
             });
 
             window.location.href = `whatsapp://send?text=${encodeURIComponent(msg)}`;
-        } catch (e) { alert("Erro na planilha."); }
-        document.getElementById('btnZap').innerText = "📲 ENVIAR PARA WHATSAPP";
+        } catch (e) { 
+            console.error(e);
+            alert("Erro ao ler dados da planilha. Verifique a internet."); 
+        }
+        
+        btnZap.innerText = "📲 ENVIAR PARA WHATSAPP";
+        btnZap.disabled = false;
     }
 </script>
 </body>
