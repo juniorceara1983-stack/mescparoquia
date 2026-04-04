@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1e3a8a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>MESC — Início</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icons/mesc.svg" type="image/svg+xml">
+    <script src="config.js"></script>
+    <script src="mesc-biblico.js"></script>
+    <style>
+        :root { --primary: #1e3a8a; --bg: #f1f5f9; --teal: #0f766e; --gold: #b45309; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 16px; min-height: 100vh; }
+        .wrap { max-width: 480px; margin: 0 auto; }
+        header { text-align: center; padding: 20px 0 8px; }
+        header h1 { margin: 0; color: var(--primary); font-size: 1.5rem; }
+        header p { margin: 8px 0 0; color: #64748b; font-size: 14px; }
+        .btn { width: 100%; padding: 16px; border: none; border-radius: 14px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; text-decoration: none; color: inherit; }
+        .btn-min { background: var(--teal); color: #fff; }
+        .btn-coo { background: var(--primary); color: #fff; }
+        .btn-lit { background: #7c3aed; color: #fff; }
+        .btn-ora { background: var(--gold); color: #fff; }
+        .btn-zap { background: #25d366; color: #fff; }
+        .btn-cal { background: #4285f4; color: #fff; }
+        .btn-inst { background: #334155; color: #fff; }
+        .section { margin-top: 22px; padding-top: 18px; border-top: 2px solid #e2e8f0; }
+        .section h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: #64748b; margin: 0 0 10px; }
+        .footer { text-align: center; font-size: 10px; color: #94a3b8; margin-top: 28px; }
+        .modal-o { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 9999; align-items: center; justify-content: center; padding: 16px; }
+        .modal-o.open { display: flex; }
+        .modal-o .box { background: #fff; border-radius: 16px; max-width: 420px; max-height: 85vh; overflow-y: auto; padding: 20px; width: 100%; }
+        .modal-o h3 { margin: 0 0 12px; color: var(--primary); }
+        .modal-o .oracao { margin: 14px 0; font-size: 14px; line-height: 1.55; color: #334155; }
+        .modal-o .oracao strong { color: var(--gold); display: block; margin-bottom: 6px; }
+        .modal-o .fechar { width: 100%; margin-top: 16px; padding: 14px; border: none; border-radius: 12px; background: var(--primary); color: #fff; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <header>
+        <h1>MESC</h1>
+        <p>Ministros Extraordinários da Santa Ceia<br>Paróquia PNSPS — Maracanaú</p>
+    </header>
+
+    <a class="btn btn-min" href="Ministro.html">📋 Minha escala (ministro)</a>
+    <a class="btn btn-coo" href="PainelCoordenador.html">⚙️ Painel do coordenador</a>
+
+    <div class="section">
+        <h2>Planilha (teste)</h2>
+        <a class="btn btn-min" id="linkPlanilhaMesc" href="https://docs.google.com/spreadsheets/d/11fV62v1MY-w4b7RrPXJwiDhSiY03kS5vkvL_tv--Kos/edit" target="_blank" rel="noopener">📊 Abrir planilha no Google</a>
+        <p style="font-size:12px;color:#64748b;margin-top:10px;line-height:1.45;">Mesmo ID em <strong>config.js</strong> (MESC_PLANILHA_URL) e no Apps Script (SPREADSHEET_ID). Coordenador e ministro usam a <strong>URL_API</strong> do mesmo <code style="font-size:11px;background:#e2e8f0;padding:2px 6px;border-radius:4px;">config.js</code>.</p>
+    </div>
+
+    <div class="section">
+        <h2>Oração e liturgia</h2>
+        <button type="button" class="btn btn-lit" onclick="abrirLiturgia()">📖 Liturgia diária</button>
+        <button type="button" class="btn btn-ora" onclick="document.getElementById('modalOracoes').classList.add('open')">🙏 Orações</button>
+    </div>
+
+    <div class="section">
+        <h2>Compartilhar e agenda</h2>
+        <button type="button" class="btn btn-zap" onclick="abrirZapRapido()">📲 Abrir WhatsApp</button>
+        <a class="btn btn-cal" href="Ministro.html#pdfArea">📅 Google Agenda / .ics (minha escala)</a>
+    </div>
+
+    <div class="section">
+        <h2>Instalar como app</h2>
+        <button type="button" class="btn btn-inst" id="btnInstalar" onclick="instalarPWA()">📲 Instalar MESC no celular</button>
+        <p style="font-size:12px;color:#94a3b8;margin-top:10px;line-height:1.4;">No Chrome/Android: menu ⋮ → «Instalar app» ou use o botão acima quando aparecer. No iPhone: Safari → compartilhar → «Adicionar à Tela de Início».</p>
+    </div>
+
+    <div class="footer">By: Jr&amp;Iz</div>
+</div>
+
+<div id="modalOracoes" class="modal-o" onclick="if(event.target===this)this.classList.remove('open')">
+    <div class="box" onclick="event.stopPropagation()">
+        <h3>Orações</h3>
+        <div class="oracao">
+            <strong>Pai Nosso</strong>
+            Pai nosso, que estais nos céus, santificado seja o vosso nome; venha a nós o vosso reino; seja feita a vossa vontade, assim na terra como no céu. O pão nosso de cada dia nos dai hoje; perdoai-nos as nossas ofensas, assim como nós perdoamos a quem nos tem ofendido; e não nos deixeis cair em tentação, mas livrai-nos do mal. Amém.
+        </div>
+        <div class="oracao">
+            <strong>Ave Maria</strong>
+            Ave Maria, cheia de graça, o Senhor é convosco; bendita sois vós entre as mulheres, e bendito é o fruto do vosso ventre, Jesus. Santa Maria, Mãe de Deus, rogai por nós pecadores, agora e na hora da nossa morte. Amém.
+        </div>
+        <div class="oracao">
+            <strong>Glória ao Pai</strong>
+            Glória ao Pai, ao Filho e ao Espírito Santo. Como era no princípio, agora e sempre. Amém.
+        </div>
+        <div class="oracao">
+            <strong>Credo (resumo — Símbolo dos Apóstolos)</strong>
+            Creio em Deus Pai todo-poderoso, Criador do céu e da terra. E em Jesus Cristo, seu único Filho, nosso Senhor… Amém.
+        </div>
+        <button type="button" class="fechar" onclick="fecharOracoes()">Amém</button>
+    </div>
+</div>
+
+<script>
+    var deferredPrompt = null;
+    window.addEventListener("beforeinstallprompt", function (e) {
+        e.preventDefault();
+        deferredPrompt = e;
+        var b = document.getElementById("btnInstalar");
+        if (b) b.textContent = "📲 Instalar MESC (toque aqui)";
+    });
+
+    function instalarPWA() {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then(function () {
+                deferredPrompt = null;
+                if (typeof mescModal === "function") {
+                    mescModal("Se o app foi instalado, você encontrará o ícone MESC na tela inicial.", false, "Instalação");
+                }
+            });
+            return;
+        }
+        if (typeof mescModal === "function") {
+            mescModal("Use o menu do navegador (⋮) → «Instalar app» ou «Adicionar à tela inicial». No iPhone: Safari → compartilhar → «Adicionar à Tela de Início».", false, "Instalar");
+        }
+    }
+
+    function abrirLiturgia() {
+        window.open("https://liturgia.cancaonova.com/pb/", "_blank", "noopener,noreferrer");
+        if (typeof mescModal === "function") {
+            mescModal("A liturgia do dia foi aberta numa nova aba. «Felizes os que ouvem a palavra de Deus e a guardam.» (Lc 11,28)", false, "Liturgia");
+        }
+    }
+
+    function abrirZapRapido() {
+        window.location.href = "whatsapp://send?text=" + encodeURIComponent("MESC — Paróquia PNSPS Maracanaú");
+    }
+
+    function fecharOracoes() {
+        document.getElementById("modalOracoes").classList.remove("open");
+    }
+
+    (function () {
+        var a = document.getElementById("linkPlanilhaMesc");
+        if (a && typeof MESC_PLANILHA_URL !== "undefined") a.href = MESC_PLANILHA_URL;
+    })();
+
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("sw.js").catch(function () {});
+    }
+</script>
+</body>
+</html>

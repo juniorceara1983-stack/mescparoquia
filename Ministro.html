@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f766e">
+    <title>MINISTRO - MESC</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icons/mesc.svg" type="image/svg+xml">
+    <script src="config.js"></script>
+    <script src="mesc-biblico.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous"></script>
+    <style>
+        :root { --primary: #0f766e; --bg: #f0fdfa; --accent: #115e59; --muted: #64748b; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 15px; margin: 0; }
+        .container { max-width: 520px; margin: auto; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 15px rgba(0,0,0,0.08); border-top: 10px solid var(--primary); }
+        h2 { text-align: center; color: var(--accent); margin: 0 0 5px 0; }
+        p.subtitle { text-align: center; color: var(--muted); margin: 0 0 18px 0; font-size: 14px; }
+        label { display: block; margin-top: 14px; font-weight: 700; color: #475569; font-size: 14px; }
+        input, textarea { width: 100%; padding: 12px; margin-top: 6px; border: 1px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; font-size: 16px; }
+        .btn { width: 100%; padding: 16px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 15px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-secondary { background: #e2e8f0; color: #334155; }
+        .btn-pdf { background: #b91c1c; color: white; }
+        .btn-pdf-extra { background: #1d4ed8; color: white; }
+        .btn-pdf-fixo { background: #b45309; color: white; }
+        .btn-cal { background: #4285f4; color: white; }
+        .btn-cal-fixo { background: #188038; color: white; }
+        .row-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .row-btns .btn { margin-top: 0; }
+        .btn-group-title { font-size: 12px; font-weight: 700; color: #64748b; margin: 18px 0 6px 0; text-transform: uppercase; letter-spacing: 0.03em; }
+        .hint-cal { font-size: 11px; color: #94a3b8; margin-top: 8px; line-height: 1.4; }
+        .hint { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+        .footer-credits { text-align: center; font-size: 10px; color: #94a3b8; margin-top: 20px; }
+        .status { text-align: center; font-size: 13px; min-height: 20px; margin-top: 8px; color: var(--primary); }
+        .status.err { color: #b91c1c; }
+        #pdfArea { margin-top: 18px; }
+        .escala-table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; }
+        table.escala { width: 100%; border-collapse: collapse; font-size: 14px; }
+        table.escala th { background: #f1f5f9; text-align: left; padding: 10px 8px; color: #334155; }
+        table.escala td { padding: 10px 8px; border-top: 1px solid #f1f5f9; vertical-align: top; }
+        table.escala .tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 6px; font-weight: 600; }
+        .tag-extra { background: #dbeafe; color: #1e40af; }
+        .tag-fixo { background: #fef3c7; color: #b45309; }
+        .empty-msg { text-align: center; color: var(--muted); padding: 24px; font-size: 14px; }
+        .pdf-header { display: none; }
+        @media print {
+            body { background: white; }
+            .container { box-shadow: none; max-width: 100%; }
+            .no-print { display: none !important; }
+            .pdf-header { display: block; margin-bottom: 12px; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+<p style="text-align:center;margin:0 0 10px;">
+    <a href="Mesc.html" style="color:#115e59;font-weight:600;text-decoration:none;">← Início MESC</a>
+    &nbsp;·&nbsp;
+    <a id="linkPlanilhaMin" href="https://docs.google.com/spreadsheets/d/11fV62v1MY-w4b7RrPXJwiDhSiY03kS5vkvL_tv--Kos/edit" target="_blank" rel="noopener" style="color:#64748b;font-size:14px;">Planilha</a>
+</p>
+
+<div class="container">
+    <h2>MINISTRO MESC</h2>
+    <p class="subtitle">Paróquia PNSPS — Maracanaú</p>
+
+    <div class="no-print">
+        <label for="nomeMinistro">Seu nome (igual ao da escala)</label>
+        <input type="text" id="nomeMinistro" placeholder="Ex: João Silva" autocomplete="name">
+        <p class="hint">Usamos esse nome para filtrar as linhas em que você aparece na planilha.</p>
+
+        <div class="row-btns">
+            <button type="button" class="btn btn-secondary" onclick="salvarPerfil()">💾 Salvar nome</button>
+            <button type="button" class="btn btn-primary" onclick="carregarEscala()">🔄 Atualizar escala</button>
+        </div>
+
+        <label for="obsPessoais">Anotações pessoais (salvas só neste aparelho)</label>
+        <textarea id="obsPessoais" rows="3" placeholder="Lembretes, leituras, horários de chegada..."></textarea>
+        <button type="button" class="btn btn-secondary" onclick="salvarAnotacoes()">💾 Salvar anotações</button>
+
+        <button type="button" class="btn btn-pdf" onclick="baixarPdf()">📄 Baixar PDF — escala completa</button>
+
+        <div class="btn-group-title">Tabelas separadas (PDF)</div>
+        <div class="row-btns">
+            <button type="button" class="btn btn-pdf-extra" onclick="baixarPdfPorTipo('extra')">📄 PDF só extras</button>
+            <button type="button" class="btn btn-pdf-fixo" onclick="baixarPdfPorTipo('fixo')">📄 PDF só regras fixas</button>
+        </div>
+
+        <div class="btn-group-title">Google Agenda (arquivo .ics)</div>
+        <p class="hint-cal">Só entram no arquivo os compromissos em que <strong>seu nome</strong> aparece na escala (já filtrado). No <strong>Android</strong>, use <strong>Abrir no Google Agenda</strong>: o sistema mostra o ícone do Google e pede para importar/salvar. No PC, use <strong>Baixar .ics</strong> e importe em agenda.google.com.</p>
+        <label>Filtrar por data (opcional, só afeta os <strong>extras</strong> no .ics)</label>
+        <div class="row-btns" style="grid-template-columns: 1fr 1fr;">
+            <div>
+                <span class="hint" style="display:block;margin-top:0;">De</span>
+                <input type="date" id="icsDe" title="Início do intervalo">
+            </div>
+            <div>
+                <span class="hint" style="display:block;margin-top:0;">Até</span>
+                <input type="date" id="icsAte" title="Fim do intervalo">
+            </div>
+        </div>
+        <p class="hint" style="margin-top:6px;">Deixe em branco para exportar todas as datas da sua escala. Cada evento terá <strong>lembrete 1 dia antes</strong> e <strong>1 hora antes</strong>.</p>
+        <div class="row-btns">
+            <button type="button" class="btn btn-cal" onclick="baixarIcsPorTipo('extra')">⬇️ Baixar .ics — extras</button>
+            <button type="button" class="btn btn-cal-fixo" onclick="baixarIcsPorTipo('fixo')">⬇️ Baixar .ics — regras fixas</button>
+        </div>
+        <div class="row-btns">
+            <button type="button" class="btn btn-cal" onclick="compartilharIcsParaAgenda('extra')">📲 Abrir no Google Agenda — extras</button>
+            <button type="button" class="btn btn-cal-fixo" onclick="compartilharIcsParaAgenda('fixo')">📲 Abrir no Google Agenda — fixos</button>
+        </div>
+    </div>
+
+    <div id="status" class="status" aria-live="polite"></div>
+
+    <div id="pdfArea">
+        <div class="pdf-header" id="pdfHeaderPrint">
+            <strong style="font-size: 16px;">MINISTRO MESC — Minha escala</strong><br>
+            <span id="pdfNomeLinha"></span>
+        </div>
+        <div id="escalaContainer"></div>
+    </div>
+
+    <div class="footer-credits no-print">By: Jr&amp;Iz</div>
+</div>
+
+<script>
+    const LS_NOME = "mesc_ministro_nome";
+    const LS_OBS = "mesc_ministro_obs";
+    const LS_CACHE = "mesc_ministro_escala_cache";
+
+    function limpar(t) {
+        return t ? t.toString().replace(/[\r\n]+/g, " ").replace(/\s\s+/g, " ").trim() : "";
+    }
+
+    function dataParaYMD(v) {
+        if (v == null || v === "") return "";
+        if (typeof v === "number" && !Number.isNaN(v)) {
+            const epoch = new Date(1899, 11, 30);
+            const d = new Date(epoch.getTime() + v * 86400000);
+            return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+        }
+        const s = v.toString().trim();
+        const iso = s.match(/^(\d{4}-\d{2}-\d{2})/);
+        if (iso) return iso[1];
+        const br = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (br) return br[3] + "-" + br[2].padStart(2, "0") + "-" + br[1].padStart(2, "0");
+        if (s.includes("T") && s.length >= 10) return s.slice(0, 10);
+        return "";
+    }
+
+    function formatarDataBR(ymd) {
+        if (!ymd || ymd.length < 10) return "—";
+        const [y, m, d] = ymd.split("-");
+        return `${d}/${m}/${y}`;
+    }
+
+    function isLinhaCabecalhoExtra(row) {
+        const a = limpar(row[0]).toLowerCase();
+        return a === "data" || a === "date";
+    }
+
+    function isLinhaCabecalhoRegra(row) {
+        const a = limpar(row[0]).toLowerCase();
+        return a === "regra" || a === "semana";
+    }
+
+    /** Nome do ministro aparece na célula de ministros (lista separada por vírgula ou texto livre) */
+    function ministroNaCelula(nomeBusca, celulaMinistros) {
+        const n = limpar(nomeBusca).toLowerCase();
+        if (!n) return false;
+        const raw = limpar(celulaMinistros).toLowerCase();
+        if (!raw) return false;
+        if (raw.includes(n)) return true;
+        return raw.split(",").some(function (p) { return limpar(p).toLowerCase() === n; });
+    }
+
+    function setStatus(msg, isErr) {
+        const el = document.getElementById("status");
+        if (!msg) {
+            el.textContent = "";
+            el.className = "status";
+            return;
+        }
+        if (/Carregando|Gerando/i.test(msg)) {
+            el.textContent = msg;
+            el.className = "status" + (isErr ? " err" : "");
+            return;
+        }
+        el.textContent = "";
+        el.className = "status";
+        if (typeof mescModal === "function") {
+            mescModal(msg, !!isErr);
+        } else {
+            alert(msg);
+        }
+    }
+
+    function salvarPerfil() {
+        const nome = limpar(document.getElementById("nomeMinistro").value);
+        if (!nome) {
+            setStatus("Digite seu nome para salvar.", true);
+            return;
+        }
+        localStorage.setItem(LS_NOME, nome);
+        setStatus("Nome salvo neste aparelho.");
+    }
+
+    function salvarAnotacoes() {
+        const obs = document.getElementById("obsPessoais").value;
+        localStorage.setItem(LS_OBS, obs);
+        setStatus("Anotações salvas neste aparelho.");
+    }
+
+    function carregarDoArmazenamento() {
+        const nome = localStorage.getItem(LS_NOME);
+        if (nome) document.getElementById("nomeMinistro").value = nome;
+        const obs = localStorage.getItem(LS_OBS);
+        if (obs) document.getElementById("obsPessoais").value = obs;
+        const cache = localStorage.getItem(LS_CACHE);
+        if (cache) {
+            try {
+                const rows = JSON.parse(cache);
+                renderTabela(rows);
+            } catch (e) { /* ignore */ }
+        }
+    }
+
+    /**
+     * Monta linhas da escala do ministro: extras com data + regras fixas.
+     * Extras: A=data B=hora C=missa D=ministros E=obs
+     * Regras: A=regra B=hora C=missa D=ministros E=obs
+     */
+    function montarLinhasEscala(extras, regras, nome) {
+        const out = [];
+
+        (extras || []).forEach(function (row, idx) {
+            if (!row || !row.length) return;
+            if (idx === 0 && isLinhaCabecalhoExtra(row)) return;
+            const ministros = row[3];
+            if (!ministroNaCelula(nome, ministros)) return;
+            const ymd = dataParaYMD(row[0]) || dataParaYMD(row[1]);
+            out.push({
+                tipo: "extra",
+                ordem: ymd ? new Date(ymd + "T12:00:00").getTime() : 0,
+                dataYmd: ymd,
+                hora: limpar(row[1]),
+                missa: limpar(row[2]),
+                ministros: limpar(row[3]),
+                obs: limpar(row[4]),
+                regraTxt: ""
+            });
+        });
+
+        (regras || []).forEach(function (row, idx) {
+            if (!row || !row.length) return;
+            if (idx === 0 && isLinhaCabecalhoRegra(row)) return;
+            const ministros = row[3];
+            if (!ministroNaCelula(nome, ministros)) return;
+            out.push({
+                tipo: "fixo",
+                ordem: 1e15 + idx,
+                dataYmd: "",
+                hora: limpar(row[1]),
+                missa: limpar(row[2]),
+                ministros: limpar(row[3]),
+                obs: limpar(row[4]),
+                regraTxt: limpar(row[0])
+            });
+        });
+
+        out.sort(function (a, b) { return a.ordem - b.ordem; });
+        return out;
+    }
+
+    function renderTabela(linhas) {
+        const nome = limpar(document.getElementById("nomeMinistro").value);
+        document.getElementById("pdfNomeLinha").textContent = nome ? "Ministro: " + nome : "";
+
+        const box = document.getElementById("escalaContainer");
+        if (!linhas || linhas.length === 0) {
+            box.innerHTML = '<div class="empty-msg">Nenhum registro encontrado com seu nome. Verifique na planilha se o nome está igual e clique em Atualizar escala.</div>';
+            return;
+        }
+
+        box.innerHTML = montarHtmlTabelaLinhas(linhas);
+    }
+
+    function escHtml(s) {
+        const d = document.createElement("div");
+        d.textContent = s == null ? "" : String(s);
+        return d.innerHTML;
+    }
+
+    function getLinhasCache() {
+        const cache = localStorage.getItem(LS_CACHE);
+        if (!cache) return [];
+        try {
+            return JSON.parse(cache);
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function montarHtmlTabelaLinhas(linhas) {
+        if (!linhas || linhas.length === 0) {
+            return '<div class="empty-msg">Nenhum registro nesta lista.</div>';
+        }
+        let html = '<div class="escala-table-wrap"><table class="escala"><thead><tr>';
+        html += "<th>Tipo</th><th>Data / Regra</th><th>Hora</th><th>Evento</th><th>Obs.</th>";
+        html += "</tr></thead><tbody>";
+        linhas.forEach(function (L) {
+            const tag = L.tipo === "extra"
+                ? '<span class="tag tag-extra">Extra</span>'
+                : '<span class="tag tag-fixo">Fixo</span>';
+            const quando = L.tipo === "extra"
+                ? formatarDataBR(L.dataYmd)
+                : (L.regraTxt || "—");
+            html += "<tr><td>" + tag + "</td><td>" + escHtml(quando) + "</td><td>" + escHtml(L.hora) + "</td><td>" + escHtml(L.missa) + "</td><td>" + escHtml(L.obs || "—") + "</td></tr>";
+        });
+        html += "</tbody></table></div>";
+        return html;
+    }
+
+    function gerarPdfDeHtml(titulo, nome, obs, htmlTabela, filename) {
+        if (typeof html2pdf === "undefined") {
+            setStatus("Biblioteca PDF indisponível. Use Ctrl+P → Salvar como PDF.", true);
+            return;
+        }
+        const clone = document.createElement("div");
+        clone.style.padding = "16px";
+        clone.style.fontFamily = "'Segoe UI', sans-serif";
+        clone.style.fontSize = "12px";
+        clone.style.color = "#111";
+        clone.innerHTML =
+            "<h2 style=\"margin:0 0 8px;font-size:18px;color:#0f766e;\">" + escHtml(titulo) + "</h2>" +
+            "<p style=\"margin:0 0 12px;\"><strong>Ministro:</strong> " + escHtml(nome) + "</p>" +
+            (obs ? "<p style=\"margin:0 0 12px;\"><strong>Anotações:</strong><br>" + escHtml(obs).replace(/\n/g, "<br>") + "</p>" : "") +
+            htmlTabela;
+        const opt = {
+            margin: 10,
+            filename: filename,
+            image: { type: "jpeg", quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+        };
+        setStatus("Gerando PDF...");
+        html2pdf().set(opt).from(clone).save().then(function () {
+            setStatus("PDF baixado.");
+        }).catch(function () {
+            setStatus("Falha ao gerar PDF.", true);
+        });
+    }
+
+    function baixarPdfPorTipo(tipo) {
+        const nome = limpar(document.getElementById("nomeMinistro").value);
+        if (!nome) {
+            setStatus("Digite seu nome e atualize a escala.", true);
+            return;
+        }
+        const todas = getLinhasCache();
+        const filtro = tipo === "extra" ? function (L) { return L.tipo === "extra"; } : function (L) { return L.tipo === "fixo"; };
+        const linhas = todas.filter(filtro);
+        if (!linhas.length) {
+            setStatus(tipo === "extra" ? "Não há extras na sua escala." : "Não há regras fixas na sua escala.", true);
+            return;
+        }
+        const obs = limpar(document.getElementById("obsPessoais").value);
+        const titulo = tipo === "extra"
+            ? "MINISTRO MESC — Extras"
+            : "MINISTRO MESC — Regras fixas";
+        const nomeArq = tipo === "extra" ? "escala-extras-mesc.pdf" : "escala-regras-fixas-mesc.pdf";
+        gerarPdfDeHtml(titulo, nome, obs, montarHtmlTabelaLinhas(linhas), nomeArq);
+    }
+
+    function parseHoraBr(s) {
+        if (!s) return null;
+        const m = limpar(s).match(/^(\d{1,2}):(\d{2})/);
+        if (!m) return null;
+        return { h: parseInt(m[1], 10), mi: parseInt(m[2], 10) };
+    }
+
+    function diaPtParaJsWeekday(str) {
+        const t = limpar(str).toLowerCase().replace(/feira$/i, "").trim();
+        const map = { "domingo": 0, "segunda": 1, "terça": 2, "terca": 2, "quarta": 3, "quinta": 4, "sexta": 5, "sábado": 6, "sabado": 6 };
+        if (map[t] !== undefined) return map[t];
+        return -1;
+    }
+
+    var ICS_DOW = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
+
+    function parseRegraFixa(regraTxt) {
+        const m = limpar(regraTxt).match(/^(\d)\s*[ºª]\s*(.+)$/);
+        if (!m) return null;
+        const n = parseInt(m[1], 10);
+        const jsD = diaPtParaJsWeekday(m[2]);
+        if (n < 1 || n > 5 || jsD < 0) return null;
+        return { n: n, jsWeekday: jsD, byday: String(n) + ICS_DOW[jsD] };
+    }
+
+    function computeNthWeekdayOfMonth(year, month, n, jsWeekday) {
+        const lastDay = new Date(year, month, 0).getDate();
+        var count = 0;
+        for (var day = 1; day <= lastDay; day++) {
+            const dt = new Date(year, month - 1, day);
+            if (dt.getDay() === jsWeekday) {
+                count++;
+                if (count === n) return dt;
+            }
+        }
+        return null;
+    }
+
+    function proximoInicioMensal(pr, horaStr) {
+        const hh = parseHoraBr(horaStr) || { h: 12, mi: 0 };
+        const now = new Date();
+        var y = now.getFullYear();
+        var mo = now.getMonth() + 1;
+        for (var step = 0; step < 36; step++) {
+            const dt = computeNthWeekdayOfMonth(y, mo, pr.n, pr.jsWeekday);
+            if (dt) {
+                dt.setHours(hh.h, hh.mi, 0, 0);
+                if (dt.getTime() >= now.getTime() - 60000) return dt;
+            }
+            mo++;
+            if (mo > 12) {
+                mo = 1;
+                y++;
+            }
+        }
+        const fallback = new Date();
+        fallback.setHours(hh.h, hh.mi, 0, 0);
+        return fallback;
+    }
+
+    function proximoDiaSemanal(jsWeekday, horaStr) {
+        const hh = parseHoraBr(horaStr) || { h: 12, mi: 0 };
+        const now = new Date();
+        const d = new Date(now);
+        d.setHours(hh.h, hh.mi, 0, 0);
+        var add = (jsWeekday - d.getDay() + 7) % 7;
+        if (add === 0 && d.getTime() < now.getTime()) add = 7;
+        d.setDate(d.getDate() + add);
+        return d;
+    }
+
+    function formatIcsDateTimeLocal(dt) {
+        const y = dt.getFullYear();
+        const mo = String(dt.getMonth() + 1).padStart(2, "0");
+        const da = String(dt.getDate()).padStart(2, "0");
+        const h = String(dt.getHours()).padStart(2, "0");
+        const mi = String(dt.getMinutes()).padStart(2, "0");
+        const s = String(dt.getSeconds()).padStart(2, "0");
+        return y + mo + da + "T" + h + mi + s;
+    }
+
+    function formatIcsUtcStamp() {
+        return new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+    }
+
+    function icsEscapeText(s) {
+        return String(s).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
+    }
+
+    function baixarArquivoTexto(nome, mime, conteudo) {
+        const blob = new Blob([conteudo], { type: mime + ";charset=utf-8" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = nome;
+        a.click();
+        URL.revokeObjectURL(a.href);
+    }
+
+    /** Lembretes padrão: 1 dia antes e 1 hora antes (compatível com Google Agenda ao importar .ics) */
+    function linhasAlarmasIcs() {
+        return [
+            "BEGIN:VALARM",
+            "ACTION:DISPLAY",
+            "DESCRIPTION:MESC - 1 dia antes",
+            "TRIGGER:-P1D",
+            "END:VALARM",
+            "BEGIN:VALARM",
+            "ACTION:DISPLAY",
+            "DESCRIPTION:MESC - 1 hora antes",
+            "TRIGGER:-PT1H",
+            "END:VALARM"
+        ];
+    }
+
+    function montarVcalendarString(blocos, nomeCalendario) {
+        const header = [
+            "BEGIN:VCALENDAR",
+            "VERSION:2.0",
+            "PRODID:-//MESC//Ministro//PT",
+            "CALSCALE:GREGORIAN",
+            "METHOD:PUBLISH",
+            "X-WR-CALNAME:" + icsEscapeText(nomeCalendario)
+        ];
+        return header.concat(blocos).concat(["END:VCALENDAR"]).join("\r\n");
+    }
+
+    /**
+     * @param {string} [de] - YYYY-MM-DD
+     * @param {string} [ate] - YYYY-MM-DD (só extras nesse intervalo; vazio = todas as datas)
+     */
+    function montarIcsExtras(linhas, nomeMinistro, de, ate) {
+        const linhasExtra = linhas.filter(function (L) {
+            if (L.tipo !== "extra" || !L.dataYmd) return false;
+            if (de && L.dataYmd < de) return false;
+            if (ate && L.dataYmd > ate) return false;
+            return true;
+        });
+        const blocos = [];
+        linhasExtra.forEach(function (L, i) {
+            const uid = "mesc-extra-" + i + "-" + Date.now() + "@mesc.local";
+            const sum = "MESC: " + limpar(L.missa);
+            const desc = [
+                "Ministro: " + nomeMinistro,
+                "Ministros (escala): " + L.ministros,
+                L.obs ? "Obs.: " + L.obs : ""
+            ].filter(Boolean).join("\\n");
+            const hh = parseHoraBr(L.hora);
+            var dtStart;
+            var dtEnd;
+            if (hh) {
+                const p = L.dataYmd.split("-");
+                dtStart = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10), hh.h, hh.mi, 0);
+                dtEnd = new Date(dtStart.getTime() + 60 * 60 * 1000);
+            } else {
+                const p = L.dataYmd.split("-");
+                dtStart = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10), 12, 0, 0);
+                dtEnd = new Date(dtStart.getTime() + 24 * 60 * 60 * 1000);
+            }
+            var ve = [
+                "BEGIN:VEVENT",
+                "UID:" + uid,
+                "DTSTAMP:" + formatIcsUtcStamp(),
+                "SUMMARY:" + icsEscapeText(sum),
+                "DESCRIPTION:" + icsEscapeText(desc)
+            ];
+            if (hh) {
+                ve.push("DTSTART:" + formatIcsDateTimeLocal(dtStart));
+                ve.push("DTEND:" + formatIcsDateTimeLocal(dtEnd));
+            } else {
+                ve.push("DTSTART;VALUE=DATE:" + L.dataYmd.replace(/-/g, ""));
+                ve.push("DTEND;VALUE=DATE:" + formatIcsDateOnlyMaisUm(L.dataYmd));
+            }
+            linhasAlarmasIcs().forEach(function (ln) { ve.push(ln); });
+            ve.push("END:VEVENT");
+            blocos.push(ve.join("\r\n"));
+        });
+        return blocos;
+    }
+
+    function formatIcsDateOnlyMaisUm(ymd) {
+        const p = ymd.split("-");
+        const d = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+        d.setDate(d.getDate() + 1);
+        const y = d.getFullYear();
+        const mo = String(d.getMonth() + 1).padStart(2, "0");
+        const da = String(d.getDate()).padStart(2, "0");
+        return y + mo + da;
+    }
+
+    function montarIcsFixos(linhas, nomeMinistro) {
+        const fixos = linhas.filter(function (L) { return L.tipo === "fixo"; });
+        const blocos = [];
+        fixos.forEach(function (L, i) {
+            const uid = "mesc-fixo-" + i + "-" + Date.now() + "@mesc.local";
+            const sum = "MESC (fixo): " + limpar(L.missa);
+            const desc = [
+                "Regra: " + L.regraTxt,
+                "Ministro: " + nomeMinistro,
+                "Ministros: " + L.ministros,
+                L.obs ? "Obs.: " + L.obs : ""
+            ].filter(Boolean).join("\\n");
+            const pr = parseRegraFixa(L.regraTxt);
+            var ve = [
+                "BEGIN:VEVENT",
+                "UID:" + uid,
+                "DTSTAMP:" + formatIcsUtcStamp(),
+                "SUMMARY:" + icsEscapeText(sum),
+                "DESCRIPTION:" + icsEscapeText(desc)
+            ];
+            if (pr) {
+                const start = proximoInicioMensal(pr, L.hora);
+                const end = new Date(start.getTime() + 60 * 60 * 1000);
+                ve.push("DTSTART:" + formatIcsDateTimeLocal(start));
+                ve.push("DTEND:" + formatIcsDateTimeLocal(end));
+                ve.push("RRULE:FREQ=MONTHLY;BYDAY=" + pr.byday);
+            } else {
+                const jsD = diaPtParaJsWeekday(L.regraTxt.replace(/^\d+\s*[ºª]\s*/i, ""));
+                if (jsD >= 0) {
+                    const start = proximoDiaSemanal(jsD, L.hora);
+                    const end = new Date(start.getTime() + 60 * 60 * 1000);
+                    ve.push("DTSTART:" + formatIcsDateTimeLocal(start));
+                    ve.push("DTEND:" + formatIcsDateTimeLocal(end));
+                    ve.push("RRULE:FREQ=WEEKLY;BYDAY=" + ICS_DOW[jsD]);
+                } else {
+                    const start = new Date();
+                    const hh = parseHoraBr(L.hora) || { h: 19, mi: 0 };
+                    start.setHours(hh.h, hh.mi, 0, 0);
+                    if (start.getTime() < Date.now()) start.setDate(start.getDate() + 1);
+                    const end = new Date(start.getTime() + 60 * 60 * 1000);
+                    ve.push("DTSTART:" + formatIcsDateTimeLocal(start));
+                    ve.push("DTEND:" + formatIcsDateTimeLocal(end));
+                }
+            }
+            linhasAlarmasIcs().forEach(function (ln) { ve.push(ln); });
+            ve.push("END:VEVENT");
+            blocos.push(ve.join("\r\n"));
+        });
+        return blocos;
+    }
+
+    function obterIntervaloIcs() {
+        return {
+            de: document.getElementById("icsDe").value || "",
+            ate: document.getElementById("icsAte").value || ""
+        };
+    }
+
+    function gerarConteudoIcs(tipo) {
+        const nome = limpar(document.getElementById("nomeMinistro").value);
+        if (!nome) {
+            return { ok: false, msg: "Digite seu nome e atualize a escala." };
+        }
+        const linhas = getLinhasCache();
+        const iv = obterIntervaloIcs();
+        var blocos;
+        if (tipo === "extra") {
+            blocos = montarIcsExtras(linhas, nome, iv.de, iv.ate);
+            if (!blocos.length) {
+                return {
+                    ok: false,
+                    msg: iv.de || iv.ate
+                        ? "Nenhum extra no intervalo de datas. Ajuste as datas ou deixe em branco."
+                        : "Não há extras com data para exportar."
+                };
+            }
+        } else {
+            blocos = montarIcsFixos(linhas, nome);
+            if (!blocos.length) {
+                return { ok: false, msg: "Não há regras fixas para exportar." };
+            }
+        }
+        const nomeCal = tipo === "extra" ? "Google MESC - Extras" : "Google MESC - Regras fixas";
+        const fname = tipo === "extra" ? "Google-MESC-extras.ics" : "Google-MESC-regras-fixas.ics";
+        return {
+            ok: true,
+            text: montarVcalendarString(blocos, nomeCal),
+            filename: fname
+        };
+    }
+
+    function baixarIcsPorTipo(tipo) {
+        const r = gerarConteudoIcs(tipo);
+        if (!r.ok) {
+            setStatus(r.msg, true);
+            return;
+        }
+        baixarArquivoTexto(r.filename, "text/calendar", r.text);
+        setStatus("Arquivo " + r.filename + " baixado. Abra o arquivo e escolha Google Agenda ou importe em agenda.google.com.");
+    }
+
+    async function compartilharIcsParaAgenda(tipo) {
+        const r = gerarConteudoIcs(tipo);
+        if (!r.ok) {
+            setStatus(r.msg, true);
+            return;
+        }
+        const blob = new Blob([r.text], { type: "text/calendar;charset=utf-8" });
+        const file = new File([blob], r.filename, { type: "text/calendar", lastModified: Date.now() });
+        if (navigator.share && typeof navigator.canShare === "function" && navigator.canShare({ files: [file] })) {
+            try {
+                await navigator.share({
+                    files: [file],
+                    title: "Google Agenda",
+                    text: "Importar escala MESC no calendário"
+                });
+                setStatus("Toque em Google Agenda no menu para abrir e salvar os eventos.");
+                return;
+            } catch (err) {
+                if (err && err.name === "AbortError") return;
+            }
+        }
+        baixarArquivoTexto(r.filename, "text/calendar", r.text);
+        setStatus("Arquivo baixado. Toque no ícone de download e abra com Google Agenda. (No PC use o .ics em Importar.)");
+    }
+
+    async function carregarEscala() {
+        const nome = limpar(document.getElementById("nomeMinistro").value);
+        if (!nome) {
+            setStatus("Digite seu nome antes de atualizar a escala.", true);
+            return;
+        }
+        setStatus("Carregando...");
+        try {
+            const res = await fetch(URL_API + "?t=" + new Date().getTime());
+            const banco = await res.json();
+            if (banco.ok === false && banco.error) {
+                setStatus("Erro na API: " + banco.error, true);
+                return;
+            }
+            const extras = Array.isArray(banco.extras) ? banco.extras : [];
+            const regras = Array.isArray(banco.regras) ? banco.regras : [];
+            const linhas = montarLinhasEscala(extras, regras, nome);
+            localStorage.setItem(LS_CACHE, JSON.stringify(linhas));
+            localStorage.setItem(LS_NOME, nome);
+            renderTabela(linhas);
+            setStatus("Escala atualizada (" + linhas.length + " registro(s)).");
+        } catch (e) {
+            setStatus("Não foi possível carregar os dados. Verifique a URL da API e a conexão.", true);
+        }
+    }
+
+    function baixarPdf() {
+        const nome = limpar(document.getElementById("nomeMinistro").value);
+        if (!nome) {
+            setStatus("Digite e salve seu nome antes de gerar o PDF.", true);
+            return;
+        }
+        const linhas = getLinhasCache();
+        if (!linhas.length) {
+            setStatus("Atualize a escala antes de gerar o PDF.", true);
+            return;
+        }
+        if (typeof html2pdf === "undefined") {
+            window.print();
+            return;
+        }
+        const obs = limpar(document.getElementById("obsPessoais").value);
+        gerarPdfDeHtml("MINISTRO MESC — Minha escala", nome, obs, montarHtmlTabelaLinhas(linhas), "escala-ministro-mesc.pdf");
+    }
+
+    carregarDoArmazenamento();
+
+    (function () {
+        var a = document.getElementById("linkPlanilhaMin");
+        if (a && typeof MESC_PLANILHA_URL !== "undefined") a.href = MESC_PLANILHA_URL;
+    })();
+
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("sw.js").catch(function () {});
+    }
+</script>
+</body>
+</html>

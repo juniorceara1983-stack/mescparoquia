@@ -1,0 +1,34 @@
+================================================================================
+  MESC — Como colocar no ar e instalar como app
+================================================================================
+
+1) GOOGLE APPS SCRIPT
+   - Copie o conteúdo de Codigo_GoogleAppsScript.txt (ou Code.gs) para o editor
+     do Google (Extensões > Apps Script na planilha).
+   - Ajuste SPREADSHEET_ID se o script não estiver vinculado à planilha.
+   - Rode setupPlanilhaMESC() uma vez se precisar criar abas e cabeçalhos.
+   - Implante como: App da Web, executar como você, acesso: qualquer pessoa.
+   - Copie a URL que termina em /exec e cole em config.js na variável URL_API.
+
+2) PLANILHA
+   - Siga o arquivo PLANILHA-MESC-DETALHES.txt para nomes de abas e colunas.
+
+3) SITE / ARQUIVOS
+   - Publique TODA a pasta no mesmo servidor (GitHub Pages, Netlify, hospedagem
+     com HTTPS). O PWA (instalar app) exige HTTPS (exceto localhost).
+
+4) ABRIR O SISTEMA
+   - Página inicial: Mesc.html
+   - Coordenador: PainelCoordenador.html
+   - Ministro: Ministro.html
+
+5) INSTALAR NO CELULAR
+   - Android (Chrome): abra o site > menu ⋮ > «Instalar app» ou use o botão
+     na página Mesc.html.
+   - iPhone (Safari): Compartilhar > «Adicionar à Tela de Início».
+
+6) WHATSAPP E GOOGLE AGENDA
+   - WhatsApp: botões nos painéis Ministro e Coordenador.
+   - Agenda: em Ministro.html, baixe o .ics ou use «Abrir no Google Agenda».
+
+================================================================================
