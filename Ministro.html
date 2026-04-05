@@ -26,6 +26,7 @@
         
         .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #fff; font-size: 14px; text-decoration: none; }
         .btn-blue { background: var(--primary); }
+        .btn-green { background: var(--green); margin-top: 10px; font-size: 12px; padding: 8px; }
         .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); margin-top: 20px; }
 
         .field { margin-bottom: 12px; text-align: left; }
@@ -101,10 +102,8 @@
 
             if(data.ok && data.escalas.length > 0) {
                 data.escalas.forEach(esc => {
-                    // CORREÇÃO: Pegando a hora como texto direto da planilha (getDisplayValues)
-                    // Não convertemos mais em Date para evitar erro de fuso horário no celular
                     const horaDisplay = esc.hora || "00:00";
-
+                    
                     const card = document.createElement('div');
                     card.className = 'card-escala';
                     card.innerHTML = `
@@ -112,6 +111,7 @@
                         <div class="missa">⛪ ${esc.missa}</div>
                         <div class="detalhes">📅 ${esc.data} (${esc.tipo})</div>
                         ${esc.obs ? `<div style="margin-top:8px; color:var(--danger); font-size:11px;"><b>Obs:</b> ${esc.obs}</div>` : ""}
+                        <button class="btn btn-green" onclick="salvarNoGoogle('${esc.data}', '${horaDisplay}', '${esc.missa}')">📅 Salvar na Agenda Google</button>
                     `;
                     lista.appendChild(card);
                 });
@@ -122,6 +122,25 @@
             loader.style.display = "none";
             lista.innerHTML = "<p style='color:red;'>Erro ao carregar dados.</p>";
         }
+    }
+
+    function salvarNoGoogle(dataStr, horaStr, missa) {
+        // Converte data de DD/MM/AAAA para AAAA-MM-DD
+        const partesData = dataStr.split('/');
+        const dataFormatada = `${partesData[2]}${partesData[1]}${partesData[0]}`;
+        
+        // Remove os dois pontos da hora (ex: 19:00 -> 1900)
+        const horaFormatada = horaStr.replace(':', '');
+        
+        // Define início e fim (adicionando 1h de duração padrão)
+        const start = `${dataFormatada}T${horaFormatada}00`;
+        const fimHora = (parseInt(horaFormatada.substring(0,2)) + 1).toString().padStart(2, '0') + horaFormatada.substring(2);
+        const end = `${dataFormatada}T${fimHora}00`;
+
+        const titulo = encodeURIComponent(`Escala MESC: ${missa}`);
+        const link = `https://www.google.com/calendar/render?action=TEMPLATE&text=${titulo}&dates=${start}/${end}&details=Escala+confirmada+pelo+App+MESC&sf=true&output=xml`;
+        
+        window.open(link, '_blank');
     }
 
     function logout() {
