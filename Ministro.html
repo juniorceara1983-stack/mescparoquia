@@ -2,13 +2,14 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MINISTRO - MESC</title>
     <style>
-        :root { --primary: #1e3a8a; --bg: #f1f5f9; --teal: #0f766e; --green: #15803d; --slate: #475569; --danger: #b91c1c; }
-        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { background: var(--bg); margin: 0; padding: 16px; }
+        :root { --primary: #1e3a8a; --bg: #f1f5f9; --teal: #0f766e; --slate: #475569; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: var(--bg); margin: 0; padding: 16px; -webkit-tap-highlight-color: transparent; }
 
+        /* Tela de Login */
         #lockScreen { position: fixed; inset: 0; background: var(--primary); z-index: 2000; display: flex; align-items: center; justify-content: center; color: white; text-align: center; padding: 20px; }
         .lock-box { background: white; padding: 30px; border-radius: 20px; color: #334155; width: 100%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
 
@@ -19,187 +20,188 @@
         .section { margin-top: 15px; padding: 15px; background: #fff; border-radius: 12px; border-top: 4px solid var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .section h2 { font-size: 13px; text-transform: uppercase; color: #64748b; margin-bottom: 10px; margin-top: 0; }
 
-        .card-escala { border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; margin-bottom: 10px; background: #f8fafc; text-align: left; }
+        /* Cards */
+        .card-escala { border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; margin-bottom: 10px; background: #f8fafc; text-align: left; position: relative; }
         .card-escala b { color: var(--primary); }
-        .badge-tipo { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #cbd5e1; color: #1e293b; float: right; }
+        .badge-tipo { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #cbd5e1; color: #1e293b; position: absolute; top: 12px; right: 12px; }
 
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #fff; font-size: 14px; text-decoration: none; }
+        /* Botões */
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #fff; font-size: 14px; text-decoration: none; transition: opacity 0.2s; }
+        .btn:active { opacity: 0.8; }
         .btn-blue { background: var(--primary); }
         .btn-teal { background: var(--teal); }
-        .btn-cal { background: var(--teal); font-size: 11px; padding: 8px; margin-top: 10px; }
-        .btn-out { background: var(--slate); margin-top: 20px; }
+        .btn-out { background: var(--slate); margin-top: 30px; }
 
+        /* Modais */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 1000; align-items: center; justify-content: center; padding: 15px; }
         .modal.open { display: flex; }
         .modal-content { background: #fff; border-radius: 16px; width: 100%; max-width: 420px; padding: 20px; text-align: center; max-height: 85vh; overflow-y: auto; position: relative; }
-        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 28px; cursor: pointer; color: var(--slate); font-weight: bold; }
+        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 30px; cursor: pointer; color: var(--slate); line-height: 1; }
 
-        .field { margin-bottom: 12px; text-align: left; }
-        label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 4px; color: var(--primary); text-transform: uppercase; }
-        input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
+        input { width: 100%; padding: 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 16px; margin-top: 5px; }
+        label { display: block; font-size: 11px; font-weight: bold; color: var(--primary); text-transform: uppercase; text-align: left; }
 
-        .frase-santo { font-style: italic; color: var(--slate); margin: 15px 0; font-size: 14px; line-height: 1.4; border-left: 3px solid var(--primary); padding-left: 10px; text-align: left; }
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 10px auto; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 15px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        iframe { width: 100%; height: 500px; border: none; border-radius: 10px; background: white; }
-        .texto-oracao { text-align: left; font-size: 14px; color: #334155; line-height: 1.6; background: #f8fafc; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid var(--teal); }
+        iframe { width: 100%; height: 450px; border: none; border-radius: 10px; background: #fff; }
+        .texto-oracao { text-align: left; font-size: 15px; color: #334155; line-height: 1.6; background: #f8fafc; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid var(--teal); }
     </style>
 </head>
 <body>
 
 <div id="lockScreen">
     <div class="lock-box">
-        <h2 style="margin-top:0; color:var(--primary)">Acesso Ministro</h2>
-        <div class="field">
+        <h2 style="margin:0 0 10px 0; color:var(--primary)">MESC Digital</h2>
+        <p style="font-size:13px; color:#64748b; margin-bottom:20px;">Acesso exclusivo para ministros cadastrados.</p>
+        <div style="margin-bottom:15px">
             <label>Seu Nome Completo</label>
-            <input type="text" id="nomeMinistroLogin" placeholder="Ex: Júnior Nunes">
+            <input type="text" id="nomeLogin" placeholder="Digite aqui..." autocomplete="off">
         </div>
-        <button class="btn btn-blue" onclick="verificarAcessoMinistro()">ENTRAR NO PAINEL</button>
+        <button class="btn btn-blue" onclick="fazerLogin()">ENTRAR NO APP</button>
     </div>
 </div>
 
-<div class="wrap" id="appContent">
+<div class="wrap" id="app">
     <header>
-        <h1 id="boasVindas">Olá, Ministro</h1>
+        <h1 id="txtUser">Olá, Ministro</h1>
     </header>
 
     <div class="section">
         <h2>Minha Escala</h2>
-        <button class="btn btn-blue" onclick="abrirMinhaEscala()">📅 Ver Minha Escala</button>
+        <button class="btn btn-blue" onclick="abrirEscala()">📅 Ver Minha Escala</button>
     </div>
 
     <div class="section">
-        <h2>Recursos Espirituais</h2>
-        <button class="btn btn-teal" onclick="window.open('https://liturgia.cnbb.org.br/', '_blank')">📖 Liturgia Diária (CNBB)</button>
+        <h2>Recursos</h2>
+        <button class="btn btn-teal" onclick="window.open('https://liturgia.cnbb.org.br/', '_blank')">📖 Liturgia Diária</button>
         <button class="btn btn-teal" style="background:#0d9488" onclick="abrirOracoes()">🙏 Orações do MESC</button>
-        <button class="btn btn-blue" style="background:#6366f1" onclick="abrirSantoDoDia()">😇 Santo do Dia</button>
+        <button class="btn btn-blue" style="background:#6366f1" onclick="abrirSanto()">😇 Santo do Dia</button>
     </div>
 
-    <button class="btn btn-out" onclick="sair()">🚪 Sair / Trocar Ministro</button>
+    <button class="btn btn-out" onclick="sair()">🚪 Sair / Trocar Usuário</button>
 </div>
 
-<div id="modalGeral" class="modal">
+<div id="mGeral" class="modal">
     <div class="modal-content">
-        <span class="close-btn" onclick="fecharModalGeral()">&times;</span>
-        <h3 id="modalTitulo" style="color:var(--primary); margin-top:10px;"></h3>
-        <hr style="opacity:0.2; margin-bottom: 15px;">
-        <div id="modalCorpo"></div>
+        <span class="close-btn" onclick="fecharModal()">&times;</span>
+        <h3 id="mTitulo" style="color:var(--primary); margin: 10px 0;"></h3>
+        <div id="mCorpo"></div>
     </div>
 </div>
 
-<div id="modalStatus" class="modal">
+<div id="mStatus" class="modal">
     <div class="modal-content">
-        <h3 id="statusTitulo">Buscando...</h3>
-        <div id="statusLoader" class="loader"></div>
-        <div id="statusFrase" class="frase-santo"></div>
-        <button class="btn btn-blue" id="btnStatusOk" onclick="fecharStatus()" style="display:none">OK</button>
+        <h3 id="sTitulo">Aguarde...</h3>
+        <div id="sLoader" class="loader"></div>
+        <button class="btn btn-blue" id="btnSOk" onclick="fecharStatus()" style="display:none">OK</button>
     </div>
 </div>
 
 <script>
-    const URL_API = "SUA_URL_DO_GOOGLE_SCRIPT_AQUI"; 
+    // COLE SUA URL ABAIXO ENTRE AS ASPAS
+    const API = "SUA_URL_DO_GOOGLE_SCRIPT_AQUI";
 
-    function formatarHora(horaRaw) {
-        if (!horaRaw || horaRaw === "") return "Não definida";
-        let str = String(horaRaw);
-        if (str.includes("T")) return str.split("T")[1].substring(0, 5);
-        return str;
+    // Formata o horário vindo da planilha
+    function formatarH(h) {
+        if (!h) return "--:--";
+        let s = String(h);
+        return s.includes("T") ? s.split("T")[1].substring(0, 5) : s;
     }
 
-    async function abrirMinhaEscala() {
-        const nomeLogado = localStorage.getItem('mesc_ministro_nome');
-        if(!nomeLogado) return alert("Erro ao identificar ministro. Saia e entre novamente.");
-
-        abrirJanelaFlutuante("Minhas Escalas", "<div class='loader'></div><p>Buscando escalas para: "+nomeLogado+"</p>");
-
+    // Login
+    async function fazerLogin() {
+        const nomeInput = document.getElementById('nomeLogin').value.trim();
+        if(!nomeInput) { alert("Por favor, digite seu nome."); return; }
+        
+        status("Verificando...", true);
         try {
-            const res = await fetch(URL_API, { 
+            const r = await fetch(API, { 
                 method: 'POST', 
-                body: JSON.stringify({ action: 'buscarMinhaEscala', nome: nomeLogado }) 
+                body: JSON.stringify({ action: 'loginMinistro', nome: nomeInput }) 
             });
-            const data = await res.json();
+            const d = await r.json();
             
-            let html = "";
-            if(data.ok && data.escalas && data.escalas.length > 0) {
-                data.escalas.forEach(esc => {
-                    const dataFormat = esc.tipo === 'EXTRA' ? String(esc.data).split('T')[0].split('-').reverse().join('/') : esc.data;
-                    const horaFormatada = formatarHora(esc.hora);
-                    
-                    html += `
-                        <div class="card-escala">
-                            <span class="badge-tipo">${esc.tipo}</span>
-                            <div><b>📅 ${dataFormat}</b></div>
-                            <div>⏰ Hora: ${horaFormatada}</div>
-                            <div>⛪ ${esc.missa}</div>
-                            ${esc.obs ? `<div style="font-size:11px; color:gray">📝 ${esc.obs}</div>` : ''}
-                            <button class="btn btn-cal" onclick="addAgenda('${esc.missa}')">📅 Agendar no Google</button>
-                        </div>`;
-                });
+            if(d.ok) {
+                localStorage.setItem('mesc_nome', d.nomeOficial);
+                renderApp(d.nomeOficial);
+                fecharStatus();
             } else {
-                html = "<p style='color:gray; padding:20px;'>Nenhuma escala encontrada para o seu nome.</p>";
+                status("Nome não encontrado!", false);
             }
-            document.getElementById('modalCorpo').innerHTML = html;
-        } catch(e) { 
-            document.getElementById('modalCorpo').innerHTML = "Erro de conexão. Verifique o URL da API."; 
+        } catch(e) {
+            status("Erro de conexão. Verifique a URL da API.", false);
         }
     }
 
-    function abrirOracoes() {
-        const oracoes = `
-            <div class="texto-oracao"><b>Oração antes de servir:</b><br>Senhor, vós me chamastes para servir à vossa mesa. Dai-me a graça de realizar este ministério com amor e reverência. Amém.</div>
-            <div class="texto-oracao"><b>Oração de Pós-Comunhão:</b><br>Graças e louvores se deem a todo momento ao Santíssimo e Diviníssimo Sacramento. Amém.</div>
-        `;
-        abrirJanelaFlutuante("Orações", oracoes);
-    }
+    // Carrega Escala
+    async function abrirEscala() {
+        const n = localStorage.getItem('mesc_nome');
+        abrirModal("Minha Escala", "<div class='loader'></div><p>Buscando...</p>");
 
-    function abrirSantoDoDia() {
-        abrirJanelaFlutuante("Santo do Dia", `<iframe src="https://santo.cancaonova.com/"></iframe>`);
-    }
-
-    function abrirJanelaFlutuante(titulo, conteudo) {
-        document.getElementById('modalTitulo').innerText = titulo;
-        document.getElementById('modalCorpo').innerHTML = conteudo;
-        document.getElementById('modalGeral').classList.add('open');
-    }
-
-    function fecharModalGeral() { document.getElementById('modalGeral').classList.remove('open'); }
-
-    async function verificarAcessoMinistro() {
-        const nome = document.getElementById('nomeMinistroLogin').value.trim();
-        if(!nome) return alert("Por favor, digite seu nome!");
-        
-        mostrarStatus("Validando acesso...");
         try {
-            const res = await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'loginMinistro', nome: nome }) });
-            const data = await res.json();
-            if(data.ok) {
-                localStorage.setItem('mesc_ministro_nome', data.nomeOficial);
-                liberarApp(data.nomeOficial);
-                fecharStatus();
-            } else { mostrarStatus("Ministro não cadastrado no sistema!", false); }
-        } catch(e) { mostrarStatus("Erro ao conectar com o servidor.", false); }
+            const r = await fetch(API, { 
+                method: 'POST', 
+                body: JSON.stringify({ action: 'buscarMinhaEscala', nome: n }) 
+            });
+            const d = await r.json();
+            
+            let h = "";
+            if(d.ok && d.escalas && d.escalas.length > 0) {
+                d.escalas.forEach(e => {
+                    const dt = e.tipo === 'EXTRA' ? String(e.data).split('T')[0].split('-').reverse().join('/') : e.data;
+                    h += `
+                        <div class="card-escala">
+                            <span class="badge-tipo">${e.tipo}</span>
+                            <b>📅 ${dt}</b><br>
+                            ⏰ Hora: ${formatarH(e.hora)}<br>
+                            ⛪ ${e.missa}
+                            ${e.obs ? `<br><small>📝 ${e.obs}</small>` : ''}
+                        </div>`;
+                });
+            } else { h = "<p>Nenhuma escala futura encontrada.</p>"; }
+            document.getElementById('mCorpo').innerHTML = h;
+        } catch(e) { document.getElementById('mCorpo').innerHTML = "Erro ao carregar dados."; }
     }
 
-    function liberarApp(nome) {
+    // Funções de Interface
+    function renderApp(n) {
         document.getElementById('lockScreen').style.display = 'none';
-        document.getElementById('appContent').style.display = 'block';
-        document.getElementById('boasVindas').innerText = "Olá, " + nome.split(' ')[0];
+        document.getElementById('app').style.display = 'block';
+        document.getElementById('txtUser').innerText = "Olá, " + n.split(' ')[0];
     }
 
-    function mostrarStatus(t, c=true) { 
-        document.getElementById('statusTitulo').innerText=t; 
-        document.getElementById('statusLoader').style.display=c?'block':'none';
-        document.getElementById('btnStatusOk').style.display=c?'none':'block';
-        document.getElementById('modalStatus').classList.add('open'); 
+    function abrirModal(t, c) {
+        document.getElementById('mTitulo').innerText = t;
+        document.getElementById('mCorpo').innerHTML = c;
+        document.getElementById('mGeral').classList.add('open');
     }
-    function fecharStatus() { document.getElementById('modalStatus').classList.remove('open'); }
+
+    function fecharModal() { document.getElementById('mGeral').classList.remove('open'); }
+    
+    function status(t, c) {
+        document.getElementById('sTitulo').innerText = t;
+        document.getElementById('sLoader').style.display = c ? 'block' : 'none';
+        document.getElementById('btnSOk').style.display = c ? 'none' : 'block';
+        document.getElementById('mStatus').classList.add('open');
+    }
+
+    function fecharStatus() { document.getElementById('mStatus').classList.remove('open'); }
+    
     function sair() { localStorage.clear(); location.reload(); }
-    function addAgenda(t) { window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(t)}`, '_blank'); }
+
+    function abrirOracoes() {
+        const o = `<div class="texto-oracao"><b>Oração do Ministro</b><br>Senhor, dai-me dignidade e humildade para servir o vosso altar.</div>`;
+        abrirModal("Orações", o);
+    }
+
+    function abrirSanto() {
+        abrirModal("Santo do Dia", `<iframe src="https://santo.cancaonova.com/"></iframe>`);
+    }
 
     window.onload = () => {
-        const nomeSalvo = localStorage.getItem('mesc_ministro_nome');
-        if(nomeSalvo) liberarApp(nomeSalvo);
+        const n = localStorage.getItem('mesc_nome');
+        if(n) renderApp(n);
     };
 </script>
 </body>
