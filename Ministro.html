@@ -41,7 +41,7 @@
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 35px; height: 35px; animation: spin 1s linear infinite; margin: 15px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        .msg-espiritual { font-style: italic; color: var(--slate); font-size: 14px; margin: 15px 0; padding: 10px; border-left: 3px solid var(--primary); text-align: left; background: #f8fafc; }
+        .msg-espiritual { font-style: italic; color: var(--slate); font-size: 14px; margin: 15px 0; padding: 15px; border-left: 4px solid var(--primary); text-align: left; background: #f8fafc; border-radius: 0 8px 8px 0; }
         iframe { width: 100%; height: 450px; border: none; border-radius: 10px; }
     </style>
 </head>
@@ -97,20 +97,21 @@
 </div>
 
 <script>
-    const API = "https://script.google.com/macros/s/AKfycbybTBWupiQNckDNS6YPcDtpNL04vGfjF2nkO1J4PCQpuI5b4nMaaw_Pltqu-3qOOEPX/exec"; // RECOLE AQUI
+    const API = "https://script.google.com/macros/s/AKfycbybTBWupiQNckDNS6YPcDtpNL04vGfjF2nkO1J4PCQpuI5b4nMaaw_Pltqu-3qOOEPX/exec"; 
 
     const frases = [
         "\"Onde dois ou três estiverem reunidos em meu nome, eu estou ali, no meio deles.\" (Mt 18,20)",
         "\"Eu sou o pão vivo descido do céu. Quem comer deste pão viverá eternamente.\"",
         "\"Tudo posso naquele que me fortalece.\"",
-        "\"Servi ao Senhor com alegria!\""
+        "\"Servi ao Senhor com alegria!\"",
+        "\"O Senhor é meu pastor, nada me faltará.\""
     ];
 
     function limparHorario(h) {
         if (!h) return "A definir";
         let s = String(h);
         if (s.includes("T")) s = s.split("T")[1];
-        return s.substring(0, 5); // Retorna apenas HH:mm
+        return s.substring(0, 5); 
     }
 
     async function fazerLogin() {
@@ -119,7 +120,7 @@
         
         const msgAleatoria = frases[Math.floor(Math.random() * frases.length)];
         document.getElementById('sMsg').innerText = msgAleatoria;
-        status("Validando Acesso...", true);
+        status("Acessando o Painel...", true);
 
         try {
             const r = await fetch(API, { method: 'POST', body: JSON.stringify({ action: 'loginMinistro', nome: nome }) });
@@ -129,39 +130,64 @@
                 renderApp(d.nomeOficial);
                 fecharStatus();
             } else { status("Nome não encontrado!", false); }
-        } catch(e) { status("Erro de conexão com o servidor.", false); }
+        } catch(e) { status("Erro de conexão.", false); }
     }
 
     async function abrirEscala() {
         const n = localStorage.getItem('mesc_nome');
-        abrirModal("Minha Escala", "<div class='loader'></div><p>Carregando dados...</p>");
+        const msgAleatoria = frases[Math.floor(Math.random() * frases.length)];
+        document.getElementById('sMsg').innerText = msgAleatoria;
+        
+        status("Buscando Escalas...", true);
 
         try {
             const r = await fetch(API, { method: 'POST', body: JSON.stringify({ action: 'buscarMinhaEscala', nome: n }) });
             const d = await r.json();
+            fecharStatus();
             
             let h = "";
             if(d.ok && d.escalas && d.escalas.length > 0) {
                 d.escalas.forEach(e => {
-                    const dt = e.tipo === 'EXTRA' ? String(e.data).split('T')[0].split('-').reverse().join('/') : e.data;
+                    const dtOriginal = e.data;
+                    const dataFormatada = e.tipo === 'EXTRA' ? String(dtOriginal).split('T')[0].split('-').reverse().join('/') : dtOriginal;
                     const hora = limparHorario(e.hora);
+                    
                     h += `
                         <div class="card-escala">
                             <span class="badge-tipo">${e.tipo}</span>
-                            <b>📅 ${dt} - ${hora}</b><br>
+                            <b>📅 ${dataFormatada} - ${hora}</b><br>
                             ⛪ ${e.missa}
                             ${e.obs ? `<br><small style='color:gray'>📝 ${e.obs}</small>` : ''}
-                            <br><button class="btn btn-cal" onclick="addCal('${e.missa}','${dt}','${hora}')">🗓️ Agendar no Google</button>
+                            <br><button class="btn btn-cal" onclick="addCal('${e.missa}','${dataFormatada}','${hora}')">🗓️ Agendar no Google</button>
                         </div>`;
                 });
             } else { h = "<p style='color:gray'>Nenhuma escala encontrada.</p>"; }
-            document.getElementById('mCorpo').innerHTML = h;
-        } catch(e) { document.getElementById('mCorpo').innerHTML = "Erro ao buscar escalas."; }
+            abrirModal("Minha Escala", h);
+        } catch(e) { fecharStatus(); alert("Erro ao carregar escalas."); }
     }
 
     function acessarLiturgia() {
-        // Tenta abrir em nova aba, que é mais garantido para o site da CNBB
         window.open('https://liturgia.cnbb.org.br/', '_blank');
+    }
+
+    function addCal(missa, data, hora) {
+        let dFormat;
+        const hoje = new Date();
+        const anoAtual = hoje.getFullYear();
+
+        if (data.includes('/')) {
+            const p = data.split('/');
+            dFormat = p[2] + p[1] + p[0];
+        } else {
+            // Trata escalas fixas (Ex: 1º Domingo) para o mês/ano atual
+            const mes = ("0" + (hoje.getMonth() + 1)).slice(-2);
+            const dia = ("0" + hoje.getDate()).slice(-2);
+            dFormat = anoAtual + mes + dia;
+        }
+
+        const hLimpa = hora.replace(':', '');
+        const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('MESC: ' + missa)}&dates=${dFormat}T${hLimpa}00/${dFormat}T${hLimpa}00&details=${encodeURIComponent('Escala de Ministro MESC')}`;
+        window.open(url, '_blank');
     }
 
     function renderApp(n) {
@@ -185,21 +211,8 @@
     }
     function fecharModal() { document.getElementById('mGeral').classList.remove('open'); }
     function sair() { localStorage.clear(); location.reload(); }
-
-    function abrirOracoes() {
-        abrirModal("Orações", `<div class="msg-espiritual"><b>Oração do Ministro</b><br>Senhor, dai-me dignidade e humildade para servir o vosso altar.</div>`);
-    }
-
-    function abrirSanto() {
-        abrirModal("Santo do Dia", `<iframe src="https://santo.cancaonova.com/"></iframe>`);
-    }
-
-    function addCal(missa, data, hora) {
-        // Formata data de DD/MM/YYYY para YYYYMMDD para o link do Google
-        const partes = data.split('/');
-        const dFormat = partes[2] + partes[1] + partes[0];
-        window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('MESC: ' + missa)}&dates=${dFormat}T${hora.replace(':','')}00/${dFormat}T${hora.replace(':','')}00`, '_blank');
-    }
+    function abrirOracoes() { abrirModal("Orações", `<div class="msg-espiritual"><b>Oração do Ministro</b><br>Senhor, dai-me dignidade e humildade para servir o vosso altar.</div>`); }
+    function abrirSanto() { abrirModal("Santo do Dia", `<iframe src="https://santo.cancaonova.com/"></iframe>`); }
 
     window.onload = () => {
         const n = localStorage.getItem('mesc_nome');
