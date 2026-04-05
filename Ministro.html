@@ -2,196 +2,122 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MESC Digital</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MINISTRO - MESC</title>
     <style>
-        :root { --primary: #1e3a8a; --bg: #f1f5f9; --teal: #0f766e; --slate: #475569; }
-        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
-        body { background: var(--bg); margin: 0; padding: 16px; -webkit-tap-highlight-color: transparent; }
-
-        #lockScreen { position: fixed; inset: 0; background: var(--primary); z-index: 2000; display: flex; align-items: center; justify-content: center; color: white; text-align: center; padding: 20px; }
-        .lock-box { background: white; padding: 30px; border-radius: 20px; color: #334155; width: 100%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-
-        .wrap { max-width: 480px; margin: 0 auto; display: none; }
-        header { text-align: center; margin-bottom: 20px; }
-        h1 { color: var(--primary); margin: 0; font-size: 22px; }
+        :root { --primary: #1e3a8a; --bg: #f1f5f9; --white: #ffffff; --text: #1e293b; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: var(--bg); margin: 0; padding: 15px; color: var(--text); }
         
-        .section { margin-top: 15px; padding: 15px; background: #fff; border-radius: 12px; border-top: 4px solid var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .section h2 { font-size: 13px; text-transform: uppercase; color: #64748b; margin-bottom: 10px; margin-top: 0; }
+        #loginScreen { position: fixed; inset: 0; background: var(--primary); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .login-box { background: white; padding: 30px; border-radius: 20px; width: 100%; max-width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h1 { color: var(--primary); margin: 0; font-size: 22px; }
+        
+        .card-escala { background: var(--white); padding: 15px; border-radius: 12px; margin-bottom: 12px; border-left: 5px solid var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .card-escala .hora { font-size: 20px; font-weight: bold; color: var(--primary); }
+        .card-escala .missa { font-weight: 600; margin: 4px 0; font-size: 16px; }
+        .card-escala .data-tipo { font-size: 13px; color: #64748b; text-transform: uppercase; }
+        .card-escala .obs { font-size: 13px; color: #b91c1c; font-style: italic; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e2e8f0; }
 
-        .card-escala { border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; margin-bottom: 10px; background: #f8fafc; text-align: left; }
-        .badge-tipo { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #cbd5e1; color: #1e293b; float: right; font-weight: bold; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; background: var(--primary); color: white; margin-top: 10px; }
+        .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); margin-top: 20px; }
+        
+        input, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; margin-top: 5px; margin-bottom: 15px; font-size: 16px; }
+        label { font-size: 12px; font-weight: bold; color: var(--primary); text-transform: uppercase; display: block; text-align: left; }
 
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #fff; font-size: 14px; text-decoration: none; }
-        .btn-blue { background: var(--primary); }
-        .btn-teal { background: var(--teal); }
-        .btn-cal { background: #0369a1; font-size: 11px; padding: 8px; margin-top: 10px; width: auto; display: inline-flex; }
-        .btn-out { background: var(--slate); margin-top: 30px; }
-
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 3000; align-items: center; justify-content: center; padding: 15px; }
-        .modal.open { display: flex; }
-        .modal-content { background: #fff; border-radius: 16px; width: 100%; max-width: 420px; padding: 20px; text-align: center; max-height: 85vh; overflow-y: auto; position: relative; }
-        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 30px; cursor: pointer; color: var(--slate); }
-
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 35px; height: 35px; animation: spin 1s linear infinite; margin: 15px auto; }
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid var(--primary); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: none; margin: 10px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        .msg-espiritual { font-style: italic; color: var(--slate); font-size: 14px; margin: 15px 0; padding: 15px; border-left: 4px solid var(--primary); text-align: left; background: #f8fafc; border-radius: 0 8px 8px 0; }
-        input { width: 100%; padding: 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 16px; margin-top: 5px; }
+        .empty { text-align: center; color: #64748b; margin-top: 40px; }
     </style>
 </head>
 <body>
 
-<div id="lockScreen">
-    <div class="lock-box">
-        <h2 style="margin:0; color:var(--primary)">MESC Digital</h2>
-        <p style="font-size:12px; color:gray">Painel do Ministro</p>
-        <div style="margin: 20px 0; text-align: left;">
-            <label style="font-size: 11px; font-weight: bold; color: var(--primary);">NOME COMPLETO</label>
-            <input type="text" id="nomeLogin" placeholder="Digite seu nome..." autocomplete="off">
-        </div>
-        <button class="btn btn-blue" onclick="fazerLogin()">ENTRAR NO APP</button>
+<div id="loginScreen">
+    <div class="login-box">
+        <h2 style="color:var(--primary); margin-top:0;">Meu Acesso</h2>
+        <label>Seu Nome (Como na lista)</label>
+        <input type="text" id="nomeMinistro" placeholder="Digite seu nome completo">
+        <button class="btn" onclick="fazerLogin()">ENTRAR NO APP</button>
+        <div id="loginLoader" class="loader"></div>
     </div>
 </div>
 
-<div class="wrap" id="app">
-    <header><h1 id="txtUser">Olá</h1></header>
-    <div class="section">
-        <h2>Minha Escala</h2>
-        <button class="btn btn-blue" onclick="abrirEscala()">📅 Ver Minha Escala</button>
+<div id="appContent" style="display:none;">
+    <div class="header">
+        <h1 id="boasVindas">Olá, Ministro</h1>
+        <p style="font-size: 12px; color: #64748b;">Suas próximas escalas agendadas</p>
     </div>
-    <div class="section">
-        <h2>Recursos</h2>
-        <button class="btn btn-teal" onclick="window.open('https://www.cnbb.org.br/liturgia-diaria/', '_blank')">📖 Liturgia Diária</button>
-        <button class="btn btn-teal" style="background:#0d9488" onclick="abrirOracoes()">🙏 Orações do MESC</button>
-        <button class="btn btn-blue" style="background:#6366f1" onclick="abrirSanto()">😇 Santo do Dia</button>
-    </div>
-    <button class="btn btn-out" onclick="sair()">🚪 Sair</button>
-</div>
 
-<div id="mGeral" class="modal">
-    <div class="modal-content">
-        <span class="close-btn" onclick="fecharModal()">&times;</span>
-        <h3 id="mTitulo" style="color:var(--primary); margin: 10px 0;"></h3>
-        <div id="mCorpo"></div>
-    </div>
-</div>
+    <div id="listaEscalas"></div>
 
-<div id="mStatus" class="modal">
-    <div class="modal-content">
-        <h3 id="sTitulo">Aguarde...</h3>
-        <div class="loader"></div>
-        <div id="sMsg" class="msg-espiritual"></div>
-        <button class="btn btn-blue" id="btnSOk" onclick="fecharStatus()" style="display:none">OK</button>
-    </div>
+    <button class="btn btn-outline" onclick="sair()">Sair / Trocar Nome</button>
 </div>
 
 <script>
-    const API = "https://script.google.com/macros/s/AKfycbybTBWupiQNckDNS6YPcDtpNL04vGfjF2nkO1J4PCQpuI5b4nMaaw_Pltqu-3qOOEPX/exec"; 
+    const URL_API = "https://script.google.com/macros/s/AKfycbybTBWupiQNckDNS6YPcDtpNL04vGfjF2nkO1J4PCQpuI5b4nMaaw_Pltqu-3qOOEPX/exec";
 
-    const frases = [
-        "\"Servi ao Senhor com alegria!\"",
-        "\"Tudo posso naquele que me fortalece.\"",
-        "\"O Senhor é meu pastor, nada me faltará.\"",
-        "\"Amai-vos uns aos outros como eu vos amei.\""
-    ];
+    window.onload = () => {
+        const salvo = localStorage.getItem('ministro_nome');
+        if(salvo) {
+            document.getElementById('nomeMinistro').value = salvo;
+            fazerLogin();
+        }
+    };
 
-    // FUNÇÃO PARA PEGAR APENAS O HORÁRIO REAL (Ignora Fuso)
-    function formatarHoraFina(v) {
-        if (!v) return "00:00";
-        const matches = String(v).match(/(\d{2}:\d{2})/);
-        return matches ? matches[1] : "00:00";
-    }
-
-    function calcularDataDomingo(texto) {
-        if (texto.includes('/')) return texto;
-        let ordem = parseInt(texto);
-        if (isNaN(ordem)) return new Date().toLocaleDateString('pt-BR');
-        let d = new Date(); d.setDate(1);
-        while (d.getDay() !== 0) d.setDate(d.getDate() + 1);
-        d.setDate(d.getDate() + (7 * (ordem - 1)));
-        return d.toLocaleDateString('pt-BR');
-    }
-
-    function status(t, l) {
-        document.getElementById('sTitulo').innerText = t;
-        document.querySelector('#mStatus .loader').style.display = l ? 'block' : 'none';
-        document.getElementById('btnSOk').style.display = l ? 'none' : 'block';
-        document.getElementById('mStatus').classList.add('open');
-    }
-
-    function fecharStatus() { document.getElementById('mStatus').classList.remove('open'); }
-
-    async function fazerLogin() {
-        const nome = document.getElementById('nomeLogin').value.trim();
+    function fazerLogin() {
+        const nome = document.getElementById('nomeMinistro').value.trim();
         if(!nome) return alert("Digite seu nome!");
-        
-        // Ativa a janela flutuante IMEDIATAMENTE
-        document.getElementById('sMsg').innerText = frases[Math.floor(Math.random() * frases.length)];
-        status("Validando Acesso...", true);
 
-        try {
-            const r = await fetch(API, { method: 'POST', body: JSON.stringify({ action: 'loginMinistro', nome: nome }) });
-            const d = await r.json();
-            if(d.ok) {
-                localStorage.setItem('mesc_nome', d.nomeOficial);
-                renderApp(d.nomeOficial);
-                fecharStatus();
-            } else { status("Não encontrado", false); document.getElementById('sMsg').innerText = "Nome não localizado."; }
-        } catch(e) { status("Erro", false); document.getElementById('sMsg').innerText = "Erro na rede."; }
+        localStorage.setItem('ministro_nome', nome);
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('appContent').style.display = 'block';
+        document.getElementById('boasVindas').innerText = "Olá, " + nome.split(' ')[0];
+        
+        buscarMinhaEscala(nome);
     }
 
-    async function abrirEscala() {
-        const n = localStorage.getItem('mesc_nome');
-        document.getElementById('sMsg').innerText = frases[Math.floor(Math.random() * frases.length)];
-        status("Buscando Escalas...", true);
+    async function buscarMinhaEscala(nome) {
+        const listaDiv = document.getElementById('listaEscalas');
+        listaDiv.innerHTML = '<div class="loader" style="display:block"></div><p style="text-align:center">Buscando escalas...</p>';
+
         try {
-            const r = await fetch(API, { method: 'POST', body: JSON.stringify({ action: 'buscarMinhaEscala', nome: n }) });
-            const d = await r.json();
-            fecharStatus();
-            let h = "";
-            if(d.ok && d.escalas.length > 0) {
-                d.escalas.forEach(e => {
-                    const dtC = calcularDataDomingo(e.data);
-                    const hrF = formatarHoraFina(e.hora);
-                    h += `<div class="card-escala">
-                        <span class="badge-tipo">${e.tipo}</span>
-                        <b>📅 ${e.data} (${dtC})</b><br>
-                        ⏰ Horário: ${hrF}<br>
-                        ⛪ ${e.missa}
-                        <br><button class="btn btn-cal" onclick="addCal('${e.missa}','${dtC}','${hrF}')">🗓️ Agendar no Google</button>
+            const response = await fetch(URL_API, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'buscarMinhaEscala', nome: nome })
+            });
+            const data = await response.json();
+
+            if (data.ok && data.escalas.length > 0) {
+                let html = "";
+                data.escalas.forEach(esc => {
+                    // CORREÇÃO: esc.hora agora é tratada como texto direto da planilha
+                    const horaFormatada = esc.hora || "00:00";
+                    
+                    html += `
+                    <div class="card-escala">
+                        <div class="hora">⏰ ${horaFormatada}</div>
+                        <div class="missa">⛪ ${esc.missa}</div>
+                        <div class="data-tipo">📅 ${esc.data} (${esc.tipo})</div>
+                        ${esc.obs ? `<div class="obs">📝 ${esc.obs}</div>` : ""}
                     </div>`;
                 });
-            } else h = "<p>Sem escalas.</p>";
-            abrirModal("Minha Escala", h);
-        } catch(e) { fecharStatus(); }
+                listaDiv.innerHTML = html;
+            } else {
+                listaDiv.innerHTML = '<div class="empty">📍 Nenhuma escala encontrada para você nos próximos dias.</div>';
+            }
+        } catch (e) {
+            listaDiv.innerHTML = '<div class="empty" style="color:red">⚠️ Erro ao carregar dados. Tente novamente.</div>';
+        }
     }
 
-    function addCal(m, d, h) {
-        const p = d.split('/');
-        const dF = p[2] + p[1] + p[0];
-        const hL = h.replace(':', '');
-        const hE = String(parseInt(hL) + 100).padStart(4, '0');
-        window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('MESC: '+m)}&dates=${dF}T${hL}00/${dF}T${hE}00`, '_blank');
+    function sair() {
+        localStorage.removeItem('ministro_nome');
+        location.reload();
     }
-
-    function renderApp(n) {
-        document.getElementById('lockScreen').style.display = 'none';
-        document.getElementById('app').style.display = 'block';
-        document.getElementById('txtUser').innerText = "Olá, " + n.split(' ')[0];
-    }
-
-    function abrirModal(t, c) {
-        document.getElementById('mTitulo').innerText = t;
-        document.getElementById('mCorpo').innerHTML = c;
-        document.getElementById('mGeral').classList.add('open');
-    }
-    function fecharModal() { document.getElementById('mGeral').classList.remove('open'); }
-    function sair() { localStorage.clear(); location.reload(); }
-    function abrirOracoes() { abrirModal("Orações", `<div class="msg-espiritual">Senhor, dai-me humildade para servir.</div>`); }
-    function abrirSanto() { abrirModal("Santo do Dia", `<iframe src="https://santo.cancaonova.com/" style="width:100%; height:450px; border:none;"></iframe>`); }
-
-    window.onload = () => { if(localStorage.getItem('mesc_nome')) renderApp(localStorage.getItem('mesc_nome')); };
 </script>
+
 </body>
 </html>
