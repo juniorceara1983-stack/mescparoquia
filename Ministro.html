@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MINISTRO - MESC</title>
     <style>
-        :root { --primary: #1e3a8a; --bg: #f1f5f9; --teal: #0f766e; --green: #15803d; --slate: #475569; --danger: #b91c1c; }
+        :root { --primary: #1e3a8a; --bg: #f1f5f9; --teal: #0f766e; --green: #15803d; --slate: #475569; --danger: #b91c1c; --gold: #b45309; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--bg); margin: 0; padding: 16px; }
         
@@ -27,7 +27,17 @@
         .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #fff; font-size: 14px; text-decoration: none; }
         .btn-blue { background: var(--primary); }
         .btn-green { background: var(--green); margin-top: 10px; font-size: 12px; padding: 8px; }
+        .btn-teal { background: var(--teal); }
+        .btn-gold { background: var(--gold); }
         .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); margin-top: 20px; }
+
+        .grid-botoes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 3000; align-items: center; justify-content: center; padding: 15px; }
+        .modal.open { display: flex; }
+        .modal-content { background: #fff; border-radius: 16px; width: 100%; max-width: 420px; padding: 20px; max-height: 85vh; overflow-y: auto; }
+        .modal-content h3 { color: var(--primary); margin-top: 0; border-bottom: 2px solid var(--bg); padding-bottom: 10px; }
+        .texto-oracao { font-size: 15px; line-height: 1.6; color: #334155; white-space: pre-line; margin-bottom: 20px; }
 
         .field { margin-bottom: 12px; text-align: left; }
         label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 4px; color: var(--primary); text-transform: uppercase; }
@@ -51,7 +61,7 @@
 </div>
 
 <div class="wrap" id="appContent">
-    <header><h1 id="boasVindas">Olá, Ministro</h1></header>
+    <header><h1 id="boasVindas">Olá, Ministro, Deus te abençõe</h1></header>
     
     <div class="section">
         <h2>Minhas Próximas Escalas</h2>
@@ -59,11 +69,48 @@
         <div id="loaderEscala" class="loader"></div>
     </div>
 
+    <div class="section">
+        <h2>Recursos e Oração</h2>
+        <div class="grid-botoes">
+            <a href="https://liturgia.cnbb.org.br/" target="_blank" class="btn btn-teal" style="font-size: 12px;">📖 Liturgia</a>
+            <a href="https://santo.cancaonova.com/" target="_blank" class="btn btn-teal" style="font-size: 12px;">😇 Santo do Dia</a>
+        </div>
+        <button class="btn btn-gold" onclick="abrirOracoes()">🙏 Orações do Ministro</button>
+    </div>
+
     <button class="btn btn-outline" onclick="logout()">Trocar de Usuário / Sair</button>
+</div>
+
+<div id="modalOracoes" class="modal">
+    <div class="modal-content">
+        <h3>Orações</h3>
+        <select id="seletorOracao" onchange="trocarOracao()" style="width:100%; padding:10px; border-radius:8px; margin-bottom:15px;">
+            <option value="ministro">Oração do Ministro</option>
+            <option value="painosso">Pai Nosso</option>
+            <option value="avemaria">Ave Maria</option>
+            <option value="credo">Credo Niceno</option>
+            <option value="salverainha">Salve Rainha</option>
+        </select>
+        <div id="corpoOracao" class="texto-oracao"></div>
+        <button class="btn btn-blue" onclick="fecharOracoes()">Fechar</button>
+    </div>
 </div>
 
 <script>
     const URL_API = "https://script.google.com/macros/s/AKfycbybTBWupiQNckDNS6YPcDtpNL04vGfjF2nkO1J4PCQpuI5b4nMaaw_Pltqu-3qOOEPX/exec";
+
+    const ORACOES_DB = {
+        ministro: `Senhor Jesus, Tu me destes a graça de ser Ministro e servo de Teu Corpo abençoado. 
+        Quantas vezes levo o calor de Tua visita aos doentes da minha comunidade e distribuo Teu Corpo aos homens e mulheres famintos na hora da Celebração da Missa. 
+        Tenho muita alegria em ser Teu servidor e poder encontrar pessoas simples, pobres, doentes e idosas esperando a visita reconfortadora de Teu amor. 
+        Que eu seja digno servidor, que eu possa ter sempre na minha vida esta atitude de serviço e de dom que transpareceram tão belamente em Tua trajetória humana. 
+        Hoje ainda, na glória, no mistério do sinal do pão, Tu Te entregas aos homens e Te serves de minhas mãos e de minha vida para fazer-Te oferenda.`,
+        painosso: `Pai nosso, que estais nos céus, santificado seja o vosso nome; venha a nós o vosso reino, seja feita a vossa vontade, assim na terra como no céu. O pão nosso de cada dia nos dai hoje, perdoai-nos as nossas dívidas, assim como nós perdoamos aos nossos devedores; e não nos introduzais em tentação, mas livrai-nos do mal. Amém.`,
+        avemaria: `Ave Maria, cheia de graça, o Senhor é convosco, bendita sois vós entre as mulheres e bendito é o fruto do vosso ventre, Jesus. Santa Maria, Mãe de Deus, rogai por nós pecadores, agora e na hora da nossa morte. Amém.`,
+        credo: `Creio em um só Deus, Pai todo-poderoso, Criador do céu e da terra, de todas as coisas visíveis e invisíveis. 
+        Creio em um só Senhor, Jesus Cristo, Filho Unigênito de Deus, nascido do Pai antes de todos os séculos. Deus de Deus, luz da luz, Deus verdadeiro de Deus verdadeiro, gerado, não criado, consubstancial ao Pai. Por ele todas as coisas foram feitas...`,
+        salverainha: `Salve Rainha, Mãe de misericórdia, vida, doçura e esperança nossa, salve! A vós bradamos os degredados filhos de Eva. A vós suspiramos, gemendo e chorando neste vale de lágrimas. Eia, pois, advogada nossa, esses vossos olhos misericordiosos a nós volvei, e depois deste desterro mostrai-nos Jesus, bendito fruto do vosso ventre. Ó clemente, ó piedosa, ó doce sempre Virgem Maria.`
+    };
 
     window.onload = () => {
         const salvo = localStorage.getItem('ministro_nome');
@@ -76,22 +123,17 @@
     function verificarMinistro() {
         const nome = document.getElementById('nomeAcesso').value.trim();
         if(!nome) return alert("Digite seu nome!");
-
         localStorage.setItem('ministro_nome', nome);
         document.getElementById('lockScreen').style.display = 'none';
         document.getElementById('appContent').style.display = 'block';
         document.getElementById('boasVindas').innerText = "Olá, " + nome.split(' ')[0];
-        
         buscarEscalas(nome);
     }
 
     async function buscarEscalas(nome) {
         const lista = document.getElementById('listaEscalas');
         const loader = document.getElementById('loaderEscala');
-        
-        lista.innerHTML = "";
-        loader.style.display = "block";
-
+        lista.innerHTML = ""; loader.style.display = "block";
         try {
             const response = await fetch(URL_API, {
                 method: 'POST',
@@ -99,77 +141,45 @@
             });
             const data = await response.json();
             loader.style.display = "none";
-
             if(data.ok && data.escalas.length > 0) {
                 data.escalas.forEach(esc => {
                     const horaDisplay = esc.hora || "00:00";
-                    
                     const card = document.createElement('div');
                     card.className = 'card-escala';
                     card.innerHTML = `
                         <div class="hora">⏰ ${horaDisplay}</div>
                         <div class="missa">⛪ ${esc.missa}</div>
                         <div class="detalhes">📅 ${esc.data} (${esc.tipo})</div>
-                        ${esc.obs ? `<div style="margin-top:8px; color:var(--danger); font-size:11px;"><b>Obs:</b> ${esc.obs}</div>` : ""}
                         <button class="btn btn-green" onclick="prepararSalvar('${esc.data}', '${horaDisplay}', '${esc.missa}')">📅 Salvar na Agenda Google</button>
                     `;
                     lista.appendChild(card);
                 });
-            } else {
-                lista.innerHTML = "<p style='text-align:center; color:#64748b;'>Nenhuma escala encontrada para você.</p>";
-            }
-        } catch(e) {
-            loader.style.display = "none";
-            lista.innerHTML = "<p style='color:red;'>Erro ao carregar dados.</p>";
-        }
+            } else { lista.innerHTML = "<p style='text-align:center; color:#64748b;'>Nenhuma escala encontrada.</p>"; }
+        } catch(e) { loader.style.display = "none"; lista.innerHTML = "<p style='color:red;'>Erro ao carregar dados.</p>"; }
     }
 
     function prepararSalvar(dataStr, horaStr, missa) {
         let dataFinal = "";
-
-        // Verifica se a dataStr é uma regra (ex: "1º Domingo") ou data real (DD/MM/AAAA)
-        if (dataStr.includes('º')) {
-            dataFinal = calcularDataPorRegra(dataStr);
-        } else {
-            const partes = dataStr.split('/');
-            dataFinal = `${partes[2]}${partes[1]}${partes[0]}`;
-        }
-
+        if (dataStr.includes('º')) { dataFinal = calcularDataPorRegra(dataStr); } 
+        else { const partes = dataStr.split('/'); dataFinal = `${partes[2]}${partes[1]}${partes[0]}`; }
         const horaFormatada = horaStr.replace(':', '');
         const start = `${dataFinal}T${horaFormatada}00`;
-        
-        // Calcula fim (+1h)
         let h = parseInt(horaFormatada.substring(0,2)) + 1;
         const end = `${dataFinal}T${h.toString().padStart(2, '0')}${horaFormatada.substring(2)}00`;
-
         const titulo = encodeURIComponent(`Escala MESC: ${missa}`);
         const link = `https://www.google.com/calendar/render?action=TEMPLATE&text=${titulo}&dates=${start}/${end}&sf=true&output=xml`;
-        
         window.open(link, '_blank');
     }
 
     function calcularDataPorRegra(regra) {
-        // Regra ex: "1º Domingo"
         const partes = regra.split(' ');
-        const nSemana = parseInt(partes[0]); // 1
-        const diaNome = partes[1].toLowerCase(); // domingo
-        
+        const nSemana = parseInt(partes[0]);
+        const diaNome = partes[1].toLowerCase();
         const diasSemanaMap = { "domingo": 0, "segunda": 1, "terça": 2, "quarta": 3, "quinta": 4, "sexta": 5, "sábado": 6 };
         const diaAlvo = diasSemanaMap[diaNome];
-
-        let hoje = new Date();
-        let ano = hoje.getFullYear();
-        let mes = hoje.getMonth();
-
-        // Tenta encontrar a data no mês atual, se já passou, tenta no próximo mês
+        let hoje = new Date(); let ano = hoje.getFullYear(); let mes = hoje.getMonth();
         let dataEncontrada = encontrarDiaNoMes(ano, mes, nSemana, diaAlvo);
-        
-        if (dataEncontrada < hoje) {
-            mes++;
-            if (mes > 11) { mes = 0; ano++; }
-            dataEncontrada = encontrarDiaNoMes(ano, mes, nSemana, diaAlvo);
-        }
-
+        if (dataEncontrada < hoje) { mes++; if (mes > 11) { mes = 0; ano++; } dataEncontrada = encontrarDiaNoMes(ano, mes, nSemana, diaAlvo); }
         const y = dataEncontrada.getFullYear();
         const m = (dataEncontrada.getMonth() + 1).toString().padStart(2, '0');
         const d = dataEncontrada.getDate().toString().padStart(2, '0');
@@ -181,18 +191,18 @@
         for (let d = 1; d <= 31; d++) {
             let tempDate = new Date(ano, mes, d);
             if (tempDate.getMonth() !== mes) break;
-            if (tempDate.getDay() === diaAlvo) {
-                contador++;
-                if (contador === nSemana) return tempDate;
-            }
+            if (tempDate.getDay() === diaAlvo) { contador++; if (contador === nSemana) return tempDate; }
         }
-        return new Date(ano, mes, 1); // fallback
+        return new Date(ano, mes, 1);
     }
 
-    function logout() {
-        localStorage.removeItem('ministro_nome');
-        location.reload();
+    function abrirOracoes() { document.getElementById('modalOracoes').classList.add('open'); trocarOracao(); }
+    function fecharOracoes() { document.getElementById('modalOracoes').classList.remove('open'); }
+    function trocarOracao() {
+        const chave = document.getElementById('seletorOracao').value;
+        document.getElementById('corpoOracao').innerText = ORACOES_DB[chave];
     }
+    function logout() { localStorage.removeItem('ministro_nome'); location.reload(); }
 </script>
 </body>
 </html>
