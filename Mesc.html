@@ -39,12 +39,15 @@
     <div class="section">
         <h2>Escala Fixa (Anual)</h2>
         <button class="btn btn-teal" onclick="openForm('Fixa')">📝 Configurar Regra Fixa</button>
-        <button class="btn btn-zap" onclick="abrirZapModal()">📲 Enviar Escala do Dia</button>
+        <button class="btn btn-zap" onclick="abrirZapModal()">📲 Enviar Escala Fixa</button>
+        <button class="btn btn-pdf" onclick="alert('Gerando PDF da Escala Fixa...')">📄 Baixar PDF Fixa</button>
     </div>
 
     <div class="section">
         <h2>Evento Extra</h2>
         <button class="btn btn-teal" onclick="openForm('Extra')">📝 Criar Escala Extra</button>
+        <button class="btn btn-zap" onclick="abrirZapModal()">📲 Enviar Escala Extra</button>
+        <button class="btn btn-pdf" onclick="alert('Gerando PDF da Escala Extra...')">📄 Baixar PDF Extra</button>
     </div>
 
     <div class="section">
@@ -75,7 +78,7 @@
     <div class="modal-content">
         <h3 style="color:var(--green); margin-top:0">Enviar WhatsApp</h3>
         <div class="field"><label>Escolha a Data</label><input type="date" id="dataZap"></div>
-        <div class="field"><label>Comentário Adicional</label><textarea id="comentZap" rows="2" placeholder="Ex: Reunião após a missa..."></textarea></div>
+        <div class="field"><label>Adicionar Comentário</label><textarea id="comentZap" rows="2" placeholder="Ex: Reunião após a missa..."></textarea></div>
         <button class="btn btn-zap" id="btnEnviarZap" onclick="gerarLinkZap()">🔍 Buscar e Enviar</button>
         <button class="btn btn-pdf" style="background:#64748b" onclick="fecharTudo()">Cancelar</button>
     </div>
@@ -110,16 +113,19 @@
 
     function abrirZapModal() { document.getElementById('modalZap').classList.add('open'); }
 
-    // NOVA FUNÇÃO PARA CORRIGIR O HORÁRIO ESTRANHO
+    // FUNÇÃO CORRIGIDA PARA O HORÁRIO
     function formatarHora(h) {
         if (!h) return "";
         let str = h.toString();
-        // Se vier o formato longo do Google (T12:00:00.000Z), corta para pegar só HH:mm
-        if (str.includes("T")) {
-            return str.split("T")[1].substring(0, 5);
+        // Se for objeto de data do Google (contém T ou é data padrão)
+        if (str.includes("T") || str.includes("Dec 30 1899")) {
+            try {
+                let d = new Date(str);
+                return d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0');
+            } catch(e) { return str.substring(0,5); }
         }
-        // Se vier apenas os números, garante que tenha 5 caracteres (HH:mm)
-        return str.substring(0, 5);
+        // Se for string simples, pega os primeiros 5 caracteres
+        return str.length > 5 ? str.substring(11, 16) : str.substring(0, 5);
     }
 
     async function salvarDados() {
