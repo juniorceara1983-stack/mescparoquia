@@ -102,6 +102,7 @@
         <div id="campoData" class="field" style="display:none;"><label>Data</label><input type="date" id="fData"></div>
         <div class="field"><label>Horário</label><input type="time" id="fHora"></div>
         <div class="field"><label>Evento/Missa</label><input type="text" id="fMissa"></div>
+        <div class="field"><label>Observação (Opcional)</label><input type="text" id="fObs"></div>
         <label>Ministros (Clique para adicionar)</label>
         <textarea id="fMinistros" rows="3" readonly></textarea>
         <div id="clickListaMinistros" class="mini-list" style="margin-bottom: 15px;"></div>
@@ -152,8 +153,7 @@
                 method: 'POST', 
                 body: JSON.stringify({ action: 'verificarToken', paroquia: p, codigo: c }) 
             });
-            const text = await response.text();
-            const data = JSON.parse(text);
+            const data = await response.json();
 
             if(data.ok) {
                 localStorage.setItem('mesc_acesso', 'true');
@@ -161,7 +161,7 @@
                 liberarApp();
                 fecharTudo();
             } else { mostrarStatus(data.error || "Código Inválido", false); }
-        } catch(e) { mostrarStatus("Erro de conexão com a planilha", false); }
+        } catch(e) { mostrarStatus("Erro de conexão", false); }
     }
 
     function liberarApp() {
@@ -243,7 +243,8 @@
             action: tipoAtual === 'Fixa' ? 'addRegra' : 'addEscala',
             hora: document.getElementById('fHora').value,
             missa: document.getElementById('fMissa').value,
-            ministro: document.getElementById('fMinistros').value
+            ministro: document.getElementById('fMinistros').value,
+            obs: document.getElementById('fObs').value
         };
         if(tipoAtual === 'Fixa') payload.regra = document.getElementById('fSemana').value + " " + document.getElementById('fDia').value;
         else payload.data = document.getElementById('fData').value;
@@ -252,11 +253,9 @@
         mostrarStatus("Escala salva com sucesso!", false);
     }
 
-    // --- FUNÇÃO CORRIGIDA PARA CELULAR ---
     async function gerarLinkZap() {
         const dataVal = document.getElementById('dataZap').value;
         if (!dataVal) return alert("Selecione a data da escala!");
-        
         mostrarStatus("Preparando WhatsApp...");
 
         try {
@@ -265,21 +264,13 @@
             
             const [ano, mes, dia] = dataVal.split('-');
             const dataObj = new Date(ano, mes-1, dia, 12, 0, 0);
-            
             const diasSemanas = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
             const diaNome = diasSemanas[dataObj.getDay()];
             const nSemana = Math.ceil(dataObj.getDate() / 7);
             const regraHoje = `${nSemana}º ${diaNome}`;
 
-            // SOLUÇÃO PARA MOBILE: Extração de caracteres brutos
-            const formatarHorarioMobile = (valor) => {
-                if(!valor) return "00:00";
-                // Converte em texto e pega apenas os primeiros 5 caracteres se for formato HH:MM
-                const s = valor.toString();
-                // Se o Google mandar algo como "Sat Dec 30 1899 19:00:00", o Regex abaixo pega só o "19:00"
-                const match = s.match(/(\d{2}:\d{2})/);
-                return match ? match[1] : "00:00";
-            };
+            // SOLUÇÃO DISPLAY VALUES: A hora agora vem como texto puro "19:00"
+            const formatarHora = (v) => (v && v.toString().trim()) ? v.toString().trim() : "00:00";
 
             const extras = (banco.extras || []).filter(e => e[0] && e[0].toString().includes(dataVal));
             const fixos = (banco.regras || []).filter(r => r[0] && r[0].toString().trim().toLowerCase() === regraHoje.toLowerCase());
@@ -292,25 +283,35 @@
             let msg = `*📍 ESCALA MESC - ${dia}/${mes}/${ano}*\n*(${regraHoje})*\n\n`;
 
             const lista = [
-                ...fixos.map(f => ({ h: formatarHorarioMobile(f[1]), m: f[2], n: f[3] })),
-                ...extras.map(e => ({ h: formatarHorarioMobile(e[1]), m: e[2], n: e[3] }))
+                ...fixos.map(f => ({ h: formatarHora(f[1]), m: f[2], n: f[3], o: f[4] })),
+                ...extras.map(e => ({ h: formatarHora(e[1]), m: e[2], n: e[3], o: e[4] }))
             ].sort((a,b) => a.h.localeCompare(b.h));
 
             lista.forEach(item => {
-                msg += `⏰ *Hora:* ${item.h}\n⛪ *Missa:* ${item.m || "Missa"}\n👤 *Ministros:* ${item.n || "A definir"}\n─────────────────\n\n`;
+                msg += `⏰ *Hora:* ${item.h}\n⛪ *Missa:* ${item.m || "Missa"}\n👤 *Ministros:* ${item.n || "A definir"}\n`;
+                if(item.o) msg += `📝 *Obs:* ${item.o}\n`;
+                msg += `─────────────────\n\n`;
             });
 
-            const obs = document.getElementById('comentZap').value;
-            if (obs) msg += `📝 *Obs:* ${obs}\n\n`;
+            const obsAdicional = document.getElementById('comentZap').value;
+            if (obsAdicional) msg += `📢 *Comunicado:* ${obsAdicional}\n\n`;
             msg += `_Gerado via MESC Digital_`;
 
-            // api.whatsapp.com é mais confiável em celulares que whatsapp://
             window.location.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
             fecharTudo();
         } catch(e) { mostrarStatus("Erro ao preparar mensagem", false); }
     }
 
-    function openForm(t) { tipoAtual = t; document.getElementById('fMinistros').value = ""; document.getElementById('modalForm').classList.add('open'); document.getElementById('seletorRegra').style.display = t === 'Fixa' ? 'block' : 'none'; document.getElementById('campoData').style.display = t === 'Extra' ? 'block' : 'none'; }
+    function openForm(t) { 
+        tipoAtual = t; 
+        document.getElementById('fMinistros').value = ""; 
+        document.getElementById('fMissa').value = ""; 
+        document.getElementById('fHora').value = ""; 
+        document.getElementById('fObs').value = "";
+        document.getElementById('modalForm').classList.add('open'); 
+        document.getElementById('seletorRegra').style.display = t === 'Fixa' ? 'block' : 'none'; 
+        document.getElementById('campoData').style.display = t === 'Extra' ? 'block' : 'none'; 
+    }
     function fecharTudo() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('open')); }
     function abrirZapModal(t) { tipoAtual = t; document.getElementById('modalZap').classList.add('open'); }
 </script>
