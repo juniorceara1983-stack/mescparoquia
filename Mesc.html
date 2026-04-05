@@ -9,134 +9,131 @@
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--bg); margin: 0; padding: 16px; }
         .wrap { max-width: 480px; margin: 0 auto; }
-        
         header { text-align: center; margin-bottom: 20px; }
         h1 { color: var(--primary); margin: 0; font-size: 24px; }
-        p { color: #64748b; font-size: 13px; margin-top: 4px; }
-
         .section { margin-top: 15px; padding-top: 15px; border-top: 2px solid #e2e8f0; }
         .section h2 { font-size: 13px; text-transform: uppercase; color: #64748b; margin-bottom: 10px; }
-        
         .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #fff; font-size: 14px; text-decoration: none; }
         .btn-teal { background: var(--teal); }
         .btn-blue { background: var(--primary); }
-        .btn-pdf { background: #475569; }
         .btn-zap { background: var(--green); }
-
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.8); z-index: 1000; align-items: center; justify-content: center; padding: 10px; }
         .modal.open { display: flex; }
-        .modal-content { background: #fff; border-radius: 16px; width: 100%; max-width: 450px; padding: 20px; max-height: 95vh; overflow-y: auto; }
-        
-        .field { margin-bottom: 12px; }
-        label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 4px; color: var(--primary); text-transform: uppercase; }
-        select, input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
-        
-        .slot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-        .footer { text-align: center; font-size: 10px; color: #94a3b8; margin-top: 30px; }
+        .modal-content { background: #fff; border-radius: 16px; width: 100%; max-width: 400px; padding: 20px; text-align: center; }
+        .field { margin-bottom: 12px; text-align: left; }
+        label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 4px; color: var(--primary); }
+        select, input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; }
+        .slot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .msg-biblica { font-style: italic; color: #334155; margin: 20px 0; font-size: 16px; line-height: 1.4; }
     </style>
 </head>
 <body>
 
 <div class="wrap">
-    <header>
-        <h1>MESC Maracanaú</h1>
-        <p>Paróquia PNSPS</p>
-    </header>
+    <header><h1>MESC Maracanaú</h1></header>
 
     <div class="section">
         <h2>Escala Fixa</h2>
-        <button class="btn btn-teal" onclick="openModal('Fixa')">📝 Criar escala fixa</button>
-        <button class="btn btn-pdf" onclick="confirmarAcao('PDF gerado com sucesso!')">📄 Baixar PDF fixa</button>
-        <button class="btn btn-zap" onclick="confirmarAcao('Abrindo WhatsApp...')">📲 Enviar escala ZAP fixo</button>
+        <button class="btn btn-teal" onclick="openForm('Fixa')">📝 Criar escala fixa</button>
+        <button class="btn btn-zap" onclick="abrirZapComData('Fixa')">📲 Enviar escala ZAP fixo</button>
     </div>
 
     <div class="section">
         <h2>Evento Extra</h2>
-        <button class="btn btn-teal" onclick="openModal('Extra')">📝 Criar escala extra</button>
-        <button class="btn btn-pdf" onclick="confirmarAcao('PDF gerado com sucesso!')">📄 Baixar PDF extra</button>
-        <button class="btn btn-zap" onclick="confirmarAcao('Abrindo WhatsApp...')">📲 Enviar escala ZAP extra</button>
+        <button class="btn btn-teal" onclick="openForm('Extra')">📝 Criar escala extra</button>
+        <button class="btn btn-zap" onclick="abrirZapComData('Extra')">📲 Enviar escala ZAP extra</button>
     </div>
 
     <div class="section">
-        <h2>Planilha Central</h2>
-        <a class="btn btn-blue" href="https://docs.google.com/spreadsheets/d/11fV62v1MY-w4b7RrPXJwiDhSiY03kS5vkvL_tv--Kos/edit" target="_blank">📊 Abrir planilha no Google</a>
+        <a class="btn btn-blue" href="https://docs.google.com/spreadsheets/d/11fV62v1MY-w4b7RrPXJwiDhSiY03kS5vkvL_tv--Kos/edit" target="_blank">📊 Abrir planilha</a>
     </div>
-
-    <div class="footer">By: Jr&amp;Iz</div>
 </div>
 
-<div id="modalEscala" class="modal" onclick="closeModal()">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <h3 id="modalTitle" style="margin-top:0; color:var(--primary); font-size: 18px;">Lançar Escala</h3>
-
+<div id="modalForm" class="modal">
+    <div class="modal-content" style="text-align: left;">
+        <h3 id="formTitle" style="color:var(--primary)">Lançar Escala</h3>
         <div style="display: flex; gap: 8px;">
             <div class="field" style="flex: 1;">
                 <label>Ocorrência</label>
-                <select id="selOcorrencia">
-                    <option>1°</option><option>2°</option><option>3°</option><option>4°</option><option>5°</option>
-                </select>
+                <select><option>1°</option><option>2°</option><option>3°</option><option>4°</option><option>5°</option></select>
             </div>
             <div class="field" style="flex: 2;">
                 <label>Dia da Semana</label>
-                <select id="selDia">
-                    <option>Sábado</option><option>Domingo</option>
-                    <option>Segunda-feira</option><option>Terça-feira</option>
-                    <option>Quarta-feira</option><option>Quinta-feira</option><option>Sexta-feira</option>
+                <select>
+                    <option>Sábado</option><option>Domingo</option><option>Segunda</option><option>Terça</option><option>Quarta</option><option>Quinta</option><option>Sexta</option>
                 </select>
             </div>
         </div>
-
-        <div style="display: flex; gap: 8px;">
-            <div class="field" style="flex: 1;"><label>Data</label><input type="date"></div>
-            <div class="field" style="flex: 1;"><label>Horário</label><input type="time"></div>
-        </div>
-
+        <div class="field"><label>Horário</label><input type="time"></div>
         <label>Ministros (10 Slots)</label>
         <div class="slot-grid" id="slotsNomes"></div>
+        <button class="btn btn-blue" style="margin-top:15px" onclick="mostrarMensagem()">💾 Salvar na Planilha</button>
+    </div>
+</div>
 
-        <button class="btn btn-blue" style="margin-top:20px;" onclick="salvarPlanilha()">💾 Salvar na Planilha</button>
+<div id="modalZap" class="modal">
+    <div class="modal-content">
+        <h3 style="color:var(--green)">Enviar via WhatsApp</h3>
+        <div class="field">
+            <label>Selecione a Data da Escala</label>
+            <input type="date" id="dataZap">
+        </div>
+        <button class="btn btn-zap" onclick="enviarZapFinal()">Continuar para o WhatsApp</button>
+    </div>
+</div>
+
+<div id="modalMsg" class="modal">
+    <div class="modal-content">
+        <div class="msg-biblica" id="textoBiblico"></div>
+        <button class="btn btn-blue" onclick="fecharTudo()">Amém</button>
     </div>
 </div>
 
 <script>
     const mensagens = [
-        "«Felizes os que ouvem a palavra de Deus e a guardam.» (Lc 11,28)",
-        "«Tudo posso naquele que me fortalece.» (Fp 4,13)",
-        "«Onde há caridade e amor, Deus aí está.» (Hino)",
-        "«O Senhor é meu pastor, nada me faltará.» (Sl 23)",
-        "«Fazei tudo o que Ele vos disser.» (Jo 2,5)",
-        "«Quem não vive para servir, não serve para viver.» (S. Papa Francisco)",
-        "«A medida do amor é amar sem medida.» (S. Agostinho)"
+        "«Felizes os que ouvem a palavra de Deus e a guardam.»",
+        "«Tudo posso naquele que me fortalece.»",
+        "«Onde há caridade e amor, Deus aí está.»",
+        "«O Senhor é meu pastor, nada me faltará.»",
+        "«Fazei tudo o que Ele vos disser.»",
+        "«Quem não vive para servir, não serve para viver.»",
+        "«A medida do amor é amar sem medida.»"
     ];
 
+    // Criar slots de nomes
     const container = document.getElementById('slotsNomes');
     for (let i = 1; i <= 10; i++) {
         const input = document.createElement('input');
-        input.type = 'text';
-        input.placeholder = i + '° Ministro';
+        input.type = 'text'; input.placeholder = i + '° Ministro';
         container.appendChild(input);
     }
 
-    function openModal(tipo) { 
-        document.getElementById('modalTitle').innerText = 'Lançar Escala ' + tipo;
-        document.getElementById('modalEscala').classList.add('open'); 
+    function openForm(t) { 
+        document.getElementById('formTitle').innerText = 'Escala ' + t;
+        document.getElementById('modalForm').classList.add('open'); 
     }
 
-    function closeModal() { 
-        document.getElementById('modalEscala').classList.remove('open'); 
+    function abrirZapComData() { document.getElementById('modalZap').classList.add('open'); }
+
+    function enviarZapFinal() {
+        const data = document.getElementById('dataZap').value;
+        if(!data) return alert("Selecione a data!");
+        document.getElementById('modalZap').classList.remove('open');
+        mostrarMensagem();
+        // Aqui iria a lógica de abrir o link do zap
     }
 
-    function confirmarAcao(prefixo) {
-        const msgAleatoria = mensagens[Math.floor(Math.random() * mensagens.length)];
-        alert(prefixo + "\n\n" + msgAleatoria);
+    function mostrarMensagem() {
+        const msg = mensagens[Math.floor(Math.random() * mensagens.length)];
+        document.getElementById('textoBiblico').innerText = msg;
+        document.getElementById('modalForm').classList.remove('open');
+        document.getElementById('modalMsg').classList.add('open');
     }
 
-    function salvarPlanilha() {
-        confirmarAcao("Dados enviados para a planilha!");
-        closeModal();
+    function fecharTudo() {
+        document.querySelectorAll('.modal').forEach(m => m.classList.remove('open'));
     }
 </script>
 
 </body>
-                                                                          </html>
-                                                                          
+</html>
