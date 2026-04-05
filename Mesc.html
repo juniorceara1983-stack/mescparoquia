@@ -150,27 +150,50 @@
     async function verificarAcesso() {
         const p = document.getElementById('paroquiaAcesso').value.trim();
         const c = document.getElementById('codigoAcesso').value.trim();
-        if(!p || !c) return;
+        
+        if(!p || !c) {
+            alert("Por favor, preencha Paróquia e Código.");
+            return;
+        }
+
         mostrarStatus("Verificando Acesso...");
+
         try {
-            const res = await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'verificarToken', paroquia: p, codigo: c }) });
-            const data = await res.json();
+            // Enviamos os dados para a planilha
+            const response = await fetch(URL_API, { 
+                method: 'POST', 
+                body: JSON.stringify({ action: 'verificarToken', paroquia: p, codigo: c }) 
+            });
+            
+            // Lemos a resposta como texto primeiro para evitar o travamento do CORS
+            const text = await response.text(); 
+            const data = JSON.parse(text);
+
             if(data.ok) {
                 localStorage.setItem('mesc_acesso', 'true');
                 localStorage.setItem('mesc_nome_paroquia', p.toUpperCase());
                 liberarApp();
                 fecharTudo();
-            } else { mostrarStatus(data.error, false); }
-        } catch(e) { mostrarStatus("Erro de conexão", false); }
+            } else { 
+                // Se o código estiver errado ou já usado, mostramos a frase de erro
+                mostrarStatus(data.error, false); 
+            }
+        } catch(e) { 
+            console.error(e);
+            mostrarStatus("Erro de conexão. Verifique se o Script foi publicado como 'Qualquer Pessoa'.", false);
+        }
     }
 
     function liberarApp() {
         document.getElementById('lockScreen').style.display = 'none';
         document.getElementById('appContent').style.display = 'block';
-        document.getElementById('tituloHeader').innerText = "MESC - " + localStorage.getItem('mesc_nome_paroquia');
+        
+        // Recupera o nome da paróquia que foi salvo no login
+        const nomeSalvo = localStorage.getItem('mesc_nome_paroquia') || "PARÓQUIA";
+        document.getElementById('tituloHeader').innerText = "MESC - " + nomeSalvo;
+        
         atualizarListaMinistros();
     }
-
     async function gerarPdf(tipo) {
         mostrarStatus("Gerando seu PDF...");
         try {
