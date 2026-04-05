@@ -3,33 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MESC — Gestão Simplificada</title>
+    <title>MESC — Gestão de Escalas</title>
     <style>
-        :root { --primary: #1e3a8a; --bg: #f1f5f9; --teal: #0f766e; }
+        :root { --primary: #1e3a8a; --bg: #f1f5f9; --teal: #0f766e; --green: #15803d; --slate: #475569; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--bg); margin: 0; padding: 16px; }
-        .wrap { max-width: 450px; margin: 0 auto; }
+        .wrap { max-width: 480px; margin: 0 auto; }
         
         header { text-align: center; margin-bottom: 20px; }
-        h1 { color: var(--primary); margin: 0; font-size: 22px; }
-        p { color: #64748b; font-size: 14px; margin: 5px 0 0; }
+        h1 { color: var(--primary); margin: 0; font-size: 24px; }
+        p { color: #64748b; font-size: 14px; margin-top: 5px; }
 
         .section { margin-top: 15px; padding-top: 15px; border-top: 2px solid #e2e8f0; }
-        .section h2 { font-size: 13px; text-transform: uppercase; color: #64748b; margin-bottom: 10px; }
+        .section h2 { font-size: 13px; text-transform: uppercase; color: #64748b; margin-bottom: 10px; letter-spacing: 0.5px; }
         
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; color: #fff; font-size: 14px; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 10px; text-decoration: none; color: #fff; font-size: 14px; transition: opacity 0.2s; }
+        .btn:active { opacity: 0.8; }
         .btn-teal { background: var(--teal); }
         .btn-blue { background: var(--primary); }
-        .btn-zap { background: #15803d; }
+        .btn-pdf { background: var(--slate); }
+        .btn-zap { background: var(--green); }
+        
+        textarea { width: 100%; border-radius: 12px; border: 1px solid #cbd5e1; padding: 12px; margin-top: 8px; resize: none; }
 
         /* Modal */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 1000; align-items: center; justify-content: center; padding: 15px; }
         .modal.open { display: flex; }
-        .modal-content { background: #fff; border-radius: 16px; width: 100%; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .modal-content { background: #fff; border-radius: 16px; width: 100%; max-width: 400px; padding: 20px; }
         
-        .field { margin-bottom: 15px; }
-        label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px; color: var(--primary); }
-        select, input, textarea { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 15px; background: #fff; }
+        .field { margin-bottom: 12px; }
+        label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 4px; color: var(--primary); }
+        select, input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
         
         .footer { text-align: center; font-size: 10px; color: #94a3b8; margin-top: 30px; }
     </style>
@@ -43,13 +47,23 @@
     </header>
 
     <div class="section">
-        <button class="btn btn-teal" onclick="openModal()">📝 Lançar Escala</button>
-        <button class="btn btn-zap">📲 Enviar via WhatsApp</button>
+        <h2>Escala Fixa</h2>
+        <button class="btn btn-teal" onclick="openModal('Fixa')">📝 Criar escala fixa</button>
+        <button class="btn btn-pdf">📄 Baixar PDF fixa</button>
+        <button class="btn btn-zap">📲 Enviar escala ZAP fixo</button>
     </div>
 
     <div class="section">
-        <h2>Comentários</h2>
-        <textarea rows="2" placeholder="Observações adicionais..."></textarea>
+        <h2>Evento Extra</h2>
+        <button class="btn btn-teal" onclick="openModal('Extra')">📝 Criar escala extra</button>
+        <button class="btn btn-pdf">📄 Baixar PDF extra</button>
+        <button class="btn btn-zap">📲 Enviar escala ZAP extra</button>
+    </div>
+
+    <div class="section">
+        <h2>Configurações e Planilha</h2>
+        <a class="btn btn-blue" href="https://docs.google.com/spreadsheets/d/11fV62v1MY-w4b7RrPXJwiDhSiY03kS5vkvL_tv--Kos/edit" target="_blank">📊 Abrir planilha no Google</a>
+        <textarea rows="2" placeholder="Adicionar comentário..."></textarea>
     </div>
 
     <div class="footer">By: Jr&amp;Iz</div>
@@ -57,54 +71,50 @@
 
 <div id="modalEscala" class="modal" onclick="closeModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
-        <h3 style="margin-top:0; color:var(--primary)">Novo Lançamento</h3>
+        <h3 id="modalTitle" style="margin-top:0; color:var(--primary); font-size: 18px;">Lançar Escala</h3>
 
         <div class="field">
             <label>Dia da Semana</label>
-            <select id="diaSemana">
-                <option>Segunda-feira</option>
-                <option>Terça-feira</option>
-                <option>Quarta-feira</option>
-                <option>Quinta-feira</option>
-                <option>Sexta-feira</option>
-                <option>Sábado</option>
+            <select>
+                <option>Segunda-feira</option><option>Terça-feira</option>
+                <option>Quarta-feira</option><option>Quinta-feira</option>
+                <option>Sexta-feira</option><option>Sábado</option>
                 <option>Domingo</option>
             </select>
         </div>
 
         <div class="field">
-            <label>Posição (Ordem)</label>
-            <select id="posicao">
-                <option>1° Ministro</option>
-                <option>2° Ministro</option>
-                <option>3° Ministro</option>
-                <option>4° Ministro</option>
+            <label>Posição</label>
+            <select>
+                <option>1° Ministro</option><option>2° Ministro</option>
+                <option>3° Ministro</option><option>4° Ministro</option>
                 <option>5° Ministro</option>
             </select>
         </div>
 
         <div style="display: flex; gap: 10px;">
             <div class="field" style="flex: 1;">
-                <label>Data</label>
-                <input type="date">
+                <label>Data</label><input type="date">
             </div>
             <div class="field" style="flex: 1;">
-                <label>Horário</label>
-                <input type="time">
+                <label>Horário</label><input type="time">
             </div>
         </div>
 
         <div class="field">
             <label>Nome do Ministro</label>
-            <input type="text" placeholder="Nome completo">
+            <input type="text" placeholder="Digite o nome">
         </div>
 
-        <button class="btn btn-blue" onclick="closeModal()">✅ Confirmar Lançamento</button>
+        <button class="btn btn-blue" onclick="closeModal()">✅ Confirmar e Salvar</button>
     </div>
 </div>
 
 <script>
-    function openModal() { document.getElementById('modalEscala').classList.add('open'); }
+    function openModal(tipo) { 
+        document.getElementById('modalTitle').innerText = 'Lançar Escala ' + tipo;
+        document.getElementById('modalEscala').classList.add('open'); 
+    }
     function closeModal() { document.getElementById('modalEscala').classList.remove('open'); }
 </script>
 
