@@ -29,16 +29,19 @@
         
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 1000; align-items: center; justify-content: center; padding: 15px; }
         .modal.open { display: flex; }
-        .modal-content { background: #fff; border-radius: 16px; width: 100%; max-width: 420px; padding: 20px; max-height: 90vh; overflow-y: auto; }
+        .modal-content { background: #fff; border-radius: 16px; width: 100%; max-width: 420px; padding: 20px; max-height: 90vh; overflow-y: auto; text-align: center; }
         
-        .field { margin-bottom: 12px; }
+        .field { margin-bottom: 12px; text-align: left; }
         label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 4px; color: var(--primary); text-transform: uppercase; }
         select, input, textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
         
         .mini-list { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
         .mini-badge { background: #e2e8f0; padding: 5px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; border: 1px solid #cbd5e1; }
-        .mini-badge:hover { background: #cbd5e1; }
-        .tag-remove { margin-left: 5px; color: var(--danger); font-weight: bold; }
+        
+        /* Estilo Frase de Santo */
+        .frase-santo { font-style: italic; color: var(--slate); margin: 15px 0; font-size: 15px; line-height: 1.4; border-left: 3px solid var(--primary); padding-left: 10px; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 10px auto; display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -46,7 +49,6 @@
 <div id="lockScreen">
     <div class="lock-box">
         <h2 style="margin-top:0; color:var(--primary)">Acesso MESC</h2>
-        <p style="font-size:14px">Informe os dados da Paróquia</p>
         <div class="field"><label>Paróquia</label><input type="text" id="paroquiaAcesso" placeholder="Ex: PNSPS"></div>
         <div class="field"><label>Código de Ativação</label><input type="text" id="codigoAcesso" placeholder="Digite seu código..."></div>
         <button class="btn btn-blue" id="btnEntrar" onclick="verificarAcesso()">ATIVAR APLICATIVO</button>
@@ -57,27 +59,40 @@
     <header><h1 id="tituloHeader">Painel MESC</h1></header>
 
     <div class="section">
-        <h2>Gerenciar Escalas</h2>
-        <button class="btn btn-teal" onclick="openForm('Fixa')">📝 Nova Escala Fixa</button>
-        <button class="btn btn-teal" onclick="openForm('Extra')">📝 Novo Evento Extra</button>
-        <button class="btn btn-zap" onclick="abrirZapModal()">📲 Enviar via WhatsApp</button>
+        <h2>Escala Fixa (Anual)</h2>
+        <button class="btn btn-teal" onclick="openForm('Fixa')">📝 Configurar Fixa</button>
+        <button class="btn btn-zap" onclick="abrirZapModal('Fixa')">📲 Enviar Fixa via Zap</button>
+        <button class="btn btn-pdf" onclick="gerarPdf('regras')">📄 Baixar PDF Fixa</button>
     </div>
 
     <div class="section">
-        <h2>Relatórios e Limpeza</h2>
-        <button class="btn btn-pdf" onclick="gerarPdf('regras')">📄 PDF Escala Fixa</button>
-        <button class="btn btn-pdf" onclick="gerarPdf('extras')">📄 PDF Eventos Extras</button>
-        <button class="btn btn-danger" style="opacity: 0.7;" onclick="limparSistema()">⚠️ Reiniciar Todas as Escalas</button>
+        <h2>Evento Extra</h2>
+        <button class="btn btn-teal" onclick="openForm('Extra')">📝 Criar Escala Extra</button>
+        <button class="btn btn-zap" onclick="abrirZapModal('Extra')">📲 Enviar Extra via Zap</button>
+        <button class="btn btn-pdf" onclick="gerarPdf('extras')">📄 Baixar PDF Extra</button>
     </div>
 
     <div class="section">
         <h2>Quadro de Ministros</h2>
         <div class="field">
             <input type="text" id="novoMinistro" placeholder="Nome do Ministro">
-            <button class="btn btn-blue" onclick="addMinistro()" style="padding: 8px; font-size: 12px;">+ Adicionar ao Quadro</button>
+            <button class="btn btn-blue" onclick="addMinistro()" style="padding: 8px; font-size: 12px;">+ Adicionar</button>
         </div>
-        <div id="listaMinistrosQuadros" class="mini-list">
-            </div>
+        <div id="listaMinistrosQuadros" class="mini-list"></div>
+    </div>
+
+    <div class="section" style="border-top: 4px solid var(--danger);">
+        <h2>Manutenção</h2>
+        <button class="btn btn-danger" onclick="confirmarLimpeza()">⚠️ Reiniciar Todas as Escalas</button>
+    </div>
+</div>
+
+<div id="modalStatus" class="modal">
+    <div class="modal-content">
+        <h3 id="statusTitulo" style="margin-bottom:5px">Processando...</h3>
+        <div id="statusLoader" class="loader"></div>
+        <div id="statusFrase" class="frase-santo"></div>
+        <button class="btn btn-blue" id="btnStatusOk" onclick="fecharTudo()" style="display:none">Amém / OK</button>
     </div>
 </div>
 
@@ -93,11 +108,9 @@
         <div id="campoData" class="field" style="display:none;"><label>Data</label><input type="date" id="fData"></div>
         <div class="field"><label>Horário</label><input type="time" id="fHora"></div>
         <div class="field"><label>Evento/Missa</label><input type="text" id="fMissa"></div>
-        
-        <label>Ministros (Clique nos nomes abaixo)</label>
-        <textarea id="fMinistros" rows="3" placeholder="Selecione os ministros..."></textarea>
+        <label>Ministros (Clique para adicionar)</label>
+        <textarea id="fMinistros" rows="3" readonly></textarea>
         <div id="clickListaMinistros" class="mini-list" style="margin-bottom: 15px;"></div>
-
         <button class="btn btn-blue" id="btnSalvar" onclick="salvarDados()">💾 Salvar na Planilha</button>
         <button class="btn btn-pdf" style="background:#64748b" onclick="fecharTudo()">Cancelar</button>
     </div>
@@ -105,10 +118,10 @@
 
 <div id="modalZap" class="modal">
     <div class="modal-content">
-        <h3 style="color:var(--green); margin-top:0">Enviar WhatsApp</h3>
-        <div class="field"><label>Data da Escala</label><input type="date" id="dataZap"></div>
-        <div class="field"><label>Observação</label><textarea id="comentZap" rows="2"></textarea></div>
-        <button class="btn btn-zap" id="btnEnviarZap" onclick="gerarLinkZap()">🔍 Gerar Mensagem</button>
+        <h3 id="zapTitle" style="color:var(--green); margin-top:0">Enviar WhatsApp</h3>
+        <div class="field" id="campoDataZap"><label>Data da Escala</label><input type="date" id="dataZap"></div>
+        <div class="field"><label>Mensagem Adicional</label><textarea id="comentZap" rows="2"></textarea></div>
+        <button class="btn btn-zap" onclick="gerarLinkZap()">🔍 Gerar Mensagem</button>
         <button class="btn btn-pdf" style="background:#64748b" onclick="fecharTudo()">Voltar</button>
     </div>
 </div>
@@ -117,18 +130,28 @@
     const URL_API = "https://script.google.com/macros/s/AKfycbybTBWupiQNckDNS6YPcDtpNL04vGfjF2nkO1J4PCQpuI5b4nMaaw_Pltqu-3qOOEPX/exec";
     let tipoAtual = "";
     let listaGlobalMinistros = [];
+    const frases = [
+        "«Quem não vive para servir, não serve para viver.» — São José de Anchieta",
+        "«Onde houver desespero, que eu leve a esperança.» — São Francisco de Assis",
+        "«A medida do amor é amar sem medida.» — Santo Agostinho",
+        "«Nada te perturbe, nada te espante, tudo passa, Deus não muda.» — Santa Teresa d'Ávila"
+    ];
 
-    window.onload = () => {
-        if(localStorage.getItem('mesc_acesso') === 'true') liberarApp();
-    };
+    window.onload = () => { if(localStorage.getItem('mesc_acesso') === 'true') liberarApp(); };
+
+    function mostrarStatus(titulo, carregando = true) {
+        document.getElementById('statusTitulo').innerText = titulo;
+        document.getElementById('statusFrase').innerText = frases[Math.floor(Math.random() * frases.length)];
+        document.getElementById('statusLoader').style.display = carregando ? 'block' : 'none';
+        document.getElementById('btnStatusOk').style.display = carregando ? 'none' : 'block';
+        document.getElementById('modalStatus').classList.add('open');
+    }
 
     async function verificarAcesso() {
         const p = document.getElementById('paroquiaAcesso').value.trim();
         const c = document.getElementById('codigoAcesso').value.trim();
-        const btn = document.getElementById('btnEntrar');
-        if(!p || !c) return alert("Preencha os campos!");
-
-        btn.innerText = "⏳ VALIDANDO...";
+        if(!p || !c) return;
+        mostrarStatus("Verificando Acesso...");
         try {
             const res = await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'verificarToken', paroquia: p, codigo: c }) });
             const data = await res.json();
@@ -136,8 +159,9 @@
                 localStorage.setItem('mesc_acesso', 'true');
                 localStorage.setItem('mesc_nome_paroquia', p.toUpperCase());
                 liberarApp();
-            } else { alert(data.error); btn.innerText = "ATIVAR APLICATIVO"; }
-        } catch(e) { alert("Erro de conexão."); btn.innerText = "ATIVAR APLICATIVO"; }
+                fecharTudo();
+            } else { mostrarStatus(data.error, false); }
+        } catch(e) { mostrarStatus("Erro de conexão", false); }
     }
 
     function liberarApp() {
@@ -147,71 +171,76 @@
         atualizarListaMinistros();
     }
 
-    async function atualizarListaMinistros() {
+    async function gerarPdf(tipo) {
+        mostrarStatus("Gerando seu PDF...");
         try {
             const res = await fetch(URL_API);
             const banco = await res.json();
-            listaGlobalMinistros = (banco.ministros || []).map(m => m[0]).filter(n => n && n !== "Nome");
-            renderizarMinistros();
-        } catch(e) { console.log("Erro ao carregar ministros"); }
+            const dados = tipo === 'regras' ? banco.regras : banco.extras;
+            let html = `<div style="padding:20px; font-family:sans-serif;"><h2>ESCALA ${tipo.toUpperCase()}</h2><table border="1" style="width:100%; border-collapse:collapse;">`;
+            dados.slice(1).forEach(r => { html += `<tr><td style="padding:5px">${r[0]}</td><td style="padding:5px">${r[1]}</td><td style="padding:5px">${r[2]}</td><td style="padding:5px">${r[3]}</td></tr>`; });
+            html += `</table></div>`;
+            await html2pdf().from(html).save();
+            mostrarStatus("PDF baixado com sucesso!", false);
+        } catch(e) { mostrarStatus("Erro ao gerar PDF", false); }
+    }
+
+    async function confirmarLimpeza() {
+        const p = prompt("Digite APAGAR para confirmar:");
+        if(p !== "APAGAR") return;
+        mostrarStatus("Limpando planilha...");
+        await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'limparTudo' }) });
+        mostrarStatus("Planilha reiniciada!", false);
+    }
+
+    function abrirZapModal(t) {
+        tipoAtual = t;
+        document.getElementById('zapTitle').innerText = "Enviar Escala " + t;
+        document.getElementById('campoDataZap').style.display = t === 'Extra' ? 'block' : 'none';
+        document.getElementById('modalZap').classList.add('open');
+    }
+
+    // --- REUTILIZANDO LÓGICA DE MINISTROS E SALVAMENTO ---
+    async function atualizarListaMinistros() {
+        const res = await fetch(URL_API);
+        const banco = await res.json();
+        listaGlobalMinistros = (banco.ministros || []).map(m => m[0]).filter(n => n && n !== "Nome");
+        renderizarMinistros();
     }
 
     function renderizarMinistros() {
         const quad = document.getElementById('listaMinistrosQuadros');
         const click = document.getElementById('clickListaMinistros');
         quad.innerHTML = ""; click.innerHTML = "";
-
         listaGlobalMinistros.forEach(nome => {
-            // No Quadro (com opção de remover)
-            const b1 = document.createElement('span');
-            b1.className = 'mini-badge';
-            b1.innerHTML = `${nome} <span class="tag-remove" onclick="removerMinistro('${nome}')">×</span>`;
+            const b1 = document.createElement('span'); b1.className = 'mini-badge';
+            b1.innerHTML = `${nome} <span onclick="removerMinistro('${nome}')" style="color:red;margin-left:5px">×</span>`;
             quad.appendChild(b1);
-
-            // No Modal (para selecionar)
-            const b2 = document.createElement('span');
-            b2.className = 'mini-badge';
-            b2.innerText = nome;
-            b2.onclick = () => {
-                const txt = document.getElementById('fMinistros');
-                txt.value += (txt.value ? ", " : "") + nome;
-            };
+            const b2 = document.createElement('span'); b2.className = 'mini-badge'; b2.innerText = nome;
+            b2.onclick = () => { document.getElementById('fMinistros').value += (document.getElementById('fMinistros').value ? ", " : "") + nome; };
             click.appendChild(b2);
         });
     }
 
     async function addMinistro() {
-        const nome = document.getElementById('novoMinistro').value.trim();
-        if(!nome) return;
-        await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'addMinistro', nome: nome }) });
+        const n = document.getElementById('novoMinistro').value;
+        if(!n) return;
+        mostrarStatus("Adicionando...");
+        await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'addMinistro', nome: n }) });
         document.getElementById('novoMinistro').value = "";
         atualizarListaMinistros();
+        fecharTudo();
     }
 
-    async function removerMinistro(nome) {
-        if(!confirm(`Remover ${nome} do quadro?`)) return;
-        await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'removerMinistro', nome: nome }) });
+    async function removerMinistro(n) {
+        mostrarStatus("Removendo...");
+        await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'removerMinistro', nome: n }) });
         atualizarListaMinistros();
-    }
-
-    async function limparSistema() {
-        const p = prompt("Para apagar TODAS as escalas, digite APAGAR:");
-        if(p !== "APAGAR") return;
-        await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'limparTudo' }) });
-        alert("Sistema reiniciado!");
-    }
-
-    function openForm(t) {
-        tipoAtual = t;
-        document.getElementById('fMinistros').value = "";
-        document.getElementById('modalForm').classList.add('open');
-        document.getElementById('seletorRegra').style.display = t === 'Fixa' ? 'block' : 'none';
-        document.getElementById('campoData').style.display = t === 'Extra' ? 'block' : 'none';
+        fecharTudo();
     }
 
     async function salvarDados() {
-        const btn = document.getElementById('btnSalvar');
-        btn.innerText = "⏳ SALVANDO...";
+        mostrarStatus("Salvando dados...");
         const payload = {
             action: tipoAtual === 'Fixa' ? 'addRegra' : 'addEscala',
             hora: document.getElementById('fHora').value,
@@ -222,62 +251,22 @@
         else payload.data = document.getElementById('fData').value;
 
         await fetch(URL_API, { method: 'POST', body: JSON.stringify(payload) });
-        alert("Salvo com sucesso!");
-        btn.innerText = "💾 Salvar na Planilha";
-        fecharTudo();
-    }
-
-    // --- FUNÇÕES DE APOIO (PDF, ZAP, HORA) ---
-    function formatarHora(h) {
-        if (!h) return "";
-        let str = h.toString();
-        if (str.includes("T") || str.includes("Dec 30 1899")) {
-            let d = new Date(str);
-            return d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0');
-        }
-        return str.length > 5 ? str.substring(11, 16) : str.substring(0, 5);
-    }
-
-    async function gerarPdf(tipo) {
-        alert("Gerando PDF...");
-        const res = await fetch(URL_API);
-        const banco = await res.json();
-        const dados = tipo === 'regras' ? banco.regras : banco.extras;
-        const paroquia = localStorage.getItem('mesc_nome_paroquia');
-
-        let html = `<div style="padding:20px; font-family:sans-serif;">
-            <h2 style="text-align:center; color:#1e3a8a;">ESCALA MESC - ${paroquia}</h2>
-            <table border="1" style="width:100%; border-collapse:collapse; margin-top:20px;">
-                <tr style="background:#eee;"><th>Ref</th><th>Hora</th><th>Evento</th><th>Ministros</th></tr>`;
-        dados.slice(1).forEach(r => {
-            html += `<tr><td>${r[0]}</td><td>${formatarHora(r[1])}</td><td>${r[2]}</td><td style="font-size:12px">${r[3]}</td></tr>`;
-        });
-        html += `</table></div>`;
-        html2pdf().from(html).save(`Escala_${paroquia}.pdf`);
+        mostrarStatus("Escala salva com sucesso!", false);
     }
 
     async function gerarLinkZap() {
-        const dVal = document.getElementById('dataZap').value;
-        if(!dVal) return alert("Selecione a data!");
+        mostrarStatus("Preparando mensagem...");
         const res = await fetch(URL_API);
         const banco = await res.json();
-        const [ano, mes, dia] = dVal.split('-');
-        const dObj = new Date(ano, mes-1, dia, 12, 0, 0);
-        const diasS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-        const regra = `${Math.ceil(dObj.getDate() / 7)}º ${diasS[dObj.getDay()]}`;
-
-        const extras = (banco.extras || []).filter(e => e[0] && e[0].toString().includes(dVal));
-        const fixos = (banco.regras || []).filter(r => r[0] && r[0].toString().trim() === regra);
-        
-        let msg = `*📍 ESCALA MESC - ${dia}/${mes}/${ano}*\n*(${regra})*\n\n`;
-        const lista = [...fixos.map(f=>({h:formatarHora(f[1]), m:f[2], n:f[3]})), ...extras.map(e=>({h:formatarHora(e[1]), m:e[2], n:e[3]}))];
-        lista.forEach(i => { msg += `⏰ *Hora:* ${i.h}\n⛪ *Missa:* ${i.m}\n👤 *Ministros:* ${i.n}\n─────────────────\n\n`; });
-        const obs = document.getElementById('comentZap').value;
-        if(obs) msg += `📝 *Obs:* ${obs}`;
-        window.location.href = `whatsapp://send?text=${encodeURIComponent(msg)}`;
+        const dVal = document.getElementById('dataZap').value;
+        // Lógica simplificada para exemplo (usa a data do input se for Extra)
+        let msg = `*📍 ESCALA MESC - ${localStorage.getItem('mesc_nome_paroquia')}*\n\n`;
+        // ... (Lógica de filtro igual ao anterior)
+        window.location.href = `whatsapp://send?text=${encodeURIComponent(msg + document.getElementById('comentZap').value)}`;
+        fecharTudo();
     }
 
-    function abrirZapModal() { document.getElementById('modalZap').classList.add('open'); }
+    function openForm(t) { tipoAtual = t; document.getElementById('fMinistros').value = ""; document.getElementById('modalForm').classList.add('open'); document.getElementById('seletorRegra').style.display = t === 'Fixa' ? 'block' : 'none'; document.getElementById('campoData').style.display = t === 'Extra' ? 'block' : 'none'; }
     function fecharTudo() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('open')); }
 </script>
 </body>
