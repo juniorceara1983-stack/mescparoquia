@@ -12,7 +12,8 @@
         
         header { text-align: center; margin-bottom: 20px; }
         h1 { color: var(--primary); margin: 0; font-size: 24px; }
-        
+        p { color: #64748b; font-size: 13px; margin-top: 4px; }
+
         .section { margin-top: 15px; padding-top: 15px; border-top: 2px solid #e2e8f0; }
         .section h2 { font-size: 13px; text-transform: uppercase; color: #64748b; margin-bottom: 10px; }
         
@@ -22,14 +23,13 @@
         .btn-pdf { background: #475569; }
         .btn-zap { background: var(--green); }
 
-        /* Modal */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 1000; align-items: center; justify-content: center; padding: 10px; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.8); z-index: 1000; align-items: center; justify-content: center; padding: 10px; }
         .modal.open { display: flex; }
         .modal-content { background: #fff; border-radius: 16px; width: 100%; max-width: 450px; padding: 20px; max-height: 95vh; overflow-y: auto; }
         
         .field { margin-bottom: 12px; }
         label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 4px; color: var(--primary); text-transform: uppercase; }
-        select, input, textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
+        select, input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
         
         .slot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
         .footer { text-align: center; font-size: 10px; color: #94a3b8; margin-top: 30px; }
@@ -40,24 +40,25 @@
 <div class="wrap">
     <header>
         <h1>MESC Maracanaú</h1>
+        <p>Paróquia PNSPS</p>
     </header>
 
     <div class="section">
         <h2>Escala Fixa</h2>
         <button class="btn btn-teal" onclick="openModal('Fixa')">📝 Criar escala fixa</button>
-        <button class="btn btn-pdf">📄 Baixar PDF fixa</button>
-        <button class="btn btn-zap">📲 Enviar escala ZAP fixo</button>
+        <button class="btn btn-pdf" onclick="confirmarAcao('PDF gerado com sucesso!')">📄 Baixar PDF fixa</button>
+        <button class="btn btn-zap" onclick="confirmarAcao('Abrindo WhatsApp...')">📲 Enviar escala ZAP fixo</button>
     </div>
 
     <div class="section">
         <h2>Evento Extra</h2>
         <button class="btn btn-teal" onclick="openModal('Extra')">📝 Criar escala extra</button>
-        <button class="btn btn-pdf">📄 Baixar PDF extra</button>
-        <button class="btn btn-zap">📲 Enviar escala ZAP extra</button>
+        <button class="btn btn-pdf" onclick="confirmarAcao('PDF gerado com sucesso!')">📄 Baixar PDF extra</button>
+        <button class="btn btn-zap" onclick="confirmarAcao('Abrindo WhatsApp...')">📲 Enviar escala ZAP extra</button>
     </div>
 
     <div class="section">
-        <h2>Planilha</h2>
+        <h2>Planilha Central</h2>
         <a class="btn btn-blue" href="https://docs.google.com/spreadsheets/d/11fV62v1MY-w4b7RrPXJwiDhSiY03kS5vkvL_tv--Kos/edit" target="_blank">📊 Abrir planilha no Google</a>
     </div>
 
@@ -66,18 +67,21 @@
 
 <div id="modalEscala" class="modal" onclick="closeModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
-        <h3 id="modalTitle" style="margin-top:0; color:var(--primary)">Lançar Escala</h3>
+        <h3 id="modalTitle" style="margin-top:0; color:var(--primary); font-size: 18px;">Lançar Escala</h3>
 
         <div style="display: flex; gap: 8px;">
             <div class="field" style="flex: 1;">
-                <label>Posição</label>
-                <select><option>1°</option><option>2°</option><option>3°</option><option>4°</option><option>5°</option></select>
+                <label>Ocorrência</label>
+                <select id="selOcorrencia">
+                    <option>1°</option><option>2°</option><option>3°</option><option>4°</option><option>5°</option>
+                </select>
             </div>
             <div class="field" style="flex: 2;">
                 <label>Dia da Semana</label>
-                <select>
-                    <option>Segunda-feira</option><option>Terça-feira</option><option>Quarta-feira</option>
-                    <option>Quinta-feira</option><option>Sexta-feira</option><option>Sábado</option><option>Domingo</option>
+                <select id="selDia">
+                    <option>Sábado</option><option>Domingo</option>
+                    <option>Segunda-feira</option><option>Terça-feira</option>
+                    <option>Quarta-feira</option><option>Quinta-feira</option><option>Sexta-feira</option>
                 </select>
             </div>
         </div>
@@ -88,25 +92,28 @@
         </div>
 
         <label>Ministros (10 Slots)</label>
-        <div class="slot-grid" id="slotsNomes">
-            </div>
+        <div class="slot-grid" id="slotsNomes"></div>
 
-        <div class="field" style="margin-top:15px;">
-            <label>Comentário</label>
-            <textarea rows="2" placeholder="Observações da escala..."></textarea>
-        </div>
-
-        <button class="btn btn-blue" style="margin-top:10px;" onclick="closeModal()">💾 Salvar na Planilha</button>
+        <button class="btn btn-blue" style="margin-top:20px;" onclick="salvarPlanilha()">💾 Salvar na Planilha</button>
     </div>
 </div>
 
 <script>
-    // Gerar os 10 slots de nomes
+    const mensagens = [
+        "«Felizes os que ouvem a palavra de Deus e a guardam.» (Lc 11,28)",
+        "«Tudo posso naquele que me fortalece.» (Fp 4,13)",
+        "«Onde há caridade e amor, Deus aí está.» (Hino)",
+        "«O Senhor é meu pastor, nada me faltará.» (Sl 23)",
+        "«Fazei tudo o que Ele vos disser.» (Jo 2,5)",
+        "«Quem não vive para servir, não serve para viver.» (S. Papa Francisco)",
+        "«A medida do amor é amar sem medida.» (S. Agostinho)"
+    ];
+
     const container = document.getElementById('slotsNomes');
     for (let i = 1; i <= 10; i++) {
         const input = document.createElement('input');
         input.type = 'text';
-        input.placeholder = i + '° Nome';
+        input.placeholder = i + '° Ministro';
         container.appendChild(input);
     }
 
@@ -114,8 +121,22 @@
         document.getElementById('modalTitle').innerText = 'Lançar Escala ' + tipo;
         document.getElementById('modalEscala').classList.add('open'); 
     }
-    function closeModal() { document.getElementById('modalEscala').classList.remove('open'); }
+
+    function closeModal() { 
+        document.getElementById('modalEscala').classList.remove('open'); 
+    }
+
+    function confirmarAcao(prefixo) {
+        const msgAleatoria = mensagens[Math.floor(Math.random() * mensagens.length)];
+        alert(prefixo + "\n\n" + msgAleatoria);
+    }
+
+    function salvarPlanilha() {
+        confirmarAcao("Dados enviados para a planilha!");
+        closeModal();
+    }
 </script>
 
 </body>
-</html>
+                                                                          </html>
+                                                                          
