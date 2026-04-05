@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MINISTRO - MESC</title>
+    <title>MESC Digital</title>
     <style>
         :root { --primary: #1e3a8a; --bg: #f1f5f9; --teal: #0f766e; --slate: #475569; }
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
         body { background: var(--bg); margin: 0; padding: 16px; -webkit-tap-highlight-color: transparent; }
 
-        /* Tela de Login */
+        /* Login */
         #lockScreen { position: fixed; inset: 0; background: var(--primary); z-index: 2000; display: flex; align-items: center; justify-content: center; color: white; text-align: center; padding: 20px; }
         .lock-box { background: white; padding: 30px; border-radius: 20px; color: #334155; width: 100%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
 
@@ -20,43 +20,40 @@
         .section { margin-top: 15px; padding: 15px; background: #fff; border-radius: 12px; border-top: 4px solid var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .section h2 { font-size: 13px; text-transform: uppercase; color: #64748b; margin-bottom: 10px; margin-top: 0; }
 
-        /* Cards */
-        .card-escala { border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; margin-bottom: 10px; background: #f8fafc; text-align: left; position: relative; }
-        .card-escala b { color: var(--primary); }
-        .badge-tipo { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #cbd5e1; color: #1e293b; position: absolute; top: 12px; right: 12px; }
+        /* Escala */
+        .card-escala { border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; margin-bottom: 10px; background: #f8fafc; text-align: left; }
+        .badge-tipo { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #cbd5e1; color: #1e293b; float: right; font-weight: bold; }
 
         /* Botões */
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #fff; font-size: 14px; text-decoration: none; transition: opacity 0.2s; }
-        .btn:active { opacity: 0.8; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #fff; font-size: 14px; text-decoration: none; }
         .btn-blue { background: var(--primary); }
         .btn-teal { background: var(--teal); }
+        .btn-cal { background: #0369a1; font-size: 11px; padding: 8px; margin-top: 10px; width: auto; display: inline-flex; }
         .btn-out { background: var(--slate); margin-top: 30px; }
 
         /* Modais */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 1000; align-items: center; justify-content: center; padding: 15px; }
         .modal.open { display: flex; }
         .modal-content { background: #fff; border-radius: 16px; width: 100%; max-width: 420px; padding: 20px; text-align: center; max-height: 85vh; overflow-y: auto; position: relative; }
-        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 30px; cursor: pointer; color: var(--slate); line-height: 1; }
+        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 30px; cursor: pointer; color: var(--slate); }
 
         input { width: 100%; padding: 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 16px; margin-top: 5px; }
-        label { display: block; font-size: 11px; font-weight: bold; color: var(--primary); text-transform: uppercase; text-align: left; }
-
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 15px auto; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 35px; height: 35px; animation: spin 1s linear infinite; margin: 15px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        iframe { width: 100%; height: 450px; border: none; border-radius: 10px; background: #fff; }
-        .texto-oracao { text-align: left; font-size: 15px; color: #334155; line-height: 1.6; background: #f8fafc; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid var(--teal); }
+        .msg-espiritual { font-style: italic; color: var(--slate); font-size: 14px; margin: 15px 0; padding: 10px; border-left: 3px solid var(--primary); text-align: left; background: #f8fafc; }
+        iframe { width: 100%; height: 450px; border: none; border-radius: 10px; }
     </style>
 </head>
 <body>
 
 <div id="lockScreen">
     <div class="lock-box">
-        <h2 style="margin:0 0 10px 0; color:var(--primary)">MESC Digital</h2>
-        <p style="font-size:13px; color:#64748b; margin-bottom:20px;">Acesso exclusivo para ministros cadastrados.</p>
-        <div style="margin-bottom:15px">
-            <label>Seu Nome Completo</label>
-            <input type="text" id="nomeLogin" placeholder="Digite aqui..." autocomplete="off">
+        <h2 style="margin:0; color:var(--primary)">MESC Digital</h2>
+        <p style="font-size:12px; color:gray">Painel do Ministro</p>
+        <div style="margin: 20px 0; text-align: left;">
+            <label style="font-size: 11px; font-weight: bold; color: var(--primary);">NOME COMPLETO</label>
+            <input type="text" id="nomeLogin" placeholder="Como na planilha..." autocomplete="off">
         </div>
         <button class="btn btn-blue" onclick="fazerLogin()">ENTRAR NO APP</button>
     </div>
@@ -64,7 +61,7 @@
 
 <div class="wrap" id="app">
     <header>
-        <h1 id="txtUser">Olá, Ministro</h1>
+        <h1 id="txtUser">Olá</h1>
     </header>
 
     <div class="section">
@@ -74,7 +71,7 @@
 
     <div class="section">
         <h2>Recursos</h2>
-        <button class="btn btn-teal" onclick="window.open('https://liturgia.cnbb.org.br/', '_blank')">📖 Liturgia Diária</button>
+        <button class="btn btn-teal" onclick="acessarLiturgia()">📖 Liturgia Diária</button>
         <button class="btn btn-teal" style="background:#0d9488" onclick="abrirOracoes()">🙏 Orações do MESC</button>
         <button class="btn btn-blue" style="background:#6366f1" onclick="abrirSanto()">😇 Santo do Dia</button>
     </div>
@@ -93,110 +90,115 @@
 <div id="mStatus" class="modal">
     <div class="modal-content">
         <h3 id="sTitulo">Aguarde...</h3>
-        <div id="sLoader" class="loader"></div>
+        <div class="loader"></div>
+        <div id="sMsg" class="msg-espiritual"></div>
         <button class="btn btn-blue" id="btnSOk" onclick="fecharStatus()" style="display:none">OK</button>
     </div>
 </div>
 
 <script>
-    // COLE SUA URL ABAIXO ENTRE AS ASPAS
-    const API = "https://script.google.com/macros/s/AKfycbybTBWupiQNckDNS6YPcDtpNL04vGfjF2nkO1J4PCQpuI5b4nMaaw_Pltqu-3qOOEPX/exec";
+    const API = "SUA_URL_DO_GOOGLE_SCRIPT_AQUI"; // RECOLE AQUI
 
-    // Formata o horário vindo da planilha
-    function formatarH(h) {
-        if (!h) return "--:--";
+    const frases = [
+        "\"Onde dois ou três estiverem reunidos em meu nome, eu estou ali, no meio deles.\" (Mt 18,20)",
+        "\"Eu sou o pão vivo descido do céu. Quem comer deste pão viverá eternamente.\"",
+        "\"Tudo posso naquele que me fortalece.\"",
+        "\"Servi ao Senhor com alegria!\""
+    ];
+
+    function limparHorario(h) {
+        if (!h) return "A definir";
         let s = String(h);
-        return s.includes("T") ? s.split("T")[1].substring(0, 5) : s;
+        if (s.includes("T")) s = s.split("T")[1];
+        return s.substring(0, 5); // Retorna apenas HH:mm
     }
 
-    // Login
     async function fazerLogin() {
-        const nomeInput = document.getElementById('nomeLogin').value.trim();
-        if(!nomeInput) { alert("Por favor, digite seu nome."); return; }
+        const nome = document.getElementById('nomeLogin').value.trim();
+        if(!nome) return alert("Digite seu nome!");
         
-        status("Verificando...", true);
+        const msgAleatoria = frases[Math.floor(Math.random() * frases.length)];
+        document.getElementById('sMsg').innerText = msgAleatoria;
+        status("Validando Acesso...", true);
+
         try {
-            const r = await fetch(API, { 
-                method: 'POST', 
-                body: JSON.stringify({ action: 'loginMinistro', nome: nomeInput }) 
-            });
+            const r = await fetch(API, { method: 'POST', body: JSON.stringify({ action: 'loginMinistro', nome: nome }) });
             const d = await r.json();
-            
             if(d.ok) {
                 localStorage.setItem('mesc_nome', d.nomeOficial);
                 renderApp(d.nomeOficial);
                 fecharStatus();
-            } else {
-                status("Nome não encontrado!", false);
-            }
-        } catch(e) {
-            status("Erro de conexão. Verifique a URL da API.", false);
-        }
+            } else { status("Nome não encontrado!", false); }
+        } catch(e) { status("Erro de conexão com o servidor.", false); }
     }
 
-    // Carrega Escala
     async function abrirEscala() {
         const n = localStorage.getItem('mesc_nome');
-        abrirModal("Minha Escala", "<div class='loader'></div><p>Buscando...</p>");
+        abrirModal("Minha Escala", "<div class='loader'></div><p>Carregando dados...</p>");
 
         try {
-            const r = await fetch(API, { 
-                method: 'POST', 
-                body: JSON.stringify({ action: 'buscarMinhaEscala', nome: n }) 
-            });
+            const r = await fetch(API, { method: 'POST', body: JSON.stringify({ action: 'buscarMinhaEscala', nome: n }) });
             const d = await r.json();
             
             let h = "";
             if(d.ok && d.escalas && d.escalas.length > 0) {
                 d.escalas.forEach(e => {
                     const dt = e.tipo === 'EXTRA' ? String(e.data).split('T')[0].split('-').reverse().join('/') : e.data;
+                    const hora = limparHorario(e.hora);
                     h += `
                         <div class="card-escala">
                             <span class="badge-tipo">${e.tipo}</span>
-                            <b>📅 ${dt}</b><br>
-                            ⏰ Hora: ${formatarH(e.hora)}<br>
+                            <b>📅 ${dt} - ${hora}</b><br>
                             ⛪ ${e.missa}
-                            ${e.obs ? `<br><small>📝 ${e.obs}</small>` : ''}
+                            ${e.obs ? `<br><small style='color:gray'>📝 ${e.obs}</small>` : ''}
+                            <br><button class="btn btn-cal" onclick="addCal('${e.missa}','${dt}','${hora}')">🗓️ Agendar no Google</button>
                         </div>`;
                 });
-            } else { h = "<p>Nenhuma escala futura encontrada.</p>"; }
+            } else { h = "<p style='color:gray'>Nenhuma escala encontrada.</p>"; }
             document.getElementById('mCorpo').innerHTML = h;
-        } catch(e) { document.getElementById('mCorpo').innerHTML = "Erro ao carregar dados."; }
+        } catch(e) { document.getElementById('mCorpo').innerHTML = "Erro ao buscar escalas."; }
     }
 
-    // Funções de Interface
+    function acessarLiturgia() {
+        // Tenta abrir em nova aba, que é mais garantido para o site da CNBB
+        window.open('https://liturgia.cnbb.org.br/', '_blank');
+    }
+
     function renderApp(n) {
         document.getElementById('lockScreen').style.display = 'none';
         document.getElementById('app').style.display = 'block';
         document.getElementById('txtUser').innerText = "Olá, " + n.split(' ')[0];
     }
 
+    function status(t, loading) {
+        document.getElementById('sTitulo').innerText = t;
+        document.querySelector('#mStatus .loader').style.display = loading ? 'block' : 'none';
+        document.getElementById('btnSOk').style.display = loading ? 'none' : 'block';
+        document.getElementById('mStatus').classList.add('open');
+    }
+
+    function fecharStatus() { document.getElementById('mStatus').classList.remove('open'); }
     function abrirModal(t, c) {
         document.getElementById('mTitulo').innerText = t;
         document.getElementById('mCorpo').innerHTML = c;
         document.getElementById('mGeral').classList.add('open');
     }
-
     function fecharModal() { document.getElementById('mGeral').classList.remove('open'); }
-    
-    function status(t, c) {
-        document.getElementById('sTitulo').innerText = t;
-        document.getElementById('sLoader').style.display = c ? 'block' : 'none';
-        document.getElementById('btnSOk').style.display = c ? 'none' : 'block';
-        document.getElementById('mStatus').classList.add('open');
-    }
-
-    function fecharStatus() { document.getElementById('mStatus').classList.remove('open'); }
-    
     function sair() { localStorage.clear(); location.reload(); }
 
     function abrirOracoes() {
-        const o = `<div class="texto-oracao"><b>Oração do Ministro</b><br>Senhor, dai-me dignidade e humildade para servir o vosso altar.</div>`;
-        abrirModal("Orações", o);
+        abrirModal("Orações", `<div class="msg-espiritual"><b>Oração do Ministro</b><br>Senhor, dai-me dignidade e humildade para servir o vosso altar.</div>`);
     }
 
     function abrirSanto() {
         abrirModal("Santo do Dia", `<iframe src="https://santo.cancaonova.com/"></iframe>`);
+    }
+
+    function addCal(missa, data, hora) {
+        // Formata data de DD/MM/YYYY para YYYYMMDD para o link do Google
+        const partes = data.split('/');
+        const dFormat = partes[2] + partes[1] + partes[0];
+        window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('MESC: ' + missa)}&dates=${dFormat}T${hora.replace(':','')}00/${dFormat}T${hora.replace(':','')}00`, '_blank');
     }
 
     window.onload = () => {
