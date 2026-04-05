@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADM - Gerador de Acesso</title>
+    <style>
+        :root { --primary: #1e3a8a; --green: #15803d; --zap: #25d366; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--primary); display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); width: 100%; max-width: 380px; text-align: center; }
+        h2 { color: var(--primary); margin-bottom: 5px; }
+        input { width: 100%; padding: 15px; margin: 15px 0; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 16px; box-sizing: border-box; text-transform: uppercase; text-align: center; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 15px; transition: 0.3s; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-gen { background: var(--primary); color: white; }
+        .btn-send { background: var(--green); color: white; display: none; }
+        .btn-zap { background: var(--zap); color: white; display: none; text-decoration: none; }
+        .resultado { margin-top: 20px; padding: 15px; background: #f8fafc; border-radius: 12px; border: 2px dashed #cbd5e1; display: none; }
+        .codigo { font-size: 32px; font-weight: 800; color: var(--primary); letter-spacing: 4px; margin: 10px 0; }
+        #status { font-size: 14px; margin-top: 10px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Painel ADM</h2>
+    <p style="color: #64748b; font-size: 14px;">Gerar acesso para Paróquia</p>
+    
+    <input type="text" id="nomeParoquia" placeholder="NOME DA PARÓQUIA">
+    
+    <button class="btn btn-gen" onclick="prepararCodigo()">1. GERAR CÓDIGO</button>
+    
+    <div id="areaResultado" class="resultado">
+        <div class="codigo" id="codigoGerado">------</div>
+        
+        <button class="btn btn-send" id="btnEnviar" onclick="enviarParaPlanilha()">
+            2. SALVAR NA PLANILHA
+        </button>
+
+        <a href="#" class="btn btn-zap" id="btnZap" onclick="enviarZap()">
+            3. ENVIAR PARA O ZAP
+        </a>
+    </div>
+    
+    <div id="status"></div>
+</div>
+
+<script>
+    const URL_API = "SUA_URL_DA_API_AQUI"; // Lembre de trocar pela sua URL real no PC
+    let codigoAtual = "";
+    let paroquiaAtual = "";
+
+    function prepararCodigo() {
+        paroquiaAtual = document.getElementById('nomeParoquia').value.trim().toUpperCase();
+        if(!paroquiaAtual) return alert("Digite o nome da paróquia!");
+
+        // Caracteres seguros (sem 0, O, 1, I)
+        const caracteres = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        codigoAtual = '';
+        for (let i = 0; i < 6; i++) {
+            codigoAtual += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+        }
+
+        document.getElementById('codigoGerado').innerText = codigoAtual;
+        document.getElementById('areaResultado').style.display = 'block';
+        document.getElementById('btnEnviar').style.display = 'flex';
+        document.getElementById('btnZap').style.display = 'none'; // Esconde o zap até salvar
+        document.getElementById('status').innerText = "";
+    }
+
+    async function enviarParaPlanilha() {
+        const statusDiv = document.getElementById('status');
+        const btn = document.getElementById('btnEnviar');
+
+        statusDiv.innerText = "⏳ Salvando na planilha...";
+        statusDiv.style.color = "orange";
+        btn.disabled = true;
+
+        try {
+            const response = await fetch(URL_API, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: 'cadastrarToken',
+                    paroquia: paroquiaAtual,
+                    codigo: codigoAtual
+                })
+            });
+
+            const data = await response.json();
+            if(data.ok) {
+                statusDiv.innerText = "✅ Salvo com sucesso!";
+                statusDiv.style.color = "green";
+                btn.style.display = 'none';
+                document.getElementById('btnZap').style.display = 'flex'; // Libera o Zap
+            } else { throw new Error(); }
+        } catch (e) {
+            statusDiv.innerText = "❌ Erro ao salvar.";
+            statusDiv.style.color = "red";
+            btn.disabled = false;
+        }
+    }
+
+    function enviarZap() {
+        const mensagem = `*📍 ACESSO MESC DIGITAL*\n\nOlá! Seu acesso ao aplicativo foi liberado.\n\n*Paróquia:* ${paroquiaAtual}\n*Código de Ativação:* ${codigoAtual}\n\n_Use esses dados na tela inicial do app._`;
+        const link = `https://api.whatsapp.com/send?text=${encodeURIComponent(mensagem)}`;
+        window.open(link, '_blank');
+    }
+</script>
+
+</body>
+</html>
