@@ -271,10 +271,13 @@
             const nSemana = Math.ceil(dataObj.getDate() / 7);
             const regraHoje = `${nSemana}º ${diaNome}`;
 
-            const formatH = (h) => {
-                if(!h) return "00:00";
-                const m = h.toString().match(/(\d{2}:\d{2})/);
-                return m ? m[1] : "00:00";
+            // ESSA É A PARTE QUE CORRIGE O 10:06
+            const formatarHorarioCorreto = (valor) => {
+                if(!valor) return "00:00";
+                // Transforma em texto e pega apenas os números no formato 00:00:00 ou 00:00
+                const stringValor = valor.toString();
+                const match = stringValor.match(/(\d{2}:\d{2})/);
+                return match ? match[1] : "00:00";
             };
 
             const extras = (banco.extras || []).filter(e => e[0] && e[0].toString().includes(dataVal));
@@ -288,8 +291,8 @@
             let msg = `*📍 ESCALA MESC - ${dia}/${mes}/${ano}*\n*(${regraHoje})*\n\n`;
 
             const lista = [
-                ...fixos.map(f => ({ h: formatH(f[1]), m: f[2], n: f[3] })),
-                ...extras.map(e => ({ h: formatH(e[1]), m: e[2], n: e[3] }))
+                ...fixos.map(f => ({ h: formatarHorarioCorreto(f[1]), m: f[2], n: f[3] })),
+                ...extras.map(e => ({ h: formatarHorarioCorreto(e[1]), m: e[2], n: e[3] }))
             ].sort((a,b) => a.h.localeCompare(b.h));
 
             lista.forEach(item => {
