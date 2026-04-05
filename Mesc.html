@@ -144,6 +144,7 @@
 
     function openForm(t) {
         tipoAtual = t;
+        document.getElementById('fMinistros').value = "";
         document.getElementById('modalForm').classList.add('open');
         document.getElementById('seletorRegra').style.display = t === 'Fixa' ? 'block' : 'none';
         document.getElementById('campoData').style.display = t === 'Extra' ? 'block' : 'none';
@@ -166,12 +167,12 @@
         } catch(e) { mostrarStatus("Erro ao salvar", false); }
     }
 
-    // --- CORREÇÃO DO ZAP ---
+    // --- FUNÇÃO CORRIGIDA PARA O ZAP ---
     async function gerarLinkZap() {
         const dataVal = document.getElementById('dataZap').value;
         if(!dataVal) return alert("Selecione a data!");
         
-        mostrarStatus("Buscando Escala...");
+        mostrarStatus("Buscando Escala na Planilha...");
 
         try {
             const res = await fetch(`${URL_API}?t=${new Date().getTime()}`);
@@ -185,34 +186,36 @@
             const nSemana = Math.ceil(dataObj.getDate() / 7);
             const regraHoje = `${nSemana}º ${diaNome}`;
 
+            // Busca nas escalas Extras
             const extras = (banco.extras || []).filter(e => {
                 let dE = e[0] ? e[0].toString() : "";
                 if (dE.includes('T')) dE = dE.split('T')[0];
                 return dE.includes(dataVal);
             });
 
+            // Busca nas escalas Fixas (Regras)
             const fixos = (banco.regras || []).filter(r => 
                 r[0] && r[0].toString().trim().toLowerCase() === regraHoje.toLowerCase()
             );
 
             if(extras.length === 0 && fixos.length === 0) {
-                mostrarStatus("Nenhuma escala encontrada para " + dia + "/" + mes, false);
+                mostrarStatus("Nenhuma escala encontrada para esta data.", false);
                 return;
             }
 
-            // Função para limpar o erro 10:06 do Zap
-            const formatarHoraLimpa = (h) => {
+            // Função para limpar o fuso horário (Erro 10:06)
+            const limparH = (h) => {
                 if(!h) return "00:00";
-                const matches = h.toString().match(/(\d{2}:\d{2})/);
-                return matches ? matches[1] : "00:00";
+                const m = h.toString().match(/(\d{2}:\d{2})/);
+                return m ? m[1] : "00:00";
             };
 
             let texto = `*📍 ESCALA MESC - ${localStorage.getItem('mesc_nome_paroquia')}*\n`;
             texto += `*📅 Data:* ${dia}/${mes}/${ano} (${regraHoje})\n\n`;
 
             const lista = [
-                ...fixos.map(f => ({ h: formatarHoraLimpa(f[1]), m: f[2], n: f[3] })),
-                ...extras.map(e => ({ h: formatarHoraLimpa(e[1]), m: e[2], n: e[3] }))
+                ...fixos.map(f => ({ h: limparH(f[1]), m: f[2], n: f[3] })),
+                ...extras.map(e => ({ h: limparH(e[1]), m: e[2], n: e[3] }))
             ].sort((a,b) => a.h.localeCompare(b.h));
 
             lista.forEach(item => {
