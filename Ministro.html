@@ -5,55 +5,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MINISTRO - MESC</title>
     <style>
-        :root { --primary: #1e3a8a; --bg: #f1f5f9; --white: #ffffff; --text: #1e293b; }
+        :root { --primary: #1e3a8a; --bg: #f1f5f9; --teal: #0f766e; --green: #15803d; --slate: #475569; --danger: #b91c1c; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { background: var(--bg); margin: 0; padding: 15px; color: var(--text); }
+        body { background: var(--bg); margin: 0; padding: 16px; }
         
-        #loginScreen { position: fixed; inset: 0; background: var(--primary); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .login-box { background: white; padding: 30px; border-radius: 20px; width: 100%; max-width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        #lockScreen { position: fixed; inset: 0; background: var(--primary); z-index: 2000; display: flex; align-items: center; justify-content: center; color: white; text-align: center; padding: 20px; }
+        .lock-box { background: white; padding: 30px; border-radius: 20px; color: #334155; width: 100%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         
-        .header { text-align: center; margin-bottom: 20px; }
-        .header h1 { color: var(--primary); margin: 0; font-size: 22px; }
+        .wrap { max-width: 480px; margin: 0 auto; display: none; }
+        header { text-align: center; margin-bottom: 20px; }
+        h1 { color: var(--primary); margin: 0; font-size: 24px; }
         
-        .card-escala { background: var(--white); padding: 15px; border-radius: 12px; margin-bottom: 12px; border-left: 5px solid var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .card-escala .hora { font-size: 20px; font-weight: bold; color: var(--primary); }
-        .card-escala .missa { font-weight: 600; margin: 4px 0; font-size: 16px; }
-        .card-escala .data-tipo { font-size: 13px; color: #64748b; text-transform: uppercase; }
-        .card-escala .obs { font-size: 13px; color: #b91c1c; font-style: italic; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e2e8f0; }
+        .section { margin-top: 15px; padding: 15px; background: #fff; border-radius: 12px; border-top: 4px solid var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .section h2 { font-size: 13px; text-transform: uppercase; color: #64748b; margin-bottom: 10px; margin-top: 0; }
 
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; background: var(--primary); color: white; margin-top: 10px; }
+        .card-escala { background: #fff; padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 5px solid var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .card-escala .hora { font-size: 18px; font-weight: bold; color: var(--primary); }
+        .card-escala .missa { font-weight: 600; margin: 4px 0; }
+        .card-escala .detalhes { font-size: 12px; color: #64748b; }
+        
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #fff; font-size: 14px; text-decoration: none; }
+        .btn-blue { background: var(--primary); }
         .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); margin-top: 20px; }
-        
-        input, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; margin-top: 5px; margin-bottom: 15px; font-size: 16px; }
-        label { font-size: 12px; font-weight: bold; color: var(--primary); text-transform: uppercase; display: block; text-align: left; }
 
-        .loader { border: 3px solid #f3f3f3; border-top: 3px solid var(--primary); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: none; margin: 10px auto; }
+        .field { margin-bottom: 12px; text-align: left; }
+        label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 4px; color: var(--primary); text-transform: uppercase; }
+        input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
+
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 10px auto; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        .empty { text-align: center; color: #64748b; margin-top: 40px; }
     </style>
 </head>
 <body>
 
-<div id="loginScreen">
-    <div class="login-box">
-        <h2 style="color:var(--primary); margin-top:0;">Meu Acesso</h2>
-        <label>Seu Nome (Como na lista)</label>
-        <input type="text" id="nomeMinistro" placeholder="Digite seu nome completo">
-        <button class="btn" onclick="fazerLogin()">ENTRAR NO APP</button>
-        <div id="loginLoader" class="loader"></div>
+<div id="lockScreen">
+    <div class="lock-box">
+        <h2 style="margin-top:0; color:var(--primary)">Acesso Ministro</h2>
+        <div class="field">
+            <label>Seu Nome (Como na lista)</label>
+            <input type="text" id="nomeAcesso" placeholder="Ex: João Silva">
+        </div>
+        <button class="btn btn-blue" onclick="verificarMinistro()">ENTRAR NO PAINEL</button>
     </div>
 </div>
 
-<div id="appContent" style="display:none;">
-    <div class="header">
-        <h1 id="boasVindas">Olá, Ministro</h1>
-        <p style="font-size: 12px; color: #64748b;">Suas próximas escalas agendadas</p>
+<div class="wrap" id="appContent">
+    <header><h1 id="boasVindas">Olá, Ministro</h1></header>
+    
+    <div class="section">
+        <h2>Minhas Próximas Escalas</h2>
+        <div id="listaEscalas"></div>
+        <div id="loaderEscala" class="loader"></div>
     </div>
 
-    <div id="listaEscalas"></div>
-
-    <button class="btn btn-outline" onclick="sair()">Sair / Trocar Nome</button>
+    <button class="btn btn-outline" onclick="logout()">Trocar de Usuário / Sair</button>
 </div>
 
 <script>
@@ -62,26 +67,29 @@
     window.onload = () => {
         const salvo = localStorage.getItem('ministro_nome');
         if(salvo) {
-            document.getElementById('nomeMinistro').value = salvo;
-            fazerLogin();
+            document.getElementById('nomeAcesso').value = salvo;
+            verificarMinistro();
         }
     };
 
-    function fazerLogin() {
-        const nome = document.getElementById('nomeMinistro').value.trim();
+    function verificarMinistro() {
+        const nome = document.getElementById('nomeAcesso').value.trim();
         if(!nome) return alert("Digite seu nome!");
 
         localStorage.setItem('ministro_nome', nome);
-        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('lockScreen').style.display = 'none';
         document.getElementById('appContent').style.display = 'block';
         document.getElementById('boasVindas').innerText = "Olá, " + nome.split(' ')[0];
         
-        buscarMinhaEscala(nome);
+        buscarEscalas(nome);
     }
 
-    async function buscarMinhaEscala(nome) {
-        const listaDiv = document.getElementById('listaEscalas');
-        listaDiv.innerHTML = '<div class="loader" style="display:block"></div><p style="text-align:center">Buscando escalas...</p>';
+    async function buscarEscalas(nome) {
+        const lista = document.getElementById('listaEscalas');
+        const loader = document.getElementById('loaderEscala');
+        
+        lista.innerHTML = "";
+        loader.style.display = "block";
 
         try {
             const response = await fetch(URL_API, {
@@ -89,35 +97,37 @@
                 body: JSON.stringify({ action: 'buscarMinhaEscala', nome: nome })
             });
             const data = await response.json();
+            loader.style.display = "none";
 
-            if (data.ok && data.escalas.length > 0) {
-                let html = "";
+            if(data.ok && data.escalas.length > 0) {
                 data.escalas.forEach(esc => {
-                    // CORREÇÃO: esc.hora agora é tratada como texto direto da planilha
-                    const horaFormatada = esc.hora || "00:00";
-                    
-                    html += `
-                    <div class="card-escala">
-                        <div class="hora">⏰ ${horaFormatada}</div>
+                    // CORREÇÃO: Pegando a hora como texto direto da planilha (getDisplayValues)
+                    // Não convertemos mais em Date para evitar erro de fuso horário no celular
+                    const horaDisplay = esc.hora || "00:00";
+
+                    const card = document.createElement('div');
+                    card.className = 'card-escala';
+                    card.innerHTML = `
+                        <div class="hora">⏰ ${horaDisplay}</div>
                         <div class="missa">⛪ ${esc.missa}</div>
-                        <div class="data-tipo">📅 ${esc.data} (${esc.tipo})</div>
-                        ${esc.obs ? `<div class="obs">📝 ${esc.obs}</div>` : ""}
-                    </div>`;
+                        <div class="detalhes">📅 ${esc.data} (${esc.tipo})</div>
+                        ${esc.obs ? `<div style="margin-top:8px; color:var(--danger); font-size:11px;"><b>Obs:</b> ${esc.obs}</div>` : ""}
+                    `;
+                    lista.appendChild(card);
                 });
-                listaDiv.innerHTML = html;
             } else {
-                listaDiv.innerHTML = '<div class="empty">📍 Nenhuma escala encontrada para você nos próximos dias.</div>';
+                lista.innerHTML = "<p style='text-align:center; color:#64748b;'>Nenhuma escala encontrada para você.</p>";
             }
-        } catch (e) {
-            listaDiv.innerHTML = '<div class="empty" style="color:red">⚠️ Erro ao carregar dados. Tente novamente.</div>';
+        } catch(e) {
+            loader.style.display = "none";
+            lista.innerHTML = "<p style='color:red;'>Erro ao carregar dados.</p>";
         }
     }
 
-    function sair() {
+    function logout() {
         localStorage.removeItem('ministro_nome');
         location.reload();
     }
 </script>
-
 </body>
 </html>
