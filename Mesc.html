@@ -13,7 +13,7 @@
         h1 { color: var(--primary); margin: 0; font-size: 24px; }
         .section { margin-top: 15px; padding-top: 15px; border-top: 2px solid #e2e8f0; }
         .section h2 { font-size: 13px; text-transform: uppercase; color: #64748b; margin-bottom: 10px; }
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #fff; font-size: 14px; text-decoration: none; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #fff; font-size: 14px; text-decoration: none; border: none; }
         .btn-teal { background: var(--teal); }
         .btn-blue { background: var(--primary); }
         .btn-pdf { background: var(--slate); }
@@ -55,22 +55,17 @@
 <div id="modalForm" class="modal">
     <div class="modal-content">
         <h3 id="formTitle" style="color:var(--primary); margin-top:0">Lançar Escala</h3>
-        
         <div id="seletorRegra">
             <div style="display: flex; gap: 8px;">
                 <div class="field" style="flex: 1;"><label>Semana</label><select id="fSemana"><option>1º</option><option>2º</option><option>3º</option><option>4º</option><option>5º</option></select></div>
                 <div class="field" style="flex: 2;"><label>Dia</label><select id="fDia"><option>Sábado</option><option>Domingo</option><option>Segunda</option><option>Terça</option><option>Quarta</option><option>Quinta</option><option>Sexta</option></select></div>
             </div>
         </div>
-
         <div id="campoData" class="field" style="display:none;"><label>Data do Evento Extra</label><input type="date" id="fData"></div>
-        
         <div class="field"><label>Horário</label><input type="time" id="fHora"></div>
         <div class="field"><label>Nome da Missa / Evento</label><input type="text" id="fMissa" placeholder="Ex: Missa das Crianças"></div>
-        
         <label>Ministros (Até 10)</label>
         <div class="slot-grid" id="slotsNomes"></div>
-        
         <button class="btn btn-blue" style="margin-top:15px" id="btnSalvar" onclick="salvarDados()">💾 Salvar na Planilha</button>
         <button class="btn btn-pdf" style="background:#64748b; margin-top:8px" onclick="fecharTudo()">Voltar</button>
     </div>
@@ -79,7 +74,6 @@
 <div id="modalZap" class="modal">
     <div class="modal-content">
         <h3 style="color:var(--green); margin-top:0">Enviar WhatsApp</h3>
-        <p style="font-size:12px; color:#64748b">O sistema buscará a regra fixa e os extras para a data escolhida.</p>
         <div class="field"><label>Escolha a Data</label><input type="date" id="dataZap"></div>
         <div class="field"><label>Comentário Adicional</label><textarea id="comentZap" rows="2" placeholder="Ex: Reunião após a missa..."></textarea></div>
         <button class="btn btn-zap" id="btnEnviarZap" onclick="gerarLinkZap()">🔍 Buscar e Enviar</button>
@@ -99,7 +93,6 @@
     const URL_API = "https://script.google.com/macros/s/AKfycbx3pQmERqlir6eMFJysYVFgASlAT_vtsVJ4Se2wv5JqBt1OcJu8G3yCEqlPNfHGPf95/exec";
     let tipoAtual = "";
 
-    // Gerar inputs de ministros
     const container = document.getElementById('slotsNomes');
     for (let i = 1; i <= 10; i++) {
         const input = document.createElement('input');
@@ -116,6 +109,18 @@
     }
 
     function abrirZapModal() { document.getElementById('modalZap').classList.add('open'); }
+
+    // NOVA FUNÇÃO PARA CORRIGIR O HORÁRIO ESTRANHO
+    function formatarHora(h) {
+        if (!h) return "";
+        let str = h.toString();
+        // Se vier o formato longo do Google (T12:00:00.000Z), corta para pegar só HH:mm
+        if (str.includes("T")) {
+            return str.split("T")[1].substring(0, 5);
+        }
+        // Se vier apenas os números, garante que tenha 5 caracteres (HH:mm)
+        return str.substring(0, 5);
+    }
 
     async function salvarDados() {
         const btn = document.getElementById('btnSalvar');
@@ -142,28 +147,23 @@
     async function gerarLinkZap() {
         const dataVal = document.getElementById('dataZap').value;
         if(!dataVal) return alert("Selecione a data!");
-        
         document.getElementById('btnEnviarZap').innerText = "⏳ BUSCANDO ESCALA...";
         
         try {
             const res = await fetch(`${URL_API}?t=${new Date().getTime()}`);
             const banco = await res.json();
-            
             const [ano, mes, dia] = dataVal.split('-');
             const dataObj = new Date(ano, mes-1, dia, 12, 0, 0);
-            
-            // Lógica da Regra Fixa (Saber qual semana e dia é)
             const diasSemanas = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
             const diaNome = diasSemanas[dataObj.getDay()];
             const nSemana = Math.ceil(dataObj.getDate() / 7);
             const regraHoje = `${nSemana}º ${diaNome}`;
 
-            // Filtra na planilha
             const extras = (banco.extras || []).filter(e => e[0] && e[0].toString().includes(dataVal));
             const fixos = (banco.regras || []).filter(r => r[0] && r[0].toString().trim() === regraHoje);
 
             if(extras.length === 0 && fixos.length === 0) {
-                alert("Nenhuma escala (fixa ou extra) encontrada para " + regraHoje);
+                alert("Nenhuma escala encontrada para " + regraHoje);
                 document.getElementById('btnEnviarZap').innerText = "🔍 Buscar e Enviar";
                 return;
             }
@@ -171,8 +171,8 @@
             let texto = `*📍 ESCALA MESC - ${dia}/${mes}/${ano}*\n*(${regraHoje})*\n\n`;
             
             const consolidado = [
-                ...fixos.map(f => ({ h: f[1], m: f[2], n: f[3] })),
-                ...extras.map(e => ({ h: e[1], m: e[2], n: e[3] }))
+                ...fixos.map(f => ({ h: formatarHora(f[1]), m: f[2], n: f[3] })),
+                ...extras.map(e => ({ h: formatarHora(e[1]), m: e[2], n: e[3] }))
             ].sort((a,b) => a.h.localeCompare(b.h));
 
             consolidado.forEach(item => {
@@ -203,6 +203,5 @@
         document.getElementById('btnEnviarZap').innerText = "🔍 Buscar e Enviar";
     }
 </script>
-
 </body>
 </html>
