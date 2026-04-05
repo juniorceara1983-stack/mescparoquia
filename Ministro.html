@@ -19,7 +19,6 @@
         .section { margin-top: 15px; padding: 15px; background: #fff; border-radius: 12px; border-top: 4px solid var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .section h2 { font-size: 13px; text-transform: uppercase; color: #64748b; margin-bottom: 10px; margin-top: 0; }
 
-        /* Card de Escala dentro da Janela */
         .card-escala { border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; margin-bottom: 10px; background: #f8fafc; text-align: left; }
         .card-escala b { color: var(--primary); }
         .badge-tipo { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #cbd5e1; color: #1e293b; float: right; }
@@ -27,10 +26,9 @@
         .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #fff; font-size: 14px; text-decoration: none; }
         .btn-blue { background: var(--primary); }
         .btn-teal { background: var(--teal); }
-        .btn-cal { background: var(--teal); font-size: 12px; padding: 8px; margin-top: 10px; }
+        .btn-cal { background: var(--teal); font-size: 11px; padding: 8px; margin-top: 10px; }
         .btn-out { background: var(--slate); margin-top: 20px; }
 
-        /* Modal e Janelas Flutuantes */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 1000; align-items: center; justify-content: center; padding: 15px; }
         .modal.open { display: flex; }
         .modal-content { background: #fff; border-radius: 16px; width: 100%; max-width: 420px; padding: 20px; text-align: center; max-height: 85vh; overflow-y: auto; position: relative; }
@@ -44,7 +42,7 @@
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 10px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        iframe { width: 100%; height: 500px; border: none; border-radius: 10px; }
+        iframe { width: 100%; height: 500px; border: none; border-radius: 10px; background: white; }
         .texto-oracao { text-align: left; font-size: 14px; color: #334155; line-height: 1.6; background: #f8fafc; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid var(--teal); }
     </style>
 </head>
@@ -73,7 +71,7 @@
 
     <div class="section">
         <h2>Recursos Espirituais</h2>
-        <button class="btn btn-teal" onclick="abrirLiturgia()">📖 Liturgia Diária (CNBB)</button>
+        <button class="btn btn-teal" onclick="window.open('https://liturgia.cnbb.org.br/', '_blank')">📖 Liturgia Diária (CNBB)</button>
         <button class="btn btn-teal" style="background:#0d9488" onclick="abrirOracoes()">🙏 Orações do MESC</button>
         <button class="btn btn-blue" style="background:#6366f1" onclick="abrirSantoDoDia()">😇 Santo do Dia</button>
     </div>
@@ -101,7 +99,7 @@
 
 <script>
     const URL_API = "SUA_URL_DO_GOOGLE_SCRIPT_AQUI"; 
-    
+
     function formatarHora(horaRaw) {
         if (!horaRaw || horaRaw === "") return "Não definida";
         let str = String(horaRaw);
@@ -109,20 +107,21 @@
         return str;
     }
 
-    // Abre a Escala em Janela Flutuante
     async function abrirMinhaEscala() {
-        const nome = localStorage.getItem('mesc_ministro_nome');
-        abrirJanelaFlutuante("Minhas Escalas", "<p>Carregando...</p>");
+        const nomeLogado = localStorage.getItem('mesc_ministro_nome');
+        if(!nomeLogado) return alert("Erro ao identificar ministro. Saia e entre novamente.");
+
+        abrirJanelaFlutuante("Minhas Escalas", "<div class='loader'></div><p>Buscando escalas para: "+nomeLogado+"</p>");
 
         try {
             const res = await fetch(URL_API, { 
                 method: 'POST', 
-                body: JSON.stringify({ action: 'buscarMinhaEscala', nome: nome }) 
+                body: JSON.stringify({ action: 'buscarMinhaEscala', nome: nomeLogado }) 
             });
             const data = await res.json();
             
             let html = "";
-            if(data.ok && data.escalas.length > 0) {
+            if(data.ok && data.escalas && data.escalas.length > 0) {
                 data.escalas.forEach(esc => {
                     const dataFormat = esc.tipo === 'EXTRA' ? String(esc.data).split('T')[0].split('-').reverse().join('/') : esc.data;
                     const horaFormatada = formatarHora(esc.hora);
@@ -134,26 +133,22 @@
                             <div>⏰ Hora: ${horaFormatada}</div>
                             <div>⛪ ${esc.missa}</div>
                             ${esc.obs ? `<div style="font-size:11px; color:gray">📝 ${esc.obs}</div>` : ''}
-                            <button class="btn btn-cal" onclick="addAgenda('${esc.missa}', '${esc.data}', '${horaFormatada}')">📅 Agendar no Google</button>
+                            <button class="btn btn-cal" onclick="addAgenda('${esc.missa}')">📅 Agendar no Google</button>
                         </div>`;
                 });
             } else {
-                html = "<p style='color:gray'>Nenhuma escala encontrada para você.</p>";
+                html = "<p style='color:gray; padding:20px;'>Nenhuma escala encontrada para o seu nome.</p>";
             }
             document.getElementById('modalCorpo').innerHTML = html;
         } catch(e) { 
-            document.getElementById('modalCorpo').innerHTML = "Erro ao conectar com o servidor."; 
+            document.getElementById('modalCorpo').innerHTML = "Erro de conexão. Verifique o URL da API."; 
         }
-    }
-
-    function abrirLiturgia() {
-        abrirJanelaFlutuante("Liturgia Diária", `<iframe src="https://liturgia.cnbb.org.br/"></iframe>`);
     }
 
     function abrirOracoes() {
         const oracoes = `
-            <div class="texto-oracao"><b>Oração do Ministro</b><br>Senhor, dai-me dignidade e humildade para servir o vosso altar e levar a Eucaristia aos meus irmãos enfermos.</div>
-            <div class="texto-oracao"><b>Ação de Graças</b><br>Graças e louvores se deem a todo momento, ao Santíssimo e Diviníssimo Sacramento. Amém.</div>
+            <div class="texto-oracao"><b>Oração antes de servir:</b><br>Senhor, vós me chamastes para servir à vossa mesa. Dai-me a graça de realizar este ministério com amor e reverência. Amém.</div>
+            <div class="texto-oracao"><b>Oração de Pós-Comunhão:</b><br>Graças e louvores se deem a todo momento ao Santíssimo e Diviníssimo Sacramento. Amém.</div>
         `;
         abrirJanelaFlutuante("Orações", oracoes);
     }
@@ -170,18 +165,20 @@
 
     function fecharModalGeral() { document.getElementById('modalGeral').classList.remove('open'); }
 
-    // Funções de Login (Mantidas)
     async function verificarAcessoMinistro() {
         const nome = document.getElementById('nomeMinistroLogin').value.trim();
-        if(!nome) return;
-        mostrarStatus("Validando...");
-        const res = await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'loginMinistro', nome: nome }) });
-        const data = await res.json();
-        if(data.ok) {
-            localStorage.setItem('mesc_ministro_nome', data.nomeOficial);
-            liberarApp(data.nomeOficial);
-            fecharStatus();
-        } else { mostrarStatus("Nome não cadastrado!", false); }
+        if(!nome) return alert("Por favor, digite seu nome!");
+        
+        mostrarStatus("Validando acesso...");
+        try {
+            const res = await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'loginMinistro', nome: nome }) });
+            const data = await res.json();
+            if(data.ok) {
+                localStorage.setItem('mesc_ministro_nome', data.nomeOficial);
+                liberarApp(data.nomeOficial);
+                fecharStatus();
+            } else { mostrarStatus("Ministro não cadastrado no sistema!", false); }
+        } catch(e) { mostrarStatus("Erro ao conectar com o servidor.", false); }
     }
 
     function liberarApp(nome) {
@@ -198,7 +195,7 @@
     }
     function fecharStatus() { document.getElementById('modalStatus').classList.remove('open'); }
     function sair() { localStorage.clear(); location.reload(); }
-    function addAgenda(t, d, h) { window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(t)}`, '_blank'); }
+    function addAgenda(t) { window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(t)}`, '_blank'); }
 
     window.onload = () => {
         const nomeSalvo = localStorage.getItem('mesc_ministro_nome');
