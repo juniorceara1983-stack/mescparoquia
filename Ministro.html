@@ -33,9 +33,9 @@
 
         .grid-botoes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 3000; align-items: center; justify-content: center; padding: 15px; text-align: center; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 3000; align-items: center; justify-content: center; padding: 15px; }
         .modal.open { display: flex; }
-        .modal-content { background: #fff; border-radius: 16px; width: 100%; max-width: 420px; padding: 20px; max-height: 85vh; overflow-y: auto; }
+        .modal-content { background: #fff; border-radius: 16px; width: 100%; max-width: 420px; padding: 20px; max-height: 85vh; overflow-y: auto; text-align: center; }
         .modal-content h3 { color: var(--primary); margin-top: 0; border-bottom: 2px solid var(--bg); padding-bottom: 10px; }
         .texto-oracao { font-size: 15px; line-height: 1.6; color: #334155; white-space: pre-line; margin-bottom: 20px; text-align: left; }
 
@@ -46,10 +46,10 @@
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 10px auto; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Estilos do Modal de Boas-Vindas com Padre Luciano */
-        .welcome-avatar { width: 180px; height: 180px; border-radius: 50%; object-fit: cover; border: 5px solid var(--gold); margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .welcome-msg { font-size: 20px; color: var(--primary); font-weight: bold; margin-bottom: 10px; }
-        .welcome-quote { font-style: italic; color: var(--slate); font-size: 15px; padding: 0 10px; line-height: 1.4; }
+        /* Estilos da Imagem do Padre Luciano */
+        .welcome-avatar { width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 4px solid var(--gold); margin-bottom: 15px; }
+        .welcome-msg { font-size: 18px; color: var(--primary); font-weight: bold; margin-bottom: 10px; }
+        .welcome-quote { font-style: italic; color: var(--slate); font-size: 14px; line-height: 1.4; padding: 0 15px; }
     </style>
 </head>
 <body>
@@ -67,10 +67,9 @@
 
 <div id="modalWelcome" class="modal">
     <div class="modal-content">
-        <img src="IMG_20260401_014539.jpg" alt="Padre Luciano" class="welcome-avatar" id="imgPadre" onerror="this.src='https://via.placeholder.com/150?text=Padre+Luciano'">
-        
+        <img src="IMG_20260401_014539.jpg" alt="Padre Luciano" class="welcome-avatar">
         <div id="welcomeName" class="welcome-msg">Seja bem-vindo(a)!</div>
-        <div id="welcomeQuote" class="welcome-quote">"Carregando mensagem de missão..."</div>
+        <div id="welcomeQuote" class="welcome-quote"></div>
         <div class="loader" style="display: block; margin-top: 20px;"></div>
     </div>
 </div>
@@ -116,21 +115,28 @@
 
     const FRASES_MISSAO = [
         "\"A messe é grande, mas os operários são poucos.\" (Mt 9,37)",
-        "\"Quem não vive para servir, não serve para viver.\" - Sto. Antônio",
+        "\"Quem não vive para servir, não serve para viver.\"",
         "\"Ide por todo o mundo e pregai o Evangelho a toda criatura.\" (Mc 16,15)",
         "\"A alegria do Senhor é a nossa força.\"",
         "\"Servir ao Altar é reinar com Cristo.\"",
-        "\"Sede misericordiosos como o vosso Pai é misericordioso.\" (Lc 6,36)",
-        "\"Tudo posso Naquele que me fortalece.\"",
-        "\"Onde há caridade e amor, Deus aí está.\""
+        "\"Sede misericordiosos como o vosso Pai é misericordioso.\""
     ];
 
     const ORACOES_DB = {
-        ministro: `Senhor Jesus, Tu me destes a graça de ser Ministro e servo de Teu Corpo abençoado...`,
-        painosso: `Pai nosso, que estais nos céus...`,
-        avemaria: `Ave Maria, cheia de graça...`,
-        credo: `Creio em um só Deus, Pai todo-poderoso...`,
-        salverainha: `Salve Rainha, Mãe de misericórdia...`
+        ministro: `Senhor Jesus, Tu me destes a graça de ser Ministro e servo de Teu Corpo abençoado. 
+        Quantas vezes levo o calor de Tua visita aos doentes da minha comunidade e distribuo Teu Corpo aos homens e mulheres famintos na hora da Celebração da Missa. 
+        Tenho muita alegria em ser Teu servidor e poder encontrar pessoas simples, pobres, doentes e idosas esperando a visita reconfortadora de Teu amor. 
+        Que eu seja digno servidor, que eu possa ter sempre na minha vida esta atitude de serviço e de dom que transpareceram tão belamente em Tua trajetória humana. 
+        Hoje ainda, na glória, no mistério do sinal do pão, Tu Te entregas aos homens e Te serves de minhas mãos e de minha vida para fazer-Te oferenda. 
+        Amém.`,
+        painosso: `Pai nosso, que estais nos céus, santificado seja o vosso nome; venha a nós o vosso reino, seja feita a vossa vontade, assim na terra como no céu. O pão nosso de cada dia nos dai hoje, perdoai-nos as nossas dívidas, assim como nós perdoamos aos nossos devedores; e não nos introduzais em tentação, mas livrai-nos do mal. Amém.`,
+        avemaria: `Ave Maria, cheia de graça, o Senhor é convosco, bendita sois vós entre as mulheres e bendito é o fruto do vosso ventre, Jesus. Santa Maria, Mãe de Deus, rogai por nós pecadores, agora e na hora da nossa morte. Amém.`,
+        credo: `Creio em um só Deus, Pai todo-poderoso, Criador do céu e da terra, de todas as coisas visíveis e invisíveis.
+        Creio em um só Senhor, Jesus Cristo, Filho Unigênito de Deus, nascido do Pai antes de todos os séculos. Deus de Deus, luz da luz, Deus verdadeiro de Deus verdadeiro, gerado, não criado, consubstancial ao Pai. Por ele todas as coisas foram feitas. E por nós, homens, e para nossa salvação, desceu dos céus: e encarnou pelo Espírito Santo, no seio da Virgem Maria, e se fez homem. 
+        Também por nós foi crucificado sob Pôncio Pilatos; padeceu e foi sepultado. Ressuscitou ao terceiro dia, conforme as Escrituras, e subiu aos céus, onde está sentado à direita do Pai. E de novo há de vir, em sua glória, para julgar os vivos e os mortos; e o seu reino não terá fim. 
+        Creio no Espírito Santo, Senhor que dá a vida, e procede do Pai e do Filho; e com o Pai e o Filho é adorado e glorificado: ele que falou pelos profetas. 
+        Creio na Igreja, una, santa, católica e apostólica. Professo um só batismo para remissão dos pecados. E espero a ressurreição dos mortos e a vida do mundo que há de vir. Amém.`,
+        salverainha: `Salve Rainha, Mãe de misericórdia, vida, doçura e esperança nossa, salve! A vós bradamos os degredados filhos de Eva. A vós suspiramos, gemendo e chorando neste vale de lágrimas. Eia, pois, advogada nossa, esses vossos olhos misericordiosos a nós volvei, e depois deste desterro mostrai-nos Jesus, bendito fruto do vosso ventre. Ó clemente, ó piedosa, ó doce sempre Virgem Maria.`
     };
 
     window.onload = () => {
@@ -149,21 +155,19 @@
         document.getElementById('boasVindas').innerText = "Olá, " + nome.split(' ')[0];
 
         if (pularWelcome) {
-            finalizarLogin(nome);
+            exibirPainel(nome);
         } else {
-            // Mostrar modal com Padre Luciano
             document.getElementById('welcomeName').innerText = `Seja bem-vindo(a), ${nome.split(' ')[0]}!`;
             document.getElementById('welcomeQuote').innerText = FRASES_MISSAO[Math.floor(Math.random() * FRASES_MISSAO.length)];
             document.getElementById('modalWelcome').classList.add('open');
-
             setTimeout(() => {
                 document.getElementById('modalWelcome').classList.remove('open');
-                finalizarLogin(nome);
-            }, 3500); 
+                exibirPainel(nome);
+            }, 3000);
         }
     }
 
-    function finalizarLogin(nome) {
+    function exibirPainel(nome) {
         document.getElementById('lockScreen').style.display = 'none';
         document.getElementById('appContent').style.display = 'block';
         buscarEscalas(nome);
@@ -197,8 +201,44 @@
         } catch(e) { loader.style.display = "none"; lista.innerHTML = "<p style='color:red;'>Erro ao carregar dados.</p>"; }
     }
 
-    // Funções de apoio (Agenda, Orações, etc) mantidas idênticas
-    function prepararSalvar(dataStr, horaStr, missa) { /* ... lógica original ... */ }
+    function prepararSalvar(dataStr, horaStr, missa) {
+        let dataFinal = "";
+        if (dataStr.includes('º')) { dataFinal = calcularDataPorRegra(dataStr); } 
+        else { const partes = dataStr.split('/'); dataFinal = `${partes[2]}${partes[1]}${partes[0]}`; }
+        const horaFormatada = horaStr.replace(':', '');
+        const start = `${dataFinal}T${horaFormatada}00`;
+        let h = parseInt(horaFormatada.substring(0,2)) + 1;
+        const end = `${dataFinal}T${h.toString().padStart(2, '0')}${horaFormatada.substring(2)}00`;
+        const titulo = encodeURIComponent(`Escala MESC: ${missa}`);
+        const link = `https://www.google.com/calendar/render?action=TEMPLATE&text=${titulo}&dates=${start}/${end}&sf=true&output=xml`;
+        window.open(link, '_blank');
+    }
+
+    function calcularDataPorRegra(regra) {
+        const partes = regra.split(' ');
+        const nSemana = parseInt(partes[0]);
+        const diaNome = partes[1].toLowerCase();
+        const diasSemanaMap = { "domingo": 0, "segunda": 1, "terça": 2, "quarta": 3, "quinta": 4, "sexta": 5, "sábado": 6 };
+        const diaAlvo = diasSemanaMap[diaNome];
+        let hoje = new Date(); let ano = hoje.getFullYear(); let mes = hoje.getMonth();
+        let dataEncontrada = encontrarDiaNoMes(ano, mes, nSemana, diaAlvo);
+        if (dataEncontrada < hoje) { mes++; if (mes > 11) { mes = 0; ano++; } dataEncontrada = encontrarDiaNoMes(ano, mes, nSemana, diaAlvo); }
+        const y = dataEncontrada.getFullYear();
+        const m = (dataEncontrada.getMonth() + 1).toString().padStart(2, '0');
+        const d = dataEncontrada.getDate().toString().padStart(2, '0');
+        return `${y}${m}${d}`;
+    }
+
+    function encontrarDiaNoMes(ano, mes, nSemana, diaAlvo) {
+        let contador = 0;
+        for (let d = 1; d <= 31; d++) {
+            let tempDate = new Date(ano, mes, d);
+            if (tempDate.getMonth() !== mes) break;
+            if (tempDate.getDay() === diaAlvo) { contador++; if (contador === nSemana) return tempDate; }
+        }
+        return new Date(ano, mes, 1);
+    }
+
     function abrirOracoes() { document.getElementById('modalOracoes').classList.add('open'); trocarOracao(); }
     function fecharOracoes() { document.getElementById('modalOracoes').classList.remove('open'); }
     function trocarOracao() {
