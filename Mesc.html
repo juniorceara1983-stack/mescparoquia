@@ -27,8 +27,8 @@
         select, input, textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
         .slot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .msg-box { text-align: center; }
-        .msg-biblica { font-style: italic; color: #334155; margin: 20px 0; font-size: 16px; }
-        .status-ok { color: var(--green); font-weight: bold; margin-bottom: 10px; display: block; }
+        .msg-biblica { font-style: italic; color: #334155; margin: 20px 0; font-size: 16px; line-height: 1.4; }
+        .status-txt { font-weight: bold; margin-bottom: 10px; display: block; font-size: 18px; }
     </style>
 </head>
 <body>
@@ -39,14 +39,14 @@
     <div class="section">
         <h2>Escala Fixa</h2>
         <button class="btn btn-teal" onclick="openForm('Fixa')">📝 Criar escala fixa</button>
-        <button class="btn btn-pdf" onclick="alert('Gerando PDF...')">📄 Baixar PDF fixa</button>
+        <button class="btn btn-pdf" onclick="finalizarAcao('PDF', 'Gerando arquivo PDF...')">📄 Baixar PDF fixa</button>
         <button class="btn btn-zap" onclick="abrirZapModal('Fixa')">📲 Enviar escala ZAP fixo</button>
     </div>
 
     <div class="section">
         <h2>Evento Extra</h2>
         <button class="btn btn-teal" onclick="openForm('Extra')">📝 Criar escala extra</button>
-        <button class="btn btn-pdf" onclick="alert('Gerando PDF...')">📄 Baixar PDF extra</button>
+        <button class="btn btn-pdf" onclick="finalizarAcao('PDF', 'Gerando arquivo PDF...')">📄 Baixar PDF extra</button>
         <button class="btn btn-zap" onclick="abrirZapModal('Extra')">📲 Enviar escala ZAP extra</button>
     </div>
 
@@ -65,7 +65,7 @@
         <div class="field"><label>Horário</label><input type="time"></div>
         <label>Ministros (10 Slots)</label>
         <div class="slot-grid" id="slotsNomes"></div>
-        <button class="btn btn-blue" style="margin-top:15px" onclick="executarSalvar()">💾 Salvar na Planilha</button>
+        <button class="btn btn-blue" style="margin-top:15px" onclick="finalizarAcao('Salvar')">💾 Salvar na Planilha</button>
     </div>
 </div>
 
@@ -73,14 +73,14 @@
     <div class="modal-content">
         <h3 style="color:var(--green); margin-top:0">Enviar WhatsApp</h3>
         <div class="field"><label>Data da Escala</label><input type="date" id="dataZap"></div>
-        <div class="field"><label>Adicionar Comentário</label><textarea id="comentZap" rows="2" placeholder="Ex: Reunião após a missa..."></textarea></div>
-        <button class="btn btn-zap" onclick="executarSalvar()">Enviar para WhatsApp</button>
+        <div class="field"><label>Adicionar Comentário</label><textarea id="comentZap" rows="2" placeholder="Observações..."></textarea></div>
+        <button class="btn btn-zap" onclick="finalizarAcao('Zap')">Enviar agora</button>
     </div>
 </div>
 
 <div id="modalStatus" class="modal">
     <div class="modal-content msg-box">
-        <span class="status-ok" id="statusTxt">✓ Salvo com sucesso!</span>
+        <span class="status-txt" id="statusTitulo"></span>
         <div class="msg-biblica" id="textoBiblico"></div>
         <button class="btn btn-blue" onclick="fecharTudo()">Amém</button>
     </div>
@@ -109,19 +109,25 @@
 
     function abrirZapModal() { document.getElementById('modalZap').classList.add('open'); }
 
-    function executarSalvar() {
-        // Simulação de erro (exemplo: se não houver internet)
-        const erro = false; 
-
-        if (erro) {
-            alert("Erro ao conectar com a planilha. Tente novamente.");
-            return;
+    function finalizarAcao(tipo, msgPersonalizada) {
+        const statusTitulo = document.getElementById('statusTitulo');
+        
+        // Define o título baseado na ação (Remove "Salvo" se for apenas envio)
+        if (tipo === 'Salvar') {
+            statusTitulo.innerText = "✓ Salvo com sucesso!";
+            statusTitulo.style.color = "var(--green)";
+        } else if (tipo === 'Zap') {
+            statusTitulo.innerText = "Encaminhando Escala...";
+            statusTitulo.style.color = "var(--green)";
+        } else if (tipo === 'PDF') {
+            statusTitulo.innerText = "Documento Pronto!";
+            statusTitulo.style.color = "var(--slate)";
         }
 
         const msg = mensagens[Math.floor(Math.random() * mensagens.length)];
         document.getElementById('textoBiblico').innerText = msg;
         
-        // Esconde os outros modais e mostra o de sucesso
+        // Fecha formulários e abre a mensagem final
         document.getElementById('modalForm').classList.remove('open');
         document.getElementById('modalZap').classList.remove('open');
         document.getElementById('modalStatus').classList.add('open');
