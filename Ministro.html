@@ -28,16 +28,16 @@
         .btn-cal { background: #0369a1; font-size: 11px; padding: 8px; margin-top: 10px; width: auto; display: inline-flex; }
         .btn-out { background: var(--slate); margin-top: 30px; }
 
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 1000; align-items: center; justify-content: center; padding: 15px; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 3000; align-items: center; justify-content: center; padding: 15px; }
         .modal.open { display: flex; }
         .modal-content { background: #fff; border-radius: 16px; width: 100%; max-width: 420px; padding: 20px; text-align: center; max-height: 85vh; overflow-y: auto; position: relative; }
         .close-btn { position: absolute; top: 10px; right: 15px; font-size: 30px; cursor: pointer; color: var(--slate); }
 
-        input { width: 100%; padding: 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 16px; margin-top: 5px; }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 35px; height: 35px; animation: spin 1s linear infinite; margin: 15px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
         .msg-espiritual { font-style: italic; color: var(--slate); font-size: 14px; margin: 15px 0; padding: 15px; border-left: 4px solid var(--primary); text-align: left; background: #f8fafc; border-radius: 0 8px 8px 0; }
+        input { width: 100%; padding: 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 16px; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -55,23 +55,18 @@
 </div>
 
 <div class="wrap" id="app">
-    <header>
-        <h1 id="txtUser">Olá</h1>
-    </header>
-
+    <header><h1 id="txtUser">Olá</h1></header>
     <div class="section">
         <h2>Minha Escala</h2>
         <button class="btn btn-blue" onclick="abrirEscala()">📅 Ver Minha Escala</button>
     </div>
-
     <div class="section">
         <h2>Recursos</h2>
         <button class="btn btn-teal" onclick="window.open('https://www.cnbb.org.br/liturgia-diaria/', '_blank')">📖 Liturgia Diária</button>
         <button class="btn btn-teal" style="background:#0d9488" onclick="abrirOracoes()">🙏 Orações do MESC</button>
-        <button class="btn btn-blue" style="background:#6366f1" onclick="abrirSantoDoDia()">😇 Santo do Dia</button>
+        <button class="btn btn-blue" style="background:#6366f1" onclick="abrirSanto()">😇 Santo do Dia</button>
     </div>
-
-    <button class="btn btn-out" onclick="sair()">🚪 Sair / Trocar Usuário</button>
+    <button class="btn btn-out" onclick="sair()">🚪 Sair</button>
 </div>
 
 <div id="mGeral" class="modal">
@@ -96,46 +91,45 @@
 
     const frases = [
         "\"Servi ao Senhor com alegria!\"",
-        "\"Onde dois ou três estiverem reunidos em meu nome, eu estou ali.\"",
         "\"Tudo posso naquele que me fortalece.\"",
         "\"O Senhor é meu pastor, nada me faltará.\"",
         "\"Amai-vos uns aos outros como eu vos amei.\""
     ];
 
-    function extrairHoraTexto(v) {
+    // FUNÇÃO PARA PEGAR APENAS O HORÁRIO REAL (Ignora Fuso)
+    function formatarHoraFina(v) {
         if (!v) return "00:00";
-        let s = String(v);
-        // Se vier como ISO (2026-04-05T07:00:00.000Z), pega apenas a parte da hora
-        if (s.includes("T")) return s.split("T")[1].substring(0, 5);
-        return s.substring(0, 5);
+        const matches = String(v).match(/(\d{2}:\d{2})/);
+        return matches ? matches[1] : "00:00";
     }
 
-    // Calcula a data real baseada em "Xº Domingo"
     function calcularDataDomingo(texto) {
-        if (texto.includes('/')) return texto; // Já é data DD/MM/AAAA
-        
-        let ordem = parseInt(texto.substring(0, 1)); // Pega o 1, 2, 3...
-        if (isNaN(ordem)) return "Hoje";
-
-        let d = new Date();
-        d.setDate(1); // Vai para o dia 1 do mês atual
-        
-        // Encontra o primeiro domingo do mês
-        while (d.getDay() !== 0) {
-            d.setDate(d.getDate() + 1);
-        }
-        
-        // Pula para o domingo desejado (ex: 2º domingo = +7 dias)
+        if (texto.includes('/')) return texto;
+        let ordem = parseInt(texto);
+        if (isNaN(ordem)) return new Date().toLocaleDateString('pt-BR');
+        let d = new Date(); d.setDate(1);
+        while (d.getDay() !== 0) d.setDate(d.getDate() + 1);
         d.setDate(d.getDate() + (7 * (ordem - 1)));
-        
         return d.toLocaleDateString('pt-BR');
     }
+
+    function status(t, l) {
+        document.getElementById('sTitulo').innerText = t;
+        document.querySelector('#mStatus .loader').style.display = l ? 'block' : 'none';
+        document.getElementById('btnSOk').style.display = l ? 'none' : 'block';
+        document.getElementById('mStatus').classList.add('open');
+    }
+
+    function fecharStatus() { document.getElementById('mStatus').classList.remove('open'); }
 
     async function fazerLogin() {
         const nome = document.getElementById('nomeLogin').value.trim();
         if(!nome) return alert("Digite seu nome!");
+        
+        // Ativa a janela flutuante IMEDIATAMENTE
         document.getElementById('sMsg').innerText = frases[Math.floor(Math.random() * frases.length)];
         status("Validando Acesso...", true);
+
         try {
             const r = await fetch(API, { method: 'POST', body: JSON.stringify({ action: 'loginMinistro', nome: nome }) });
             const d = await r.json();
@@ -143,8 +137,8 @@
                 localStorage.setItem('mesc_nome', d.nomeOficial);
                 renderApp(d.nomeOficial);
                 fecharStatus();
-            } else { status("Não encontrado", false); }
-        } catch(e) { status("Erro de conexão", false); }
+            } else { status("Não encontrado", false); document.getElementById('sMsg').innerText = "Nome não localizado."; }
+        } catch(e) { status("Erro", false); document.getElementById('sMsg').innerText = "Erro na rede."; }
     }
 
     async function abrirEscala() {
@@ -156,30 +150,29 @@
             const d = await r.json();
             fecharStatus();
             let h = "";
-            if(d.ok && d.escalas && d.escalas.length > 0) {
+            if(d.ok && d.escalas.length > 0) {
                 d.escalas.forEach(e => {
-                    let dataCalculada = calcularDataDomingo(e.data);
-                    const horaFixa = extrairHoraTexto(e.hora);
-                    h += `
-                        <div class="card-escala">
-                            <span class="badge-tipo">${e.tipo}</span>
-                            <b>📅 ${e.data} (${dataCalculada})</b><br>
-                            ⏰ Hora: ${horaFixa}<br>
-                            ⛪ ${e.missa}
-                            <br><button class="btn btn-cal" onclick="addCal('${e.missa}','${dataCalculada}','${horaFixa}')">🗓️ Agendar no Google</button>
-                        </div>`;
+                    const dtC = calcularDataDomingo(e.data);
+                    const hrF = formatarHoraFina(e.hora);
+                    h += `<div class="card-escala">
+                        <span class="badge-tipo">${e.tipo}</span>
+                        <b>📅 ${e.data} (${dtC})</b><br>
+                        ⏰ Horário: ${hrF}<br>
+                        ⛪ ${e.missa}
+                        <br><button class="btn btn-cal" onclick="addCal('${e.missa}','${dtC}','${hrF}')">🗓️ Agendar no Google</button>
+                    </div>`;
                 });
-            } else { h = "<p>Nenhuma escala encontrada.</p>"; }
+            } else h = "<p>Sem escalas.</p>";
             abrirModal("Minha Escala", h);
         } catch(e) { fecharStatus(); }
     }
 
     function addCal(m, d, h) {
         const p = d.split('/');
-        const dFormat = p[2] + p[1] + p[0];
-        const hLimpa = h.replace(':', '');
-        const hFim = String(parseInt(hLimpa) + 100).padStart(4, '0');
-        window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('MESC: '+m)}&dates=${dFormat}T${hLimpa}00/${dFormat}T${hFim}00`, '_blank');
+        const dF = p[2] + p[1] + p[0];
+        const hL = h.replace(':', '');
+        const hE = String(parseInt(hL) + 100).padStart(4, '0');
+        window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('MESC: '+m)}&dates=${dF}T${hL}00/${dF}T${hE}00`, '_blank');
     }
 
     function renderApp(n) {
@@ -188,14 +181,6 @@
         document.getElementById('txtUser').innerText = "Olá, " + n.split(' ')[0];
     }
 
-    function status(t, l) {
-        document.getElementById('sTitulo').innerText = t;
-        document.querySelector('#mStatus .loader').style.display = l ? 'block' : 'none';
-        document.getElementById('btnSOk').style.display = l ? 'none' : 'block';
-        document.getElementById('mStatus').classList.add('open');
-    }
-
-    function fecharStatus() { document.getElementById('mStatus').classList.remove('open'); }
     function abrirModal(t, c) {
         document.getElementById('mTitulo').innerText = t;
         document.getElementById('mCorpo').innerHTML = c;
@@ -203,13 +188,10 @@
     }
     function fecharModal() { document.getElementById('mGeral').classList.remove('open'); }
     function sair() { localStorage.clear(); location.reload(); }
-    function abrirOracoes() { abrirModal("Orações", `<div class="msg-espiritual"><b>Oração</b><br>Senhor, dai-me humildade para servir.</div>`); }
-    function abrirSantoDoDia() { abrirModal("Santo do Dia", `<iframe src="https://santo.cancaonova.com/" style="width:100%; height:450px; border:none;"></iframe>`); }
+    function abrirOracoes() { abrirModal("Orações", `<div class="msg-espiritual">Senhor, dai-me humildade para servir.</div>`); }
+    function abrirSanto() { abrirModal("Santo do Dia", `<iframe src="https://santo.cancaonova.com/" style="width:100%; height:450px; border:none;"></iframe>`); }
 
-    window.onload = () => {
-        const n = localStorage.getItem('mesc_nome');
-        if(n) renderApp(n);
-    };
+    window.onload = () => { if(localStorage.getItem('mesc_nome')) renderApp(localStorage.getItem('mesc_nome')); };
 </script>
 </body>
 </html>
