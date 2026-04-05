@@ -253,19 +253,77 @@
     }
 
     async function gerarLinkZap() {
-        mostrarStatus("Preparando WhatsApp...");
-        try {
-            const res = await fetch(URL_API);
-            const banco = await res.json();
-            let msg = `*📍 ESCALA MESC - ${localStorage.getItem('mesc_nome_paroquia')}*\n\n`;
-            window.location.href = `whatsapp://send?text=${encodeURIComponent(msg + document.getElementById('comentZap').value)}`;
-            fecharTudo();
-        } catch(e) { mostrarStatus("Erro ao preparar mensagem", false); }
-    }
+    const dataVal = document.getElementById('dataZap').value;
+    if(!dataVal) return alert("Selecione a data!");
+    
+    document.getElementById('btnEnviarZap').innerText = "⏳ BUSCANDO ESCALA...";
 
-    function openForm(t) { tipoAtual = t; document.getElementById('fMinistros').value = ""; document.getElementById('modalForm').classList.add('open'); document.getElementById('seletorRegra').style.display = t === 'Fixa' ? 'block' : 'none'; document.getElementById('campoData').style.display = t === 'Extra' ? 'block' : 'none'; }
-    function fecharTudo() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('open')); }
-    function abrirZapModal(t) { tipoAtual = t; document.getElementById('modalZap').classList.add('open'); }
+    try {
+        // Adicionando timestamp para evitar cache do navegador
+        const res = await fetch(`${URL_API}?t=${new Date().getTime()}`);
+        const banco = await res.json();
+        
+        const [ano, mes, dia] = dataVal.split('-');
+        // Criamos a data local para evitar problemas de fuso horário no cálculo do dia da semana
+        const dataObj = new Date(ano, mes-1, dia, 12, 0, 0);
+        
+        const diasSemanas = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+        const diaNome = diasSemanas[dataObj.getDay()];
+        
+        // Cálculo preciso do N-ésimo dia da semana no mês
+        const nSemana = Math.ceil(dataObj.getDate() / 7);
+        const regraHoje = `${nSemana}º ${diaNome}`;
+
+        // Filtro aprimorado para Escalas Extras (compara apenas a parte YYYY-MM-DD)
+        const extras = (banco.extras || []).filter(e => {
+            if (!e[0]) return false;
+            let dataE = e[0].toString();
+            if (dataE.includes('T')) dataE = dataE.split('T')[0];
+            return dataE.includes(dataVal);
+        });
+
+        // Filtro para Escalas Fixas
+        const fixos = (banco.regras || []).filter(r => 
+            r[0] && r[0].toString().trim().toLowerCase() === regraHoje.toLowerCase()
+        );
+
+        if(extras.length === 0 && fixos.length === 0) {
+            alert("Nenhuma escala encontrada para " + regraHoje + " em " + dia + "/" + mes);
+            document.getElementById('btnEnviarZap').innerText = "🔍 Buscar e Enviar";
+            return;
+        }
+
+        let texto = `*📍 ESCALA MESC - ${dia}/${mes}/${ano}*\n*(${regraHoje})*\n\n`;
+
+        // Mapeamento garantindo a captura de Hora (índice 1), Missa (2) e Ministros (3)
+        const consolidado = [
+            ...fixos.map(f => ({ h: formatarHora(f[1]), m: f[2] || "Missa", n: f[3] || "Não informado" })),
+            ...extras.map(e => ({ h: formatarHora(e[1]), m: e[2] || "Missa", n: e[3] || "Não informado" }))
+        ];
+
+        // Ordenar por horário
+        consolidado.sort((a,b) => a.h.localeCompare(b.h));
+
+        consolidado.forEach(item => {
+            texto += `⏰ *Hora:* ${item.h}\n⛪ *Missa:* ${item.m}\n👤 *Ministros:* ${item.n}\n─────────────────\n\n`;
+        });
+
+        const obs = document.getElementById('comentZap').value;
+        if(obs) texto += `📝 *Obs:* ${obs}\n\n`;
+        
+        texto += `_Gerado via MESC Digital_`;
+
+        // Link para WhatsApp (Web e App)
+        const linkZap = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
+        window.open(linkZap, '_blank');
+        
+        finalizarAcao('Zap');
+    } catch (e) {
+        console.error(e);
+        alert("Erro ao buscar dados na planilha. Verifique a conexão.");
+        document.getElementById('btnEnviarZap').innerText = "🔍 Buscar e Enviar";
+    }
+}
 </script>
 </body>
 </html>
