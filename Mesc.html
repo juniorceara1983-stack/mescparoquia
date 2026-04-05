@@ -252,7 +252,7 @@
         mostrarStatus("Escala salva com sucesso!", false);
     }
 
-    // --- FUNÇÃO CORRIGIDA ---
+    // --- FUNÇÃO CORRIGIDA PARA CELULAR ---
     async function gerarLinkZap() {
         const dataVal = document.getElementById('dataZap').value;
         if (!dataVal) return alert("Selecione a data da escala!");
@@ -271,12 +271,13 @@
             const nSemana = Math.ceil(dataObj.getDate() / 7);
             const regraHoje = `${nSemana}º ${diaNome}`;
 
-            // ESSA É A PARTE QUE CORRIGE O 10:06
-            const formatarHorarioCorreto = (valor) => {
+            // SOLUÇÃO PARA MOBILE: Extração de caracteres brutos
+            const formatarHorarioMobile = (valor) => {
                 if(!valor) return "00:00";
-                // Transforma em texto e pega apenas os números no formato 00:00:00 ou 00:00
-                const stringValor = valor.toString();
-                const match = stringValor.match(/(\d{2}:\d{2})/);
+                // Converte em texto e pega apenas os primeiros 5 caracteres se for formato HH:MM
+                const s = valor.toString();
+                // Se o Google mandar algo como "Sat Dec 30 1899 19:00:00", o Regex abaixo pega só o "19:00"
+                const match = s.match(/(\d{2}:\d{2})/);
                 return match ? match[1] : "00:00";
             };
 
@@ -291,8 +292,8 @@
             let msg = `*📍 ESCALA MESC - ${dia}/${mes}/${ano}*\n*(${regraHoje})*\n\n`;
 
             const lista = [
-                ...fixos.map(f => ({ h: formatarHorarioCorreto(f[1]), m: f[2], n: f[3] })),
-                ...extras.map(e => ({ h: formatarHorarioCorreto(e[1]), m: e[2], n: e[3] }))
+                ...fixos.map(f => ({ h: formatarHorarioMobile(f[1]), m: f[2], n: f[3] })),
+                ...extras.map(e => ({ h: formatarHorarioMobile(e[1]), m: e[2], n: e[3] }))
             ].sort((a,b) => a.h.localeCompare(b.h));
 
             lista.forEach(item => {
@@ -303,6 +304,7 @@
             if (obs) msg += `📝 *Obs:* ${obs}\n\n`;
             msg += `_Gerado via MESC Digital_`;
 
+            // api.whatsapp.com é mais confiável em celulares que whatsapp://
             window.location.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
             fecharTudo();
         } catch(e) { mostrarStatus("Erro ao preparar mensagem", false); }
