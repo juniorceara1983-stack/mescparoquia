@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MESC — Maracanaú</title>
+    <title>COORDENADOR - MESC</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        :root { --primary: #1e3a8a; --bg: #f1f5f9; --teal: #0f766e; --green: #15803d; --slate: #475569; }
+        :root { --primary: #1e3a8a; --bg: #f1f5f9; --teal: #0f766e; --green: #15803d; --slate: #475569; --danger: #b91c1c; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--bg); margin: 0; padding: 16px; }
         
@@ -17,255 +17,268 @@
         .wrap { max-width: 480px; margin: 0 auto; display: none; }
         header { text-align: center; margin-bottom: 20px; }
         h1 { color: var(--primary); margin: 0; font-size: 24px; }
-        .section { margin-top: 15px; padding-top: 15px; border-top: 2px solid #e2e8f0; }
-        .section h2 { font-size: 13px; text-transform: uppercase; color: #64748b; margin-bottom: 10px; }
+        .section { margin-top: 15px; padding: 15px; background: #fff; border-radius: 12px; border-top: 4px solid var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .section h2 { font-size: 13px; text-transform: uppercase; color: #64748b; margin-bottom: 10px; margin-top: 0; }
+        
         .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #fff; font-size: 14px; text-decoration: none; }
         .btn-teal { background: var(--teal); }
         .btn-blue { background: var(--primary); }
         .btn-pdf { background: var(--slate); }
         .btn-zap { background: var(--green); }
+        .btn-danger { background: var(--danger); }
         
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 1000; align-items: center; justify-content: center; padding: 15px; }
         .modal.open { display: flex; }
         .modal-content { background: #fff; border-radius: 16px; width: 100%; max-width: 420px; padding: 20px; max-height: 90vh; overflow-y: auto; }
-        .field { margin-bottom: 12px; text-align: left; }
+        
+        .field { margin-bottom: 12px; }
         label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 4px; color: var(--primary); text-transform: uppercase; }
         select, input, textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
-        .slot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .msg-box { text-align: center; }
-        .msg-biblica { font-style: italic; color: #334155; margin: 20px 0; font-size: 16px; line-height: 1.4; }
-        .status-txt { font-weight: bold; margin-bottom: 10px; display: block; font-size: 18px; }
+        
+        .mini-list { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+        .mini-badge { background: #e2e8f0; padding: 5px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; border: 1px solid #cbd5e1; }
+        .mini-badge:hover { background: #cbd5e1; }
+        .tag-remove { margin-left: 5px; color: var(--danger); font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="lockScreen">
     <div class="lock-box">
-        <h2 style="margin-top:0; color:var(--primary)">Acesso Restrito</h2>
+        <h2 style="margin-top:0; color:var(--primary)">Acesso MESC</h2>
         <p style="font-size:14px">Informe os dados da Paróquia</p>
-        <div class="field"><label>Nome da Paróquia</label><input type="text" id="paroquiaAcesso" placeholder="Ex: PNSPS"></div>
-        <div class="field"><label>Código de 6 Dígitos</label><input type="text" id="codigoAcesso" placeholder="Digite o código..."></div>
-        <button class="btn btn-blue" onclick="verificarAcesso()">ENTRAR NO APP</button>
+        <div class="field"><label>Paróquia</label><input type="text" id="paroquiaAcesso" placeholder="Ex: PNSPS"></div>
+        <div class="field"><label>Código de Ativação</label><input type="text" id="codigoAcesso" placeholder="Digite seu código..."></div>
+        <button class="btn btn-blue" id="btnEntrar" onclick="verificarAcesso()">ATIVAR APLICATIVO</button>
     </div>
 </div>
 
 <div class="wrap" id="appContent">
-    <header><h1 id="tituloHeader">MESC Maracanaú</h1></header>
+    <header><h1 id="tituloHeader">Painel MESC</h1></header>
 
     <div class="section">
-        <h2>Escala Fixa (Anual)</h2>
-        <button class="btn btn-teal" onclick="openForm('Fixa')">📝 Configurar Regra Fixa</button>
-        <button class="btn btn-zap" onclick="abrirZapModal()">📲 Enviar Escala Fixa</button>
-        <button class="btn btn-pdf" onclick="gerarPdf('regras')">📄 Baixar PDF Fixa</button>
+        <h2>Gerenciar Escalas</h2>
+        <button class="btn btn-teal" onclick="openForm('Fixa')">📝 Nova Escala Fixa</button>
+        <button class="btn btn-teal" onclick="openForm('Extra')">📝 Novo Evento Extra</button>
+        <button class="btn btn-zap" onclick="abrirZapModal()">📲 Enviar via WhatsApp</button>
     </div>
 
     <div class="section">
-        <h2>Evento Extra</h2>
-        <button class="btn btn-teal" onclick="openForm('Extra')">📝 Criar Escala Extra</button>
-        <button class="btn btn-zap" onclick="abrirZapModal()">📲 Enviar Escala Extra</button>
-        <button class="btn btn-pdf" onclick="gerarPdf('extras')">📄 Baixar PDF Extra</button>
+        <h2>Relatórios e Limpeza</h2>
+        <button class="btn btn-pdf" onclick="gerarPdf('regras')">📄 PDF Escala Fixa</button>
+        <button class="btn btn-pdf" onclick="gerarPdf('extras')">📄 PDF Eventos Extras</button>
+        <button class="btn btn-danger" style="opacity: 0.7;" onclick="limparSistema()">⚠️ Reiniciar Todas as Escalas</button>
     </div>
 
     <div class="section">
-        <a class="btn btn-blue" href="https://docs.google.com/spreadsheets/d/11fV62v1MY-w4b7RrPXJwiDhSiY03kS5vkvL_tv--Kos/edit" target="_blank">📊 Abrir Planilha</a>
+        <h2>Quadro de Ministros</h2>
+        <div class="field">
+            <input type="text" id="novoMinistro" placeholder="Nome do Ministro">
+            <button class="btn btn-blue" onclick="addMinistro()" style="padding: 8px; font-size: 12px;">+ Adicionar ao Quadro</button>
+        </div>
+        <div id="listaMinistrosQuadros" class="mini-list">
+            </div>
     </div>
 </div>
 
 <div id="modalForm" class="modal">
     <div class="modal-content">
-        <h3 id="formTitle" style="color:var(--primary); margin-top:0">Lançar Escala</h3>
+        <h3 id="formTitle" style="color:var(--primary); margin-top:0">Lançar</h3>
         <div id="seletorRegra">
             <div style="display: flex; gap: 8px;">
                 <div class="field" style="flex: 1;"><label>Semana</label><select id="fSemana"><option>1º</option><option>2º</option><option>3º</option><option>4º</option><option>5º</option></select></div>
                 <div class="field" style="flex: 2;"><label>Dia</label><select id="fDia"><option>Sábado</option><option>Domingo</option><option>Segunda</option><option>Terça</option><option>Quarta</option><option>Quinta</option><option>Sexta</option></select></div>
             </div>
         </div>
-        <div id="campoData" class="field" style="display:none;"><label>Data do Evento Extra</label><input type="date" id="fData"></div>
+        <div id="campoData" class="field" style="display:none;"><label>Data</label><input type="date" id="fData"></div>
         <div class="field"><label>Horário</label><input type="time" id="fHora"></div>
-        <div class="field"><label>Nome da Missa / Evento</label><input type="text" id="fMissa" placeholder="Ex: Missa das Crianças"></div>
-        <label>Ministros (Até 10)</label>
-        <div class="slot-grid" id="slotsNomes"></div>
-        <button class="btn btn-blue" style="margin-top:15px" id="btnSalvar" onclick="salvarDados()">💾 Salvar na Planilha</button>
-        <button class="btn btn-pdf" style="background:#64748b; margin-top:8px" onclick="fecharTudo()">Voltar</button>
+        <div class="field"><label>Evento/Missa</label><input type="text" id="fMissa"></div>
+        
+        <label>Ministros (Clique nos nomes abaixo)</label>
+        <textarea id="fMinistros" rows="3" placeholder="Selecione os ministros..."></textarea>
+        <div id="clickListaMinistros" class="mini-list" style="margin-bottom: 15px;"></div>
+
+        <button class="btn btn-blue" id="btnSalvar" onclick="salvarDados()">💾 Salvar na Planilha</button>
+        <button class="btn btn-pdf" style="background:#64748b" onclick="fecharTudo()">Cancelar</button>
     </div>
 </div>
 
 <div id="modalZap" class="modal">
     <div class="modal-content">
         <h3 style="color:var(--green); margin-top:0">Enviar WhatsApp</h3>
-        <div class="field"><label>Escolha a Data</label><input type="date" id="dataZap"></div>
-        <div class="field"><label>Adicionar Comentário</label><textarea id="comentZap" rows="2" placeholder="Ex: Reunião após a missa..."></textarea></div>
-        <button class="btn btn-zap" id="btnEnviarZap" onclick="gerarLinkZap()">🔍 Buscar e Enviar</button>
-        <button class="btn btn-pdf" style="background:#64748b" onclick="fecharTudo()">Cancelar</button>
-    </div>
-</div>
-
-<div id="modalStatus" class="modal">
-    <div class="modal-content msg-box">
-        <span class="status-txt" id="statusTitulo"></span>
-        <div class="msg-biblica" id="textoBiblico"></div>
-        <button class="btn btn-blue" onclick="fecharTudo()">Amém</button>
+        <div class="field"><label>Data da Escala</label><input type="date" id="dataZap"></div>
+        <div class="field"><label>Observação</label><textarea id="comentZap" rows="2"></textarea></div>
+        <button class="btn btn-zap" id="btnEnviarZap" onclick="gerarLinkZap()">🔍 Gerar Mensagem</button>
+        <button class="btn btn-pdf" style="background:#64748b" onclick="fecharTudo()">Voltar</button>
     </div>
 </div>
 
 <script>
-    const URL_API = "https://script.google.com/macros/s/AKfycbx3pQmERqlir6eMFJysYVFgASlAT_vtsVJ4Se2wv5JqBt1OcJu8G3yCEqlPNfHGPf95/exec";
+    const URL_API = "https://script.google.com/macros/s/AKfycbybTBWupiQNckDNS6YPcDtpNL04vGfjF2nkO1J4PCQpuI5b4nMaaw_Pltqu-3qOOEPX/exec";
     let tipoAtual = "";
+    let listaGlobalMinistros = [];
 
-    // --- LOGICA DE ACESSO ---
-    window.onload = function() {
-        if(localStorage.getItem('mesc_acesso') === 'true') {
-            liberarApp();
-        }
-    }
+    window.onload = () => {
+        if(localStorage.getItem('mesc_acesso') === 'true') liberarApp();
+    };
 
-    function verificarAcesso() {
-        const paroquia = document.getElementById('paroquiaAcesso').value.trim();
-        const codigo = document.getElementById('codigoAcesso').value.trim();
+    async function verificarAcesso() {
+        const p = document.getElementById('paroquiaAcesso').value.trim();
+        const c = document.getElementById('codigoAcesso').value.trim();
+        const btn = document.getElementById('btnEntrar');
+        if(!p || !c) return alert("Preencha os campos!");
 
-        // Altere o código abaixo para o que você desejar
-        if(paroquia !== "" && codigo === "PNSPS1") { 
-            localStorage.setItem('mesc_acesso', 'true');
-            localStorage.setItem('mesc_nome_paroquia', paroquia);
-            liberarApp();
-        } else {
-            alert("Código de acesso inválido!");
-        }
+        btn.innerText = "⏳ VALIDANDO...";
+        try {
+            const res = await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'verificarToken', paroquia: p, codigo: c }) });
+            const data = await res.json();
+            if(data.ok) {
+                localStorage.setItem('mesc_acesso', 'true');
+                localStorage.setItem('mesc_nome_paroquia', p.toUpperCase());
+                liberarApp();
+            } else { alert(data.error); btn.innerText = "ATIVAR APLICATIVO"; }
+        } catch(e) { alert("Erro de conexão."); btn.innerText = "ATIVAR APLICATIVO"; }
     }
 
     function liberarApp() {
         document.getElementById('lockScreen').style.display = 'none';
         document.getElementById('appContent').style.display = 'block';
-        const nomeP = localStorage.getItem('mesc_nome_paroquia');
-        document.getElementById('tituloHeader').innerText = "MESC " + nomeP;
+        document.getElementById('tituloHeader').innerText = "MESC - " + localStorage.getItem('mesc_nome_paroquia');
+        atualizarListaMinistros();
     }
 
-    // --- FUNÇÃO DO PDF ---
-    async function gerarPdf(tipo) {
-        alert("Preparando PDF, aguarde...");
+    async function atualizarListaMinistros() {
         try {
-            const res = await fetch(`${URL_API}?t=${new Date().getTime()}`);
+            const res = await fetch(URL_API);
             const banco = await res.json();
-            const dados = tipo === 'regras' ? banco.regras : banco.extras;
-            const paroquia = localStorage.getItem('mesc_nome_paroquia') || "Maracanaú";
+            listaGlobalMinistros = (banco.ministros || []).map(m => m[0]).filter(n => n && n !== "Nome");
+            renderizarMinistros();
+        } catch(e) { console.log("Erro ao carregar ministros"); }
+    }
 
-            let htmlDoc = `<div style="padding:20px; font-family:sans-serif;">
-                <h1 style="text-align:center; color:#1e3a8a;">ESCALA MESC - ${paroquia}</h1>
-                <p style="text-align:center; border-bottom:2px solid #eee; padding-bottom:10px;">Relatório de Escala ${tipo === 'regras' ? 'Fixa Anual' : 'Eventos Extras'}</p>
-                <table border="1" style="width:100%; border-collapse:collapse; margin-top:20px;">
-                    <tr style="background:#f1f5f9;">
-                        <th style="padding:10px;">Data/Regra</th>
-                        <th style="padding:10px;">Hora</th>
-                        <th style="padding:10px;">Evento</th>
-                        <th style="padding:10px;">Ministros</th>
-                    </tr>`;
+    function renderizarMinistros() {
+        const quad = document.getElementById('listaMinistrosQuadros');
+        const click = document.getElementById('clickListaMinistros');
+        quad.innerHTML = ""; click.innerHTML = "";
 
-            dados.forEach(item => {
-                htmlDoc += `<tr>
-                    <td style="padding:8px;">${item[0]}</td>
-                    <td style="padding:8px;">${formatarHora(item[1])}</td>
-                    <td style="padding:8px;">${item[2]}</td>
-                    <td style="padding:8px; font-size:12px;">${item[3]}</td>
-                </tr>`;
-            });
+        listaGlobalMinistros.forEach(nome => {
+            // No Quadro (com opção de remover)
+            const b1 = document.createElement('span');
+            b1.className = 'mini-badge';
+            b1.innerHTML = `${nome} <span class="tag-remove" onclick="removerMinistro('${nome}')">×</span>`;
+            quad.appendChild(b1);
 
-            htmlDoc += `</table><p style="margin-top:30px; font-size:10px; text-align:center;">Gerado em: ${new Date().toLocaleString()}</p></div>`;
-
-            const opt = {
-                margin: 10,
-                filename: `Escala_${tipo}_${paroquia}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            // No Modal (para selecionar)
+            const b2 = document.createElement('span');
+            b2.className = 'mini-badge';
+            b2.innerText = nome;
+            b2.onclick = () => {
+                const txt = document.getElementById('fMinistros');
+                txt.value += (txt.value ? ", " : "") + nome;
             };
-            html2pdf().set(opt).from(htmlDoc).save();
-        } catch (e) { alert("Erro ao gerar PDF."); }
+            click.appendChild(b2);
+        });
     }
 
-    // --- RESTANTE DAS FUNÇÕES (MANTIDAS) ---
-    const container = document.getElementById('slotsNomes');
-    for (let i = 1; i <= 10; i++) {
-        const input = document.createElement('input');
-        input.type = 'text'; input.className = 'm-nome'; input.placeholder = i + '° Ministro';
-        container.appendChild(input);
+    async function addMinistro() {
+        const nome = document.getElementById('novoMinistro').value.trim();
+        if(!nome) return;
+        await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'addMinistro', nome: nome }) });
+        document.getElementById('novoMinistro').value = "";
+        atualizarListaMinistros();
     }
 
-    function openForm(t) { 
+    async function removerMinistro(nome) {
+        if(!confirm(`Remover ${nome} do quadro?`)) return;
+        await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'removerMinistro', nome: nome }) });
+        atualizarListaMinistros();
+    }
+
+    async function limparSistema() {
+        const p = prompt("Para apagar TODAS as escalas, digite APAGAR:");
+        if(p !== "APAGAR") return;
+        await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'limparTudo' }) });
+        alert("Sistema reiniciado!");
+    }
+
+    function openForm(t) {
         tipoAtual = t;
-        document.getElementById('formTitle').innerText = t === 'Fixa' ? 'Configurar Escala Fixa' : 'Novo Evento Extra';
+        document.getElementById('fMinistros').value = "";
         document.getElementById('modalForm').classList.add('open');
         document.getElementById('seletorRegra').style.display = t === 'Fixa' ? 'block' : 'none';
         document.getElementById('campoData').style.display = t === 'Extra' ? 'block' : 'none';
     }
 
-    function abrirZapModal() { document.getElementById('modalZap').classList.add('open'); }
-
-    function formatarHora(h) {
-        if (!h) return "";
-        let str = h.toString();
-        if (str.includes("T") || str.includes("Dec 30 1899")) {
-            try {
-                let d = new Date(str);
-                return d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0');
-            } catch(e) { return str.substring(0,5); }
-        }
-        return str.length > 5 ? str.substring(11, 16) : str.substring(0, 5);
-    }
-
     async function salvarDados() {
         const btn = document.getElementById('btnSalvar');
         btn.innerText = "⏳ SALVANDO...";
-        const nomes = Array.from(document.querySelectorAll('.m-nome')).map(i => i.value.trim()).filter(v => v !== "").join(", ");
         const payload = {
             action: tipoAtual === 'Fixa' ? 'addRegra' : 'addEscala',
             hora: document.getElementById('fHora').value,
             missa: document.getElementById('fMissa').value,
-            ministro: nomes
+            ministro: document.getElementById('fMinistros').value
         };
         if(tipoAtual === 'Fixa') payload.regra = document.getElementById('fSemana').value + " " + document.getElementById('fDia').value;
         else payload.data = document.getElementById('fData').value;
 
-        await fetch(URL_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-        finalizarAcao('Salvar');
+        await fetch(URL_API, { method: 'POST', body: JSON.stringify(payload) });
+        alert("Salvo com sucesso!");
+        btn.innerText = "💾 Salvar na Planilha";
+        fecharTudo();
+    }
+
+    // --- FUNÇÕES DE APOIO (PDF, ZAP, HORA) ---
+    function formatarHora(h) {
+        if (!h) return "";
+        let str = h.toString();
+        if (str.includes("T") || str.includes("Dec 30 1899")) {
+            let d = new Date(str);
+            return d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0');
+        }
+        return str.length > 5 ? str.substring(11, 16) : str.substring(0, 5);
+    }
+
+    async function gerarPdf(tipo) {
+        alert("Gerando PDF...");
+        const res = await fetch(URL_API);
+        const banco = await res.json();
+        const dados = tipo === 'regras' ? banco.regras : banco.extras;
+        const paroquia = localStorage.getItem('mesc_nome_paroquia');
+
+        let html = `<div style="padding:20px; font-family:sans-serif;">
+            <h2 style="text-align:center; color:#1e3a8a;">ESCALA MESC - ${paroquia}</h2>
+            <table border="1" style="width:100%; border-collapse:collapse; margin-top:20px;">
+                <tr style="background:#eee;"><th>Ref</th><th>Hora</th><th>Evento</th><th>Ministros</th></tr>`;
+        dados.slice(1).forEach(r => {
+            html += `<tr><td>${r[0]}</td><td>${formatarHora(r[1])}</td><td>${r[2]}</td><td style="font-size:12px">${r[3]}</td></tr>`;
+        });
+        html += `</table></div>`;
+        html2pdf().from(html).save(`Escala_${paroquia}.pdf`);
     }
 
     async function gerarLinkZap() {
-        const dataVal = document.getElementById('dataZap').value;
-        if(!dataVal) return alert("Selecione a data!");
-        document.getElementById('btnEnviarZap').innerText = "⏳ BUSCANDO ESCALA...";
-        try {
-            const res = await fetch(`${URL_API}?t=${new Date().getTime()}`);
-            const banco = await res.json();
-            const [ano, mes, dia] = dataVal.split('-');
-            const dataObj = new Date(ano, mes-1, dia, 12, 0, 0);
-            const diasSemanas = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-            const regraHoje = `${Math.ceil(dataObj.getDate() / 7)}º ${diasSemanas[dataObj.getDay()]}`;
+        const dVal = document.getElementById('dataZap').value;
+        if(!dVal) return alert("Selecione a data!");
+        const res = await fetch(URL_API);
+        const banco = await res.json();
+        const [ano, mes, dia] = dVal.split('-');
+        const dObj = new Date(ano, mes-1, dia, 12, 0, 0);
+        const diasS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+        const regra = `${Math.ceil(dObj.getDate() / 7)}º ${diasS[dObj.getDay()]}`;
 
-            const extras = (banco.extras || []).filter(e => e[0] && e[0].toString().includes(dataVal));
-            const fixos = (banco.regras || []).filter(r => r[0] && r[0].toString().trim() === regraHoje);
-
-            let texto = `*📍 ESCALA MESC - ${dia}/${mes}/${ano}*\n*(${regraHoje})*\n\n`;
-            const consolidado = [...fixos.map(f => ({ h: formatarHora(f[1]), m: f[2], n: f[3] })), ...extras.map(e => ({ h: formatarHora(e[1]), m: e[2], n: e[3] }))].sort((a,b) => a.h.localeCompare(b.h));
-            consolidado.forEach(item => { texto += `⏰ *Hora:* ${item.h}\n⛪ *Missa:* ${item.m}\n👤 *Ministros:* ${item.n}\n─────────────────\n\n`; });
-            const obs = document.getElementById('comentZap').value;
-            if(obs) texto += `📝 *Obs:* ${obs}`;
-
-            window.location.href = `whatsapp://send?text=${encodeURIComponent(texto)}`;
-            finalizarAcao('Zap');
-        } catch (e) { alert("Erro ao conectar."); }
+        const extras = (banco.extras || []).filter(e => e[0] && e[0].toString().includes(dVal));
+        const fixos = (banco.regras || []).filter(r => r[0] && r[0].toString().trim() === regra);
+        
+        let msg = `*📍 ESCALA MESC - ${dia}/${mes}/${ano}*\n*(${regra})*\n\n`;
+        const lista = [...fixos.map(f=>({h:formatarHora(f[1]), m:f[2], n:f[3]})), ...extras.map(e=>({h:formatarHora(e[1]), m:e[2], n:e[3]}))];
+        lista.forEach(i => { msg += `⏰ *Hora:* ${i.h}\n⛪ *Missa:* ${i.m}\n👤 *Ministros:* ${i.n}\n─────────────────\n\n`; });
+        const obs = document.getElementById('comentZap').value;
+        if(obs) msg += `📝 *Obs:* ${obs}`;
+        window.location.href = `whatsapp://send?text=${encodeURIComponent(msg)}`;
     }
 
-    function finalizarAcao(tipo) {
-        document.getElementById('statusTitulo').innerText = tipo === 'Salvar' ? "✓ Salvo!" : "✓ Escala Enviada!";
-        document.getElementById('textoBiblico').innerText = "«Quem não vive para servir, não serve para viver.»";
-        fecharTudo();
-        document.getElementById('modalStatus').classList.add('open');
-    }
-
-    function fecharTudo() {
-        document.querySelectorAll('.modal').forEach(m => m.classList.remove('open'));
-        document.getElementById('btnEnviarZap').innerText = "🔍 Buscar e Enviar";
-    }
+    function abrirZapModal() { document.getElementById('modalZap').classList.add('open'); }
+    function fecharTudo() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('open')); }
 </script>
 </body>
 </html>
