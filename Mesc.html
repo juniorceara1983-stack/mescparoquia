@@ -251,18 +251,18 @@
         await fetch(URL_API, { method: 'POST', body: JSON.stringify(payload) });
         mostrarStatus("Escala salva com sucesso!", false);
     }
-    
+
+    // --- FUNÇÃO CORRIGIDA ---
     async function gerarLinkZap() {
         const dataVal = document.getElementById('dataZap').value;
         if (!dataVal) return alert("Selecione a data da escala!");
-
+        
         mostrarStatus("Preparando WhatsApp...");
 
         try {
             const res = await fetch(`${URL_API}?t=${new Date().getTime()}`);
             const banco = await res.json();
             
-            // Tratamento da Data Selecionada
             const [ano, mes, dia] = dataVal.split('-');
             const dataObj = new Date(ano, mes-1, dia, 12, 0, 0);
             
@@ -271,60 +271,43 @@
             const nSemana = Math.ceil(dataObj.getDate() / 7);
             const regraHoje = `${nSemana}º ${diaNome}`;
 
-            // Função para limpar o erro de fuso horário (10:06)
-            const limparHora = (h) => {
+            const formatH = (h) => {
                 if(!h) return "00:00";
-                const matches = h.toString().match(/(\d{2}:\d{2})/);
-                return matches ? matches[1] : "00:00";
+                const m = h.toString().match(/(\d{2}:\d{2})/);
+                return m ? m[1] : "00:00";
             };
 
-            // Filtrar Escalas Extras
-            const extras = (banco.extras || []).filter(e => {
-                let dE = e[0] ? e[0].toString() : "";
-                if (dE.includes('T')) dE = dE.split('T')[0];
-                return dE.includes(dataVal);
-            });
-
-            // Filtrar Escalas Fixas (Regras)
-            const fixos = (banco.regras || []).filter(r => 
-                r[0] && r[0].toString().trim().toLowerCase() === regraHoje.toLowerCase()
-            );
+            const extras = (banco.extras || []).filter(e => e[0] && e[0].toString().includes(dataVal));
+            const fixos = (banco.regras || []).filter(r => r[0] && r[0].toString().trim().toLowerCase() === regraHoje.toLowerCase());
 
             if (extras.length === 0 && fixos.length === 0) {
-                mostrarStatus("Nenhuma escala encontrada para este dia.", false);
+                mostrarStatus("Nenhuma escala encontrada.", false);
                 return;
             }
 
-            // Montagem da Mensagem
-            let texto = `*📍 ESCALA MESC - ${dia}/${mes}/${ano}*\n*(${regraHoje})*\n\n`;
+            let msg = `*📍 ESCALA MESC - ${dia}/${mes}/${ano}*\n*(${regraHoje})*\n\n`;
 
-            const consolidado = [
-                ...fixos.map(f => ({ h: limparHora(f[1]), m: f[2], n: f[3] })),
-                ...extras.map(e => ({ h: limparHora(e[1]), m: e[2], n: e[3] }))
+            const lista = [
+                ...fixos.map(f => ({ h: formatH(f[1]), m: f[2], n: f[3] })),
+                ...extras.map(e => ({ h: formatH(e[1]), m: e[2], n: e[3] }))
             ].sort((a,b) => a.h.localeCompare(b.h));
 
-            consolidado.forEach(item => {
-                texto += `⏰ *Hora:* ${item.h}\n`;
-                texto += `⛪ *Missa:* ${item.m || "Missa"}\n`;
-                texto += `👤 *Ministros:* ${item.n || "A definir"}\n`;
-                texto += `─────────────────\n\n`;
+            lista.forEach(item => {
+                msg += `⏰ *Hora:* ${item.h}\n⛪ *Missa:* ${item.m || "Missa"}\n👤 *Ministros:* ${item.n || "A definir"}\n─────────────────\n\n`;
             });
 
             const obs = document.getElementById('comentZap').value;
-            if (obs) texto += `📝 *Obs:* ${obs}\n\n`;
-            
-            texto += `_Gerado via MESC Digital_`;
+            if (obs) msg += `📝 *Obs:* ${obs}\n\n`;
+            msg += `_Gerado via MESC Digital_`;
 
-            // Envio (Usa api.whatsapp para maior compatibilidade)
-            window.location.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
+            window.location.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
             fecharTudo();
-
-        } catch (e) {
-            console.error(e);
-            mostrarStatus("Erro ao conectar com a planilha", false);
-        }
+        } catch(e) { mostrarStatus("Erro ao preparar mensagem", false); }
     }
-    
-    </script>
+
+    function openForm(t) { tipoAtual = t; document.getElementById('fMinistros').value = ""; document.getElementById('modalForm').classList.add('open'); document.getElementById('seletorRegra').style.display = t === 'Fixa' ? 'block' : 'none'; document.getElementById('campoData').style.display = t === 'Extra' ? 'block' : 'none'; }
+    function fecharTudo() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('open')); }
+    function abrirZapModal(t) { tipoAtual = t; document.getElementById('modalZap').classList.add('open'); }
+</script>
 </body>
 </html>
