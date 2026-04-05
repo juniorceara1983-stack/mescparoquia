@@ -21,7 +21,7 @@
         
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 1000; align-items: center; justify-content: center; padding: 15px; }
         .modal.open { display: flex; }
-        .modal-content { background: #fff; border-radius: 16px; width: 100%; max-width: 420px; padding: 20px; }
+        .modal-content { background: #fff; border-radius: 16px; width: 100%; max-width: 420px; padding: 20px; max-height: 90vh; overflow-y: auto; }
         .field { margin-bottom: 12px; text-align: left; }
         label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 4px; color: var(--primary); text-transform: uppercase; }
         select, input, textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
@@ -37,44 +37,53 @@
     <header><h1>MESC Maracanaú</h1></header>
 
     <div class="section">
-        <h2>Escala Fixa</h2>
-        <button class="btn btn-teal" onclick="openForm('Fixa')">📝 Criar escala fixa</button>
-        <button class="btn btn-pdf" onclick="finalizarAcao('PDF', 'Gerando arquivo PDF...')">📄 Baixar PDF fixa</button>
-        <button class="btn btn-zap" onclick="abrirZapModal('Fixa')">📲 Enviar escala ZAP fixo</button>
+        <h2>Escala Fixa (Anual)</h2>
+        <button class="btn btn-teal" onclick="openForm('Fixa')">📝 Configurar Regra Fixa</button>
+        <button class="btn btn-zap" onclick="abrirZapModal()">📲 Enviar Escala do Dia</button>
     </div>
 
     <div class="section">
         <h2>Evento Extra</h2>
-        <button class="btn btn-teal" onclick="openForm('Extra')">📝 Criar escala extra</button>
-        <button class="btn btn-pdf" onclick="finalizarAcao('PDF', 'Gerando arquivo PDF...')">📄 Baixar PDF extra</button>
-        <button class="btn btn-zap" onclick="abrirZapModal('Extra')">📲 Enviar escala ZAP extra</button>
+        <button class="btn btn-teal" onclick="openForm('Extra')">📝 Criar Escala Extra</button>
     </div>
 
     <div class="section">
-        <a class="btn btn-blue" href="https://docs.google.com/spreadsheets/d/11fV62v1MY-w4b7RrPXJwiDhSiY03kS5vkvL_tv--Kos/edit" target="_blank">📊 Abrir planilha</a>
+        <a class="btn btn-blue" href="https://docs.google.com/spreadsheets/d/11fV62v1MY-w4b7RrPXJwiDhSiY03kS5vkvL_tv--Kos/edit" target="_blank">📊 Abrir Planilha</a>
     </div>
 </div>
 
 <div id="modalForm" class="modal">
     <div class="modal-content">
         <h3 id="formTitle" style="color:var(--primary); margin-top:0">Lançar Escala</h3>
-        <div style="display: flex; gap: 8px;">
-            <div class="field" style="flex: 1;"><label>Ocorrência</label><select><option>1°</option><option>2°</option><option>3°</option><option>4°</option><option>5°</option></select></div>
-            <div class="field" style="flex: 2;"><label>Dia</label><select><option>Sábado</option><option>Domingo</option><option>Segunda</option><option>Terça</option><option>Quarta</option><option>Quinta</option><option>Sexta</option></select></div>
+        
+        <div id="seletorRegra">
+            <div style="display: flex; gap: 8px;">
+                <div class="field" style="flex: 1;"><label>Semana</label><select id="fSemana"><option>1º</option><option>2º</option><option>3º</option><option>4º</option><option>5º</option></select></div>
+                <div class="field" style="flex: 2;"><label>Dia</label><select id="fDia"><option>Sábado</option><option>Domingo</option><option>Segunda</option><option>Terça</option><option>Quarta</option><option>Quinta</option><option>Sexta</option></select></div>
+            </div>
         </div>
-        <div class="field"><label>Horário</label><input type="time"></div>
-        <label>Ministros (10 Slots)</label>
+
+        <div id="campoData" class="field" style="display:none;"><label>Data do Evento Extra</label><input type="date" id="fData"></div>
+        
+        <div class="field"><label>Horário</label><input type="time" id="fHora"></div>
+        <div class="field"><label>Nome da Missa / Evento</label><input type="text" id="fMissa" placeholder="Ex: Missa das Crianças"></div>
+        
+        <label>Ministros (Até 10)</label>
         <div class="slot-grid" id="slotsNomes"></div>
-        <button class="btn btn-blue" style="margin-top:15px" onclick="finalizarAcao('Salvar')">💾 Salvar na Planilha</button>
+        
+        <button class="btn btn-blue" style="margin-top:15px" id="btnSalvar" onclick="salvarDados()">💾 Salvar na Planilha</button>
+        <button class="btn btn-pdf" style="background:#64748b; margin-top:8px" onclick="fecharTudo()">Voltar</button>
     </div>
 </div>
 
 <div id="modalZap" class="modal">
     <div class="modal-content">
         <h3 style="color:var(--green); margin-top:0">Enviar WhatsApp</h3>
-        <div class="field"><label>Data da Escala</label><input type="date" id="dataZap"></div>
-        <div class="field"><label>Adicionar Comentário</label><textarea id="comentZap" rows="2" placeholder="Observações..."></textarea></div>
-        <button class="btn btn-zap" onclick="finalizarAcao('Zap')">Enviar agora</button>
+        <p style="font-size:12px; color:#64748b">O sistema buscará a regra fixa e os extras para a data escolhida.</p>
+        <div class="field"><label>Escolha a Data</label><input type="date" id="dataZap"></div>
+        <div class="field"><label>Comentário Adicional</label><textarea id="comentZap" rows="2" placeholder="Ex: Reunião após a missa..."></textarea></div>
+        <button class="btn btn-zap" id="btnEnviarZap" onclick="gerarLinkZap()">🔍 Buscar e Enviar</button>
+        <button class="btn btn-pdf" style="background:#64748b" onclick="fecharTudo()">Cancelar</button>
     </div>
 </div>
 
@@ -87,54 +96,111 @@
 </div>
 
 <script>
-    const mensagens = [
-        "«Felizes os que ouvem a palavra de Deus e a guardam.»",
-        "«Tudo posso naquele que me fortalece.»",
-        "«O Senhor é meu pastor, nada me faltará.»",
-        "«Fazei tudo o que Ele vos disser.»",
-        "«Quem não vive para servir, não serve para viver.»"
-    ];
+    const URL_API = "https://script.google.com/macros/s/AKfycbx3pQmERqlir6eMFJysYVFgASlAT_vtsVJ4Se2wv5JqBt1OcJu8G3yCEqlPNfHGPf95/exec";
+    let tipoAtual = "";
 
+    // Gerar inputs de ministros
     const container = document.getElementById('slotsNomes');
     for (let i = 1; i <= 10; i++) {
         const input = document.createElement('input');
-        input.type = 'text'; input.placeholder = i + '° Ministro';
+        input.type = 'text'; input.className = 'm-nome'; input.placeholder = i + '° Ministro';
         container.appendChild(input);
     }
 
     function openForm(t) { 
-        document.getElementById('formTitle').innerText = 'Criar Escala ' + t;
-        document.getElementById('modalForm').classList.add('open'); 
+        tipoAtual = t;
+        document.getElementById('formTitle').innerText = t === 'Fixa' ? 'Configurar Escala Fixa' : 'Novo Evento Extra';
+        document.getElementById('modalForm').classList.add('open');
+        document.getElementById('seletorRegra').style.display = t === 'Fixa' ? 'block' : 'none';
+        document.getElementById('campoData').style.display = t === 'Extra' ? 'block' : 'none';
     }
 
     function abrirZapModal() { document.getElementById('modalZap').classList.add('open'); }
 
-    function finalizarAcao(tipo, msgPersonalizada) {
-        const statusTitulo = document.getElementById('statusTitulo');
+    async function salvarDados() {
+        const btn = document.getElementById('btnSalvar');
+        btn.innerText = "⏳ SALVANDO...";
+        const nomes = Array.from(document.querySelectorAll('.m-nome')).map(i => i.value.trim()).filter(v => v !== "").join(", ");
         
-        // Define o título baseado na ação (Remove "Salvo" se for apenas envio)
-        if (tipo === 'Salvar') {
-            statusTitulo.innerText = "✓ Salvo com sucesso!";
-            statusTitulo.style.color = "var(--green)";
-        } else if (tipo === 'Zap') {
-            statusTitulo.innerText = "Encaminhando Escala...";
-            statusTitulo.style.color = "var(--green)";
-        } else if (tipo === 'PDF') {
-            statusTitulo.innerText = "Documento Pronto!";
-            statusTitulo.style.color = "var(--slate)";
+        const payload = {
+            action: tipoAtual === 'Fixa' ? 'addRegra' : 'addEscala',
+            hora: document.getElementById('fHora').value,
+            missa: document.getElementById('fMissa').value,
+            ministro: nomes
+        };
+
+        if(tipoAtual === 'Fixa') {
+            payload.regra = document.getElementById('fSemana').value + " " + document.getElementById('fDia').value;
+        } else {
+            payload.data = document.getElementById('fData').value;
         }
 
-        const msg = mensagens[Math.floor(Math.random() * mensagens.length)];
-        document.getElementById('textoBiblico').innerText = msg;
+        await fetch(URL_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+        finalizarAcao('Salvar');
+    }
+
+    async function gerarLinkZap() {
+        const dataVal = document.getElementById('dataZap').value;
+        if(!dataVal) return alert("Selecione a data!");
         
-        // Fecha formulários e abre a mensagem final
-        document.getElementById('modalForm').classList.remove('open');
-        document.getElementById('modalZap').classList.remove('open');
+        document.getElementById('btnEnviarZap').innerText = "⏳ BUSCANDO ESCALA...";
+        
+        try {
+            const res = await fetch(`${URL_API}?t=${new Date().getTime()}`);
+            const banco = await res.json();
+            
+            const [ano, mes, dia] = dataVal.split('-');
+            const dataObj = new Date(ano, mes-1, dia, 12, 0, 0);
+            
+            // Lógica da Regra Fixa (Saber qual semana e dia é)
+            const diasSemanas = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+            const diaNome = diasSemanas[dataObj.getDay()];
+            const nSemana = Math.ceil(dataObj.getDate() / 7);
+            const regraHoje = `${nSemana}º ${diaNome}`;
+
+            // Filtra na planilha
+            const extras = (banco.extras || []).filter(e => e[0] && e[0].toString().includes(dataVal));
+            const fixos = (banco.regras || []).filter(r => r[0] && r[0].toString().trim() === regraHoje);
+
+            if(extras.length === 0 && fixos.length === 0) {
+                alert("Nenhuma escala (fixa ou extra) encontrada para " + regraHoje);
+                document.getElementById('btnEnviarZap').innerText = "🔍 Buscar e Enviar";
+                return;
+            }
+
+            let texto = `*📍 ESCALA MESC - ${dia}/${mes}/${ano}*\n*(${regraHoje})*\n\n`;
+            
+            const consolidado = [
+                ...fixos.map(f => ({ h: f[1], m: f[2], n: f[3] })),
+                ...extras.map(e => ({ h: e[1], m: e[2], n: e[3] }))
+            ].sort((a,b) => a.h.localeCompare(b.h));
+
+            consolidado.forEach(item => {
+                texto += `⏰ *Hora:* ${item.h}\n⛪ *Missa:* ${item.m}\n👤 *Ministros:* ${item.n}\n─────────────────\n\n`;
+            });
+
+            const obs = document.getElementById('comentZap').value;
+            if(obs) texto += `📝 *Obs:* ${obs}`;
+
+            window.location.href = `whatsapp://send?text=${encodeURIComponent(texto)}`;
+            finalizarAcao('Zap');
+
+        } catch (e) {
+            alert("Erro ao conectar com a planilha.");
+            document.getElementById('btnEnviarZap').innerText = "🔍 Buscar e Enviar";
+        }
+    }
+
+    function finalizarAcao(tipo) {
+        document.getElementById('statusTitulo').innerText = tipo === 'Salvar' ? "✓ Salvo na Planilha!" : "✓ Escala Gerada!";
+        document.getElementById('textoBiblico').innerText = "«Quem não vive para servir, não serve para viver.»";
+        fecharTudo();
         document.getElementById('modalStatus').classList.add('open');
     }
 
     function fecharTudo() {
         document.querySelectorAll('.modal').forEach(m => m.classList.remove('open'));
+        document.getElementById('btnEnviarZap').innerText = "🔍 Buscar e Enviar";
     }
 </script>
 
