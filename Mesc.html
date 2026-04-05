@@ -4,16 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MESC — Maracanaú</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --primary: #1e3a8a; --bg: #f1f5f9; --teal: #0f766e; --green: #15803d; --slate: #475569; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--bg); margin: 0; padding: 16px; }
-        .wrap { max-width: 480px; margin: 0 auto; }
+        
+        /* Tela de Bloqueio */
+        #lockScreen { position: fixed; inset: 0; background: var(--primary); z-index: 2000; display: flex; align-items: center; justify-content: center; color: white; text-align: center; padding: 20px; }
+        .lock-box { background: white; padding: 30px; border-radius: 20px; color: #334155; width: 100%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        
+        .wrap { max-width: 480px; margin: 0 auto; display: none; }
         header { text-align: center; margin-bottom: 20px; }
         h1 { color: var(--primary); margin: 0; font-size: 24px; }
         .section { margin-top: 15px; padding-top: 15px; border-top: 2px solid #e2e8f0; }
         .section h2 { font-size: 13px; text-transform: uppercase; color: #64748b; margin-bottom: 10px; }
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #fff; font-size: 14px; text-decoration: none; border: none; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #fff; font-size: 14px; text-decoration: none; }
         .btn-teal { background: var(--teal); }
         .btn-blue { background: var(--primary); }
         .btn-pdf { background: var(--slate); }
@@ -33,21 +39,31 @@
 </head>
 <body>
 
-<div class="wrap">
-    <header><h1>MESC Maracanaú</h1></header>
+<div id="lockScreen">
+    <div class="lock-box">
+        <h2 style="margin-top:0; color:var(--primary)">Acesso Restrito</h2>
+        <p style="font-size:14px">Informe os dados da Paróquia</p>
+        <div class="field"><label>Nome da Paróquia</label><input type="text" id="paroquiaAcesso" placeholder="Ex: PNSPS"></div>
+        <div class="field"><label>Código de 6 Dígitos</label><input type="text" id="codigoAcesso" placeholder="Digite o código..."></div>
+        <button class="btn btn-blue" onclick="verificarAcesso()">ENTRAR NO APP</button>
+    </div>
+</div>
+
+<div class="wrap" id="appContent">
+    <header><h1 id="tituloHeader">MESC Maracanaú</h1></header>
 
     <div class="section">
         <h2>Escala Fixa (Anual)</h2>
         <button class="btn btn-teal" onclick="openForm('Fixa')">📝 Configurar Regra Fixa</button>
         <button class="btn btn-zap" onclick="abrirZapModal()">📲 Enviar Escala Fixa</button>
-        <button class="btn btn-pdf" onclick="alert('Gerando PDF da Escala Fixa...')">📄 Baixar PDF Fixa</button>
+        <button class="btn btn-pdf" onclick="gerarPdf('regras')">📄 Baixar PDF Fixa</button>
     </div>
 
     <div class="section">
         <h2>Evento Extra</h2>
         <button class="btn btn-teal" onclick="openForm('Extra')">📝 Criar Escala Extra</button>
         <button class="btn btn-zap" onclick="abrirZapModal()">📲 Enviar Escala Extra</button>
-        <button class="btn btn-pdf" onclick="alert('Gerando PDF da Escala Extra...')">📄 Baixar PDF Extra</button>
+        <button class="btn btn-pdf" onclick="gerarPdf('extras')">📄 Baixar PDF Extra</button>
     </div>
 
     <div class="section">
@@ -96,6 +112,77 @@
     const URL_API = "https://script.google.com/macros/s/AKfycbx3pQmERqlir6eMFJysYVFgASlAT_vtsVJ4Se2wv5JqBt1OcJu8G3yCEqlPNfHGPf95/exec";
     let tipoAtual = "";
 
+    // --- LOGICA DE ACESSO ---
+    window.onload = function() {
+        if(localStorage.getItem('mesc_acesso') === 'true') {
+            liberarApp();
+        }
+    }
+
+    function verificarAcesso() {
+        const paroquia = document.getElementById('paroquiaAcesso').value.trim();
+        const codigo = document.getElementById('codigoAcesso').value.trim();
+
+        // Altere o código abaixo para o que você desejar
+        if(paroquia !== "" && codigo === "PNSPS1") { 
+            localStorage.setItem('mesc_acesso', 'true');
+            localStorage.setItem('mesc_nome_paroquia', paroquia);
+            liberarApp();
+        } else {
+            alert("Código de acesso inválido!");
+        }
+    }
+
+    function liberarApp() {
+        document.getElementById('lockScreen').style.display = 'none';
+        document.getElementById('appContent').style.display = 'block';
+        const nomeP = localStorage.getItem('mesc_nome_paroquia');
+        document.getElementById('tituloHeader').innerText = "MESC " + nomeP;
+    }
+
+    // --- FUNÇÃO DO PDF ---
+    async function gerarPdf(tipo) {
+        alert("Preparando PDF, aguarde...");
+        try {
+            const res = await fetch(`${URL_API}?t=${new Date().getTime()}`);
+            const banco = await res.json();
+            const dados = tipo === 'regras' ? banco.regras : banco.extras;
+            const paroquia = localStorage.getItem('mesc_nome_paroquia') || "Maracanaú";
+
+            let htmlDoc = `<div style="padding:20px; font-family:sans-serif;">
+                <h1 style="text-align:center; color:#1e3a8a;">ESCALA MESC - ${paroquia}</h1>
+                <p style="text-align:center; border-bottom:2px solid #eee; padding-bottom:10px;">Relatório de Escala ${tipo === 'regras' ? 'Fixa Anual' : 'Eventos Extras'}</p>
+                <table border="1" style="width:100%; border-collapse:collapse; margin-top:20px;">
+                    <tr style="background:#f1f5f9;">
+                        <th style="padding:10px;">Data/Regra</th>
+                        <th style="padding:10px;">Hora</th>
+                        <th style="padding:10px;">Evento</th>
+                        <th style="padding:10px;">Ministros</th>
+                    </tr>`;
+
+            dados.forEach(item => {
+                htmlDoc += `<tr>
+                    <td style="padding:8px;">${item[0]}</td>
+                    <td style="padding:8px;">${formatarHora(item[1])}</td>
+                    <td style="padding:8px;">${item[2]}</td>
+                    <td style="padding:8px; font-size:12px;">${item[3]}</td>
+                </tr>`;
+            });
+
+            htmlDoc += `</table><p style="margin-top:30px; font-size:10px; text-align:center;">Gerado em: ${new Date().toLocaleString()}</p></div>`;
+
+            const opt = {
+                margin: 10,
+                filename: `Escala_${tipo}_${paroquia}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(htmlDoc).save();
+        } catch (e) { alert("Erro ao gerar PDF."); }
+    }
+
+    // --- RESTANTE DAS FUNÇÕES (MANTIDAS) ---
     const container = document.getElementById('slotsNomes');
     for (let i = 1; i <= 10; i++) {
         const input = document.createElement('input');
@@ -113,18 +200,15 @@
 
     function abrirZapModal() { document.getElementById('modalZap').classList.add('open'); }
 
-    // FUNÇÃO CORRIGIDA PARA O HORÁRIO
     function formatarHora(h) {
         if (!h) return "";
         let str = h.toString();
-        // Se for objeto de data do Google (contém T ou é data padrão)
         if (str.includes("T") || str.includes("Dec 30 1899")) {
             try {
                 let d = new Date(str);
                 return d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0');
             } catch(e) { return str.substring(0,5); }
         }
-        // Se for string simples, pega os primeiros 5 caracteres
         return str.length > 5 ? str.substring(11, 16) : str.substring(0, 5);
     }
 
@@ -132,19 +216,14 @@
         const btn = document.getElementById('btnSalvar');
         btn.innerText = "⏳ SALVANDO...";
         const nomes = Array.from(document.querySelectorAll('.m-nome')).map(i => i.value.trim()).filter(v => v !== "").join(", ");
-        
         const payload = {
             action: tipoAtual === 'Fixa' ? 'addRegra' : 'addEscala',
             hora: document.getElementById('fHora').value,
             missa: document.getElementById('fMissa').value,
             ministro: nomes
         };
-
-        if(tipoAtual === 'Fixa') {
-            payload.regra = document.getElementById('fSemana').value + " " + document.getElementById('fDia').value;
-        } else {
-            payload.data = document.getElementById('fData').value;
-        }
+        if(tipoAtual === 'Fixa') payload.regra = document.getElementById('fSemana').value + " " + document.getElementById('fDia').value;
+        else payload.data = document.getElementById('fData').value;
 
         await fetch(URL_API, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
         finalizarAcao('Salvar');
@@ -154,51 +233,30 @@
         const dataVal = document.getElementById('dataZap').value;
         if(!dataVal) return alert("Selecione a data!");
         document.getElementById('btnEnviarZap').innerText = "⏳ BUSCANDO ESCALA...";
-        
         try {
             const res = await fetch(`${URL_API}?t=${new Date().getTime()}`);
             const banco = await res.json();
             const [ano, mes, dia] = dataVal.split('-');
             const dataObj = new Date(ano, mes-1, dia, 12, 0, 0);
             const diasSemanas = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-            const diaNome = diasSemanas[dataObj.getDay()];
-            const nSemana = Math.ceil(dataObj.getDate() / 7);
-            const regraHoje = `${nSemana}º ${diaNome}`;
+            const regraHoje = `${Math.ceil(dataObj.getDate() / 7)}º ${diasSemanas[dataObj.getDay()]}`;
 
             const extras = (banco.extras || []).filter(e => e[0] && e[0].toString().includes(dataVal));
             const fixos = (banco.regras || []).filter(r => r[0] && r[0].toString().trim() === regraHoje);
 
-            if(extras.length === 0 && fixos.length === 0) {
-                alert("Nenhuma escala encontrada para " + regraHoje);
-                document.getElementById('btnEnviarZap').innerText = "🔍 Buscar e Enviar";
-                return;
-            }
-
             let texto = `*📍 ESCALA MESC - ${dia}/${mes}/${ano}*\n*(${regraHoje})*\n\n`;
-            
-            const consolidado = [
-                ...fixos.map(f => ({ h: formatarHora(f[1]), m: f[2], n: f[3] })),
-                ...extras.map(e => ({ h: formatarHora(e[1]), m: e[2], n: e[3] }))
-            ].sort((a,b) => a.h.localeCompare(b.h));
-
-            consolidado.forEach(item => {
-                texto += `⏰ *Hora:* ${item.h}\n⛪ *Missa:* ${item.m}\n👤 *Ministros:* ${item.n}\n─────────────────\n\n`;
-            });
-
+            const consolidado = [...fixos.map(f => ({ h: formatarHora(f[1]), m: f[2], n: f[3] })), ...extras.map(e => ({ h: formatarHora(e[1]), m: e[2], n: e[3] }))].sort((a,b) => a.h.localeCompare(b.h));
+            consolidado.forEach(item => { texto += `⏰ *Hora:* ${item.h}\n⛪ *Missa:* ${item.m}\n👤 *Ministros:* ${item.n}\n─────────────────\n\n`; });
             const obs = document.getElementById('comentZap').value;
             if(obs) texto += `📝 *Obs:* ${obs}`;
 
             window.location.href = `whatsapp://send?text=${encodeURIComponent(texto)}`;
             finalizarAcao('Zap');
-
-        } catch (e) {
-            alert("Erro ao conectar com a planilha.");
-            document.getElementById('btnEnviarZap').innerText = "🔍 Buscar e Enviar";
-        }
+        } catch (e) { alert("Erro ao conectar."); }
     }
 
     function finalizarAcao(tipo) {
-        document.getElementById('statusTitulo').innerText = tipo === 'Salvar' ? "✓ Salvo na Planilha!" : "✓ Escala Gerada!";
+        document.getElementById('statusTitulo').innerText = tipo === 'Salvar' ? "✓ Salvo!" : "✓ Escala Enviada!";
         document.getElementById('textoBiblico').innerText = "«Quem não vive para servir, não serve para viver.»";
         fecharTudo();
         document.getElementById('modalStatus').classList.add('open');
