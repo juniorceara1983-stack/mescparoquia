@@ -38,7 +38,6 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
         .msg-espiritual { font-style: italic; color: var(--slate); font-size: 14px; margin: 15px 0; padding: 15px; border-left: 4px solid var(--primary); text-align: left; background: #f8fafc; border-radius: 0 8px 8px 0; }
-        iframe { width: 100%; height: 450px; border: none; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -67,9 +66,9 @@
 
     <div class="section">
         <h2>Recursos</h2>
-        <button class="btn btn-teal" onclick="acessarLiturgia()">📖 Liturgia Diária</button>
+        <button class="btn btn-teal" onclick="window.open('https://www.cnbb.org.br/liturgia-diaria/', '_blank')">📖 Liturgia Diária</button>
         <button class="btn btn-teal" style="background:#0d9488" onclick="abrirOracoes()">🙏 Orações do MESC</button>
-        <button class="btn btn-blue" style="background:#6366f1" onclick="abrirSanto()">😇 Santo do Dia</button>
+        <button class="btn btn-blue" style="background:#6366f1" onclick="abrirSantoDoDia()">😇 Santo do Dia</button>
     </div>
 
     <button class="btn btn-out" onclick="sair()">🚪 Sair / Trocar Usuário</button>
@@ -96,37 +95,47 @@
     const API = "https://script.google.com/macros/s/AKfycbybTBWupiQNckDNS6YPcDtpNL04vGfjF2nkO1J4PCQpuI5b4nMaaw_Pltqu-3qOOEPX/exec"; 
 
     const frases = [
-        "\"Onde dois ou três estiverem reunidos em meu nome, eu estou ali, no meio deles.\"",
-        "\"Eu sou o pão vivo descido do céu. Quem comer deste pão viverá eternamente.\"",
-        "\"Tudo posso naquele que me fortalece.\"",
         "\"Servi ao Senhor com alegria!\"",
+        "\"Onde dois ou três estiverem reunidos em meu nome, eu estou ali.\"",
+        "\"Tudo posso naquele que me fortalece.\"",
         "\"O Senhor é meu pastor, nada me faltará.\"",
         "\"Amai-vos uns aos outros como eu vos amei.\""
     ];
 
-    // CORREÇÃO DEFINITIVA DO HORÁRIO: Pega apenas o texto HH:mm ignorando fuso
-    function extrairHoraTexto(valor) {
-        if (!valor) return "00:00";
-        let s = String(valor);
-        if (s.includes("T")) {
-            return s.split("T")[1].substring(0, 5);
-        }
-        // Se já for uma string curta tipo "07:00:00"
+    function extrairHoraTexto(v) {
+        if (!v) return "00:00";
+        let s = String(v);
+        // Se vier como ISO (2026-04-05T07:00:00.000Z), pega apenas a parte da hora
+        if (s.includes("T")) return s.split("T")[1].substring(0, 5);
         return s.substring(0, 5);
     }
 
-    function sortearFrase() {
-        return frases[Math.floor(Math.random() * frases.length)];
+    // Calcula a data real baseada em "Xº Domingo"
+    function calcularDataDomingo(texto) {
+        if (texto.includes('/')) return texto; // Já é data DD/MM/AAAA
+        
+        let ordem = parseInt(texto.substring(0, 1)); // Pega o 1, 2, 3...
+        if (isNaN(ordem)) return "Hoje";
+
+        let d = new Date();
+        d.setDate(1); // Vai para o dia 1 do mês atual
+        
+        // Encontra o primeiro domingo do mês
+        while (d.getDay() !== 0) {
+            d.setDate(d.getDate() + 1);
+        }
+        
+        // Pula para o domingo desejado (ex: 2º domingo = +7 dias)
+        d.setDate(d.getDate() + (7 * (ordem - 1)));
+        
+        return d.toLocaleDateString('pt-BR');
     }
 
     async function fazerLogin() {
         const nome = document.getElementById('nomeLogin').value.trim();
         if(!nome) return alert("Digite seu nome!");
-        
-        // Tela de carregamento com frase no LOGIN
-        document.getElementById('sMsg').innerText = sortearFrase();
+        document.getElementById('sMsg').innerText = frases[Math.floor(Math.random() * frases.length)];
         status("Validando Acesso...", true);
-
         try {
             const r = await fetch(API, { method: 'POST', body: JSON.stringify({ action: 'loginMinistro', nome: nome }) });
             const d = await r.json();
@@ -134,64 +143,43 @@
                 localStorage.setItem('mesc_nome', d.nomeOficial);
                 renderApp(d.nomeOficial);
                 fecharStatus();
-            } else { 
-                status("Acesso Negado", false);
-                document.getElementById('sMsg').innerText = "Nome não encontrado na lista de ministros.";
-            }
-        } catch(e) { status("Erro de conexão.", false); }
+            } else { status("Não encontrado", false); }
+        } catch(e) { status("Erro de conexão", false); }
     }
 
     async function abrirEscala() {
         const n = localStorage.getItem('mesc_nome');
-        document.getElementById('sMsg').innerText = sortearFrase();
+        document.getElementById('sMsg').innerText = frases[Math.floor(Math.random() * frases.length)];
         status("Buscando Escalas...", true);
-
         try {
             const r = await fetch(API, { method: 'POST', body: JSON.stringify({ action: 'buscarMinhaEscala', nome: n }) });
             const d = await r.json();
             fecharStatus();
-            
             let h = "";
             if(d.ok && d.escalas && d.escalas.length > 0) {
                 d.escalas.forEach(e => {
-                    const dataFormatada = e.tipo === 'EXTRA' ? String(e.data).split('T')[0].split('-').reverse().join('/') : e.data;
-                    const horaFormatada = extrairHoraTexto(e.hora);
-                    
+                    let dataCalculada = calcularDataDomingo(e.data);
+                    const horaFixa = extrairHoraTexto(e.hora);
                     h += `
                         <div class="card-escala">
                             <span class="badge-tipo">${e.tipo}</span>
-                            <b>📅 ${dataFormatada} - ${horaFormatada}</b><br>
+                            <b>📅 ${e.data} (${dataCalculada})</b><br>
+                            ⏰ Hora: ${horaFixa}<br>
                             ⛪ ${e.missa}
-                            ${e.obs ? `<br><small style='color:gray'>📝 ${e.obs}</small>` : ''}
-                            <br><button class="btn btn-cal" onclick="addCal('${e.missa}','${dataFormatada}','${horaFormatada}')">🗓️ Agendar no Google</button>
+                            <br><button class="btn btn-cal" onclick="addCal('${e.missa}','${dataCalculada}','${horaFixa}')">🗓️ Agendar no Google</button>
                         </div>`;
                 });
-            } else { h = "<p style='color:gray; padding:20px;'>Nenhuma escala futura encontrada.</p>"; }
+            } else { h = "<p>Nenhuma escala encontrada.</p>"; }
             abrirModal("Minha Escala", h);
-        } catch(e) { fecharStatus(); alert("Erro ao carregar."); }
+        } catch(e) { fecharStatus(); }
     }
 
-    function acessarLiturgia() {
-        // Abre o link direto em nova aba para evitar bloqueio de segurança
-        window.open('https://www.cnbb.org.br/liturgia-diaria/', '_blank');
-    }
-
-    function addCal(missa, data, hora) {
-        let dFormat;
-        const hoje = new Date();
-        if (data.includes('/')) {
-            const p = data.split('/');
-            dFormat = p[2] + p[1] + p[0];
-        } else {
-            const mes = ("0" + (hoje.getMonth() + 1)).slice(-2);
-            dFormat = hoje.getFullYear() + mes + ("0" + hoje.getDate()).slice(-2);
-        }
-
-        const hLimpa = hora.replace(':', '');
+    function addCal(m, d, h) {
+        const p = d.split('/');
+        const dFormat = p[2] + p[1] + p[0];
+        const hLimpa = h.replace(':', '');
         const hFim = String(parseInt(hLimpa) + 100).padStart(4, '0');
-
-        const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('MESC: ' + missa)}&dates=${dFormat}T${hLimpa}00/${dFormat}T${hFim}00&details=${encodeURIComponent('Escala de Ministro MESC')}`;
-        window.open(url, '_blank');
+        window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('MESC: '+m)}&dates=${dFormat}T${hLimpa}00/${dFormat}T${hFim}00`, '_blank');
     }
 
     function renderApp(n) {
@@ -200,10 +188,10 @@
         document.getElementById('txtUser').innerText = "Olá, " + n.split(' ')[0];
     }
 
-    function status(t, loading) {
+    function status(t, l) {
         document.getElementById('sTitulo').innerText = t;
-        document.querySelector('#mStatus .loader').style.display = loading ? 'block' : 'none';
-        document.getElementById('btnSOk').style.display = loading ? 'none' : 'block';
+        document.querySelector('#mStatus .loader').style.display = l ? 'block' : 'none';
+        document.getElementById('btnSOk').style.display = l ? 'none' : 'block';
         document.getElementById('mStatus').classList.add('open');
     }
 
@@ -215,8 +203,8 @@
     }
     function fecharModal() { document.getElementById('mGeral').classList.remove('open'); }
     function sair() { localStorage.clear(); location.reload(); }
-    function abrirOracoes() { abrirModal("Orações", `<div class="msg-espiritual"><b>Oração do Ministro</b><br>Senhor, dai-me dignidade e humildade para servir o vosso altar.</div>`); }
-    function abrirSanto() { abrirModal("Santo do Dia", `<iframe src="https://santo.cancaonova.com/"></iframe>`); }
+    function abrirOracoes() { abrirModal("Orações", `<div class="msg-espiritual"><b>Oração</b><br>Senhor, dai-me humildade para servir.</div>`); }
+    function abrirSantoDoDia() { abrirModal("Santo do Dia", `<iframe src="https://santo.cancaonova.com/" style="width:100%; height:450px; border:none;"></iframe>`); }
 
     window.onload = () => {
         const n = localStorage.getItem('mesc_nome');
