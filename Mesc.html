@@ -42,11 +42,17 @@
 <div id="lockScreen">
     <div class="lock-box">
         <h2 style="margin:0; color:var(--primary)">Painel Coordenador</h2>
-        <div style="margin: 20px 0; text-align: left;">
-            <label style="font-size: 11px; font-weight: bold;">CHAVE DE ACESSO</label>
-            <input type="password" id="passAccess" placeholder="****">
+        <p style="font-size:12px; color:gray; margin-bottom: 20px;">Acesso Restrito</p>
+        
+        <div style="text-align: left;">
+            <label style="font-size: 11px; font-weight: bold; color: var(--primary);">LOGIN (PARÓQUIA)</label>
+            <input type="text" id="loginParoquia" placeholder="Ex: PNSPS" style="text-transform: uppercase;">
+            
+            <label style="font-size: 11px; font-weight: bold; color: var(--primary);">CÓDIGO DE ACESSO (6 DÍGITOS)</label>
+            <input type="password" id="passAccess" placeholder="******" maxlength="6">
         </div>
-        <button class="btn btn-blue" onclick="checkPass()">ENTRAR</button>
+        
+        <button class="btn btn-blue" onclick="checkPass()">ENTRAR NO PAINEL</button>
     </div>
 </div>
 
@@ -120,12 +126,18 @@
         "\"Servi ao Senhor com alegria!\""
     ];
 
+    // LOGIN COM NOME E CÓDIGO
     function checkPass() {
-        if(document.getElementById('passAccess').value === "1234") {
+        const login = document.getElementById('loginParoquia').value.trim().toUpperCase();
+        const code = document.getElementById('passAccess').value;
+
+        if(login !== "" && code.length === 6) {
             localStorage.setItem('mesc_admin', 'ok');
-            localStorage.setItem('mesc_nome_paroquia', 'Matriz de Maracanaú');
+            localStorage.setItem('mesc_nome_paroquia', login);
             renderApp();
-        } else { alert("Chave incorreta!"); }
+        } else {
+            alert("Por favor, preencha o login e o código de 6 dígitos corretamente.");
+        }
     }
 
     function renderApp() {
@@ -167,12 +179,11 @@
         } catch(e) { mostrarStatus("Erro ao salvar", false); }
     }
 
-    // --- FUNÇÃO CORRIGIDA PARA O ZAP ---
     async function gerarLinkZap() {
         const dataVal = document.getElementById('dataZap').value;
         if(!dataVal) return alert("Selecione a data!");
         
-        mostrarStatus("Buscando Escala na Planilha...");
+        mostrarStatus("Buscando Escala...");
 
         try {
             const res = await fetch(`${URL_API}?t=${new Date().getTime()}`);
@@ -186,24 +197,21 @@
             const nSemana = Math.ceil(dataObj.getDate() / 7);
             const regraHoje = `${nSemana}º ${diaNome}`;
 
-            // Busca nas escalas Extras
             const extras = (banco.extras || []).filter(e => {
                 let dE = e[0] ? e[0].toString() : "";
                 if (dE.includes('T')) dE = dE.split('T')[0];
                 return dE.includes(dataVal);
             });
 
-            // Busca nas escalas Fixas (Regras)
             const fixos = (banco.regras || []).filter(r => 
                 r[0] && r[0].toString().trim().toLowerCase() === regraHoje.toLowerCase()
             );
 
             if(extras.length === 0 && fixos.length === 0) {
-                mostrarStatus("Nenhuma escala encontrada para esta data.", false);
+                mostrarStatus("Nenhuma escala para este dia.", false);
                 return;
             }
 
-            // Função para limpar o fuso horário (Erro 10:06)
             const limparH = (h) => {
                 if(!h) return "00:00";
                 const m = h.toString().match(/(\d{2}:\d{2})/);
@@ -228,7 +236,7 @@
 
             window.location.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
             fecharTudo();
-        } catch(e) { mostrarStatus("Erro ao conectar", false); }
+        } catch(e) { mostrarStatus("Erro de conexão", false); }
     }
 
     function abrirZapModal() { document.getElementById('modalZap').classList.add('open'); }
