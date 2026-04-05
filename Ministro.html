@@ -111,7 +111,7 @@
                         <div class="missa">⛪ ${esc.missa}</div>
                         <div class="detalhes">📅 ${esc.data} (${esc.tipo})</div>
                         ${esc.obs ? `<div style="margin-top:8px; color:var(--danger); font-size:11px;"><b>Obs:</b> ${esc.obs}</div>` : ""}
-                        <button class="btn btn-green" onclick="salvarNoGoogle('${esc.data}', '${horaDisplay}', '${esc.missa}')">📅 Salvar na Agenda Google</button>
+                        <button class="btn btn-green" onclick="prepararSalvar('${esc.data}', '${horaDisplay}', '${esc.missa}')">📅 Salvar na Agenda Google</button>
                     `;
                     lista.appendChild(card);
                 });
@@ -124,23 +124,69 @@
         }
     }
 
-    function salvarNoGoogle(dataStr, horaStr, missa) {
-        // Converte data de DD/MM/AAAA para AAAA-MM-DD
-        const partesData = dataStr.split('/');
-        const dataFormatada = `${partesData[2]}${partesData[1]}${partesData[0]}`;
-        
-        // Remove os dois pontos da hora (ex: 19:00 -> 1900)
+    function prepararSalvar(dataStr, horaStr, missa) {
+        let dataFinal = "";
+
+        // Verifica se a dataStr é uma regra (ex: "1º Domingo") ou data real (DD/MM/AAAA)
+        if (dataStr.includes('º')) {
+            dataFinal = calcularDataPorRegra(dataStr);
+        } else {
+            const partes = dataStr.split('/');
+            dataFinal = `${partes[2]}${partes[1]}${partes[0]}`;
+        }
+
         const horaFormatada = horaStr.replace(':', '');
+        const start = `${dataFinal}T${horaFormatada}00`;
         
-        // Define início e fim (adicionando 1h de duração padrão)
-        const start = `${dataFormatada}T${horaFormatada}00`;
-        const fimHora = (parseInt(horaFormatada.substring(0,2)) + 1).toString().padStart(2, '0') + horaFormatada.substring(2);
-        const end = `${dataFormatada}T${fimHora}00`;
+        // Calcula fim (+1h)
+        let h = parseInt(horaFormatada.substring(0,2)) + 1;
+        const end = `${dataFinal}T${h.toString().padStart(2, '0')}${horaFormatada.substring(2)}00`;
 
         const titulo = encodeURIComponent(`Escala MESC: ${missa}`);
-        const link = `https://www.google.com/calendar/render?action=TEMPLATE&text=${titulo}&dates=${start}/${end}&details=Escala+confirmada+pelo+App+MESC&sf=true&output=xml`;
+        const link = `https://www.google.com/calendar/render?action=TEMPLATE&text=${titulo}&dates=${start}/${end}&sf=true&output=xml`;
         
         window.open(link, '_blank');
+    }
+
+    function calcularDataPorRegra(regra) {
+        // Regra ex: "1º Domingo"
+        const partes = regra.split(' ');
+        const nSemana = parseInt(partes[0]); // 1
+        const diaNome = partes[1].toLowerCase(); // domingo
+        
+        const diasSemanaMap = { "domingo": 0, "segunda": 1, "terça": 2, "quarta": 3, "quinta": 4, "sexta": 5, "sábado": 6 };
+        const diaAlvo = diasSemanaMap[diaNome];
+
+        let hoje = new Date();
+        let ano = hoje.getFullYear();
+        let mes = hoje.getMonth();
+
+        // Tenta encontrar a data no mês atual, se já passou, tenta no próximo mês
+        let dataEncontrada = encontrarDiaNoMes(ano, mes, nSemana, diaAlvo);
+        
+        if (dataEncontrada < hoje) {
+            mes++;
+            if (mes > 11) { mes = 0; ano++; }
+            dataEncontrada = encontrarDiaNoMes(ano, mes, nSemana, diaAlvo);
+        }
+
+        const y = dataEncontrada.getFullYear();
+        const m = (dataEncontrada.getMonth() + 1).toString().padStart(2, '0');
+        const d = dataEncontrada.getDate().toString().padStart(2, '0');
+        return `${y}${m}${d}`;
+    }
+
+    function encontrarDiaNoMes(ano, mes, nSemana, diaAlvo) {
+        let contador = 0;
+        for (let d = 1; d <= 31; d++) {
+            let tempDate = new Date(ano, mes, d);
+            if (tempDate.getMonth() !== mes) break;
+            if (tempDate.getDay() === diaAlvo) {
+                contador++;
+                if (contador === nSemana) return tempDate;
+            }
+        }
+        return new Date(ano, mes, 1); // fallback
     }
 
     function logout() {
