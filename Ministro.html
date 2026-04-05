@@ -96,29 +96,36 @@
     const API = "https://script.google.com/macros/s/AKfycbybTBWupiQNckDNS6YPcDtpNL04vGfjF2nkO1J4PCQpuI5b4nMaaw_Pltqu-3qOOEPX/exec"; 
 
     const frases = [
-        "\"Onde dois ou três estiverem reunidos em meu nome, eu estou ali, no meio deles.\" (Mt 18,20)",
+        "\"Onde dois ou três estiverem reunidos em meu nome, eu estou ali, no meio deles.\"",
         "\"Eu sou o pão vivo descido do céu. Quem comer deste pão viverá eternamente.\"",
         "\"Tudo posso naquele que me fortalece.\"",
         "\"Servi ao Senhor com alegria!\"",
-        "\"O Senhor é meu pastor, nada me faltará.\""
+        "\"O Senhor é meu pastor, nada me faltará.\"",
+        "\"Amai-vos uns aos outros como eu vos amei.\""
     ];
 
-    function limparHorario(h) {
-        if (!h) return "00:00";
-        let s = String(h);
+    // CORREÇÃO DEFINITIVA DO HORÁRIO: Pega apenas o texto HH:mm ignorando fuso
+    function extrairHoraTexto(valor) {
+        if (!valor) return "00:00";
+        let s = String(valor);
         if (s.includes("T")) {
             return s.split("T")[1].substring(0, 5);
         }
-        return s.length > 5 ? s.substring(0, 5) : s;
+        // Se já for uma string curta tipo "07:00:00"
+        return s.substring(0, 5);
+    }
+
+    function sortearFrase() {
+        return frases[Math.floor(Math.random() * frases.length)];
     }
 
     async function fazerLogin() {
         const nome = document.getElementById('nomeLogin').value.trim();
         if(!nome) return alert("Digite seu nome!");
         
-        const msgAleatoria = frases[Math.floor(Math.random() * frases.length)];
-        document.getElementById('sMsg').innerText = msgAleatoria;
-        status("Acessando o Painel...", true);
+        // Tela de carregamento com frase no LOGIN
+        document.getElementById('sMsg').innerText = sortearFrase();
+        status("Validando Acesso...", true);
 
         try {
             const r = await fetch(API, { method: 'POST', body: JSON.stringify({ action: 'loginMinistro', nome: nome }) });
@@ -127,15 +134,16 @@
                 localStorage.setItem('mesc_nome', d.nomeOficial);
                 renderApp(d.nomeOficial);
                 fecharStatus();
-            } else { status("Nome não encontrado!", false); }
+            } else { 
+                status("Acesso Negado", false);
+                document.getElementById('sMsg').innerText = "Nome não encontrado na lista de ministros.";
+            }
         } catch(e) { status("Erro de conexão.", false); }
     }
 
     async function abrirEscala() {
         const n = localStorage.getItem('mesc_nome');
-        const msgAleatoria = frases[Math.floor(Math.random() * frases.length)];
-        document.getElementById('sMsg').innerText = msgAleatoria;
-        
+        document.getElementById('sMsg').innerText = sortearFrase();
         status("Buscando Escalas...", true);
 
         try {
@@ -147,7 +155,7 @@
             if(d.ok && d.escalas && d.escalas.length > 0) {
                 d.escalas.forEach(e => {
                     const dataFormatada = e.tipo === 'EXTRA' ? String(e.data).split('T')[0].split('-').reverse().join('/') : e.data;
-                    const horaFormatada = limparHorario(e.hora);
+                    const horaFormatada = extrairHoraTexto(e.hora);
                     
                     h += `
                         <div class="card-escala">
@@ -158,27 +166,25 @@
                             <br><button class="btn btn-cal" onclick="addCal('${e.missa}','${dataFormatada}','${horaFormatada}')">🗓️ Agendar no Google</button>
                         </div>`;
                 });
-            } else { h = "<p style='color:gray'>Nenhuma escala encontrada.</p>"; }
+            } else { h = "<p style='color:gray; padding:20px;'>Nenhuma escala futura encontrada.</p>"; }
             abrirModal("Minha Escala", h);
-        } catch(e) { fecharStatus(); alert("Erro ao carregar escalas."); }
+        } catch(e) { fecharStatus(); alert("Erro ao carregar."); }
     }
 
     function acessarLiturgia() {
-        window.open('https://liturgia.cnbb.org.br/', '_blank');
+        // Abre o link direto em nova aba para evitar bloqueio de segurança
+        window.open('https://www.cnbb.org.br/liturgia-diaria/', '_blank');
     }
 
     function addCal(missa, data, hora) {
         let dFormat;
         const hoje = new Date();
-        const anoAtual = hoje.getFullYear();
-
         if (data.includes('/')) {
             const p = data.split('/');
             dFormat = p[2] + p[1] + p[0];
         } else {
             const mes = ("0" + (hoje.getMonth() + 1)).slice(-2);
-            const dia = ("0" + hoje.getDate()).slice(-2);
-            dFormat = anoAtual + mes + dia;
+            dFormat = hoje.getFullYear() + mes + ("0" + hoje.getDate()).slice(-2);
         }
 
         const hLimpa = hora.replace(':', '');
