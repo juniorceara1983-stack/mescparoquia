@@ -287,6 +287,9 @@
         document.getElementById('corpoOracao').innerText = ORACOES_DB[chave];
     }
     function logout() { localStorage.removeItem('ministro_nome'); location.reload(); }
+    if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw-ministro.js');
+}
 </script>
 </body>
 </html>
