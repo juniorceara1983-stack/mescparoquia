@@ -322,7 +322,43 @@
             fecharTudo();
         } catch(e) { mostrarStatus("Erro ao preparar mensagem", false); }
     }
+// --- SISTEMA PROFISSIONAL DE NOTIFICAÇÕES ---
 
+async function agendarLembretes(dataMissa, horaMissa, nomeMissa) {
+    const permissao = await Notification.requestPermission();
+    if (permissao !== "granted") return;
+
+    // Converte data/hora da planilha para objeto Date do JS
+    const dataAlvo = new Date(`${dataMissa}T${horaMissa}`);
+    const agora = new Date();
+
+    const aviso12h = new Date(dataAlvo.getTime() - (12 * 60 * 60 * 1000));
+    const aviso30min = new Date(dataAlvo.getTime() - (30 * 60 * 1000));
+
+    // Se o horário do aviso ainda não passou, agenda
+    if (aviso12h > agora) {
+        const tempoRestante = aviso12h.getTime() - agora.getTime();
+        setTimeout(() => dispararNotificacao("Lembrete de Escala", `Faltam 12h para: ${nomeMissa}`), tempoRestante);
+    }
+
+    if (aviso30min > agora) {
+        const tempoRestante = aviso30min.getTime() - agora.getTime();
+        setTimeout(() => dispararNotificacao("⚠️ Já vai começar!", `30 minutos para: ${nomeMissa}`), tempoRestante);
+    }
+}
+
+function dispararNotificacao(titulo, corpo) {
+    navigator.serviceWorker.ready.then(reg => {
+        reg.showNotification(titulo, {
+            body: corpo,
+            icon: "https://cdn-icons-png.flaticon.com/512/3209/3209265.png",
+            vibrate: [200, 100, 200],
+            data: { url: './Ministro.html' }
+        });
+    });
+    // Atualiza o numerinho no ícone
+    if (navigator.setAppBadge) navigator.setAppBadge(1);
+}
     function openForm(t) { 
         tipoAtual = t; 
         document.getElementById('fMinistros').value = ""; 
