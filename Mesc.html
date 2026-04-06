@@ -265,9 +265,7 @@
     async function gerarLinkZap() {
         const dataVal = document.getElementById('dataZap').value;
         if (!dataVal) return alert("Selecione a data da escala!");
-        
-        // --- ADICIONADO: MOSTRAR CARREGAMENTO E FRASE ---
-        mostrarStatus("Preparando WhatsApp...");
+        mostrarStatus("Preparando WhatsApp...");
 
         try {
             const res = await fetch(`${URL_API}?t=${new Date().getTime()}`);
