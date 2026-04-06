@@ -67,7 +67,6 @@
         <button class="btn btn-zap" onclick="abrirZapModal('Extra')">📲 Enviar Extra via Zap</button>
         <button class="btn btn-pdf" onclick="gerarPdf('extras')">📄 Baixar PDF Extra</button>
     </div>
-    
     <div class="section">
         <h2>Quadro de Ministros</h2>
         <button class="btn btn-blue" onclick="abrirModalMinistros()">👥 Gerenciar Ministros</button>
@@ -242,7 +241,7 @@
         document.getElementById('novoMinistro').value = "";
         await atualizarListaMinistros();
         fecharTudo();
-        abrirModalMinistros(); // Reabre para ver o resultado
+        abrirModalMinistros();
     }
 
     async function removerMinistro(n) {
@@ -251,7 +250,7 @@
         await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'removerMinistro', nome: n }) });
         await atualizarListaMinistros();
         fecharTudo();
-        abrirModalMinistros(); // Reabre para ver o resultado
+        abrirModalMinistros();
     }
 
     async function salvarDados() {
@@ -277,7 +276,6 @@
         const dataVal = document.getElementById('dataZap').value;
         if (!dataVal) return alert("Selecione a data da escala!");
         
-        // ADICIONADO: Mensagem de carregamento ao clicar em Gerar Zap
         mostrarStatus("Buscando dados e preparando WhatsApp...");
 
         try {
@@ -322,43 +320,7 @@
             fecharTudo();
         } catch(e) { mostrarStatus("Erro ao preparar mensagem", false); }
     }
-// --- SISTEMA PROFISSIONAL DE NOTIFICAÇÕES ---
 
-async function agendarLembretes(dataMissa, horaMissa, nomeMissa) {
-    const permissao = await Notification.requestPermission();
-    if (permissao !== "granted") return;
-
-    // Converte data/hora da planilha para objeto Date do JS
-    const dataAlvo = new Date(`${dataMissa}T${horaMissa}`);
-    const agora = new Date();
-
-    const aviso12h = new Date(dataAlvo.getTime() - (12 * 60 * 60 * 1000));
-    const aviso30min = new Date(dataAlvo.getTime() - (30 * 60 * 1000));
-
-    // Se o horário do aviso ainda não passou, agenda
-    if (aviso12h > agora) {
-        const tempoRestante = aviso12h.getTime() - agora.getTime();
-        setTimeout(() => dispararNotificacao("Lembrete de Escala", `Faltam 12h para: ${nomeMissa}`), tempoRestante);
-    }
-
-    if (aviso30min > agora) {
-        const tempoRestante = aviso30min.getTime() - agora.getTime();
-        setTimeout(() => dispararNotificacao("⚠️ Já vai começar!", `30 minutos para: ${nomeMissa}`), tempoRestante);
-    }
-}
-
-function dispararNotificacao(titulo, corpo) {
-    navigator.serviceWorker.ready.then(reg => {
-        reg.showNotification(titulo, {
-            body: corpo,
-            icon: "https://cdn-icons-png.flaticon.com/512/3209/3209265.png",
-            vibrate: [200, 100, 200],
-            data: { url: './Ministro.html' }
-        });
-    });
-    // Atualiza o numerinho no ícone
-    if (navigator.setAppBadge) navigator.setAppBadge(1);
-}
     function openForm(t) { 
         tipoAtual = t; 
         document.getElementById('fMinistros').value = ""; 
