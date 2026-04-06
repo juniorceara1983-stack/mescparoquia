@@ -1,24 +1,19 @@
 {
   "name": "MESC Digital",
   "short_name": "MESC",
-  "description": "Gestão de Escalas e Ministros",
+  "description": "Sistema de Gestão de Escalas - Ministros Extraordinários",
   "start_url": "./Mesc.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#1e3a8a",
   "theme_color": "#1e3a8a",
+  "lang": "pt-BR",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3209/3209265.png",
-      "sizes": "512x512",
-      "type": "image/png",
+      "src": "mesc.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any maskable"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Ver Escala",
-      "url": "./Ministro.html"
     }
   ]
 }
