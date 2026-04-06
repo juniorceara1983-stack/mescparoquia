@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#1e3a8a"/>
+  <path fill="#fff" d="M256 96c-44 0-80 36-80 80v48h-40c-22 0-40 18-40 40v152c0 22 18 40 40 40h240c22 0 40-18 40-40V264c0-22-18-40-40-40h-40v-48c0-44-36-80-80-80zm0 64c9 0 16 7 16 16v48h-32v-48c0-9 7-16 16-16z"/>
+  <text x="256" y="420" text-anchor="middle" fill="#fde68a" font-family="Georgia,serif" font-size="56" font-weight="bold">MESC</text>
+</svg>
