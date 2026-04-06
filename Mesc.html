@@ -347,6 +347,9 @@
     function abrirModalMinistros() { document.getElementById('modalMinistros').classList.add('open'); }
     function fecharTudo() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('open')); }
     function abrirZapModal(t) { tipoAtual = t; document.getElementById('modalZap').classList.add('open'); }
+    if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw-coordenador.js');
+}
 </script>
 </body>
 </html>
