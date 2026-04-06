@@ -7,21 +7,19 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --primary: #1e3a8a; --bg: #f1f5f9; --teal: #0f766e; --green: #15803d; --slate: #475569; --danger: #b91c1c; }
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background: var(--bg); margin: 0; padding: 16px; color: #1e293b; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: var(--bg); margin: 0; padding: 16px; }
         
         #lockScreen { position: fixed; inset: 0; background: var(--primary); z-index: 2000; display: flex; align-items: center; justify-content: center; color: white; text-align: center; padding: 20px; }
         .lock-box { background: white; padding: 30px; border-radius: 20px; color: #334155; width: 100%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         
         .wrap { max-width: 480px; margin: 0 auto; display: none; }
         header { text-align: center; margin-bottom: 20px; }
-        h1 { color: var(--primary); margin: 0; font-size: 24px; font-weight: 800; }
-        
+        h1 { color: var(--primary); margin: 0; font-size: 24px; }
         .section { margin-top: 15px; padding: 15px; background: #fff; border-radius: 12px; border-top: 4px solid var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .section h2 { font-size: 13px; text-transform: uppercase; color: #64748b; margin-bottom: 12px; margin-top: 0; letter-spacing: 0.5px; }
+        .section h2 { font-size: 13px; text-transform: uppercase; color: #64748b; margin-bottom: 10px; margin-top: 0; }
         
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #fff; font-size: 14px; text-decoration: none; transition: opacity 0.2s; }
-        .btn:active { opacity: 0.8; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #fff; font-size: 14px; text-decoration: none; }
         .btn-teal { background: var(--teal); }
         .btn-blue { background: var(--primary); }
         .btn-pdf { background: var(--slate); }
@@ -30,17 +28,17 @@
         
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 1000; align-items: center; justify-content: center; padding: 15px; }
         .modal.open { display: flex; }
-        .modal-content { background: #fff; border-radius: 16px; width: 100%; max-width: 420px; padding: 20px; max-height: 90vh; overflow-y: auto; position: relative; }
+        .modal-content { background: #fff; border-radius: 16px; width: 100%; max-width: 420px; padding: 20px; max-height: 90vh; overflow-y: auto; text-align: center; }
         
         .field { margin-bottom: 12px; text-align: left; }
         label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 4px; color: var(--primary); text-transform: uppercase; }
-        select, input, textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; }
+        select, input, textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
         
-        .mini-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-        .mini-badge { background: #f1f5f9; padding: 6px 12px; border-radius: 8px; font-size: 13px; cursor: pointer; border: 1px solid #e2e8f0; display: flex; align-items: center; }
+        .mini-list { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+        .mini-badge { background: #e2e8f0; padding: 5px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; border: 1px solid #cbd5e1; }
         
         .frase-santo { font-style: italic; color: var(--slate); margin: 15px 0; font-size: 15px; line-height: 1.4; border-left: 3px solid var(--primary); padding-left: 10px; }
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 10px auto; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 10px auto; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
@@ -49,36 +47,30 @@
 <div id="lockScreen">
     <div class="lock-box">
         <h2 style="margin-top:0; color:var(--primary)">Acesso MESC</h2>
-        <div class="field"><label>Paróquia</label><input type="text" id="paroquiaAcesso" placeholder="Ex: PNPSPS"></div>
-        <div class="field"><label>Código de Ativação</label><input type="text" id="codigoAcesso" placeholder="Sua senha"></div>
-        <button class="btn btn-blue" onclick="verificarAcesso()">ATIVAR APLICATIVO</button>
+        <div class="field"><label>Paróquia</label><input type="text" id="paroquiaAcesso" placeholder="Ex: TESTE"></div>
+        <div class="field"><label>Código de Ativação</label><input type="text" id="codigoAcesso" placeholder="123456"></div>
+        <button class="btn btn-blue" id="btnEntrar" onclick="verificarAcesso()">ATIVAR APLICATIVO</button>
     </div>
 </div>
 
 <div class="wrap" id="appContent">
     <header><h1 id="tituloHeader">Painel MESC</h1></header>
-    
     <div class="section">
         <h2>Escala Fixa (Anual)</h2>
         <button class="btn btn-teal" onclick="openForm('Fixa')">📝 Configurar Fixa</button>
         <button class="btn btn-zap" onclick="abrirZapModal('Fixa')">📲 Enviar Fixa via Zap</button>
         <button class="btn btn-pdf" onclick="gerarPdf('regras')">📄 Baixar PDF Fixa</button>
     </div>
-
     <div class="section">
         <h2>Evento Extra</h2>
         <button class="btn btn-teal" onclick="openForm('Extra')">📝 Criar Escala Extra</button>
         <button class="btn btn-zap" onclick="abrirZapModal('Extra')">📲 Enviar Extra via Zap</button>
         <button class="btn btn-pdf" onclick="gerarPdf('extras')">📄 Baixar PDF Extra</button>
     </div>
-
+    
     <div class="section">
         <h2>Quadro de Ministros</h2>
-        <div class="field" style="display:flex; gap:5px;">
-            <input type="text" id="novoMinistro" placeholder="Nome do Ministro">
-            <button class="btn btn-blue" onclick="addMinistro()" style="width:100px; margin:0;">+ Add</button>
-        </div>
-        <div id="listaMinistrosQuadros" class="mini-list"></div>
+        <button class="btn btn-blue" onclick="abrirModalMinistros()">👥 Gerenciar Ministros</button>
     </div>
 
     <div class="section" style="border-top: 4px solid var(--danger);">
@@ -88,7 +80,7 @@
 </div>
 
 <div id="modalStatus" class="modal">
-    <div class="modal-content" style="text-align:center;">
+    <div class="modal-content">
         <h3 id="statusTitulo">Processando...</h3>
         <div id="statusLoader" class="loader"></div>
         <div id="statusFrase" class="frase-santo"></div>
@@ -109,22 +101,36 @@
         <div class="field"><label>Horário</label><input type="time" id="fHora"></div>
         <div class="field"><label>Evento/Missa</label><input type="text" id="fMissa"></div>
         <div class="field"><label>Observação (Opcional)</label><input type="text" id="fObs"></div>
-        <label>Ministros (Toque para selecionar)</label>
-        <textarea id="fMinistros" rows="2" readonly style="background:#f8fafc; margin-bottom:10px;"></textarea>
-        <div id="clickListaMinistros" class="mini-list" style="margin-bottom: 20px; max-height: 150px; overflow-y: auto;"></div>
-        
+        <label>Ministros (Clique para adicionar)</label>
+        <textarea id="fMinistros" rows="3" readonly></textarea>
+        <div id="clickListaMinistros" class="mini-list" style="margin-bottom: 15px;"></div>
         <button class="btn btn-blue" onclick="salvarDados()">💾 Salvar na Planilha</button>
-        <button class="btn btn-pdf" style="background:#94a3b8" onclick="fecharTudo()">Cancelar</button>
+        <button class="btn btn-pdf" style="background:#64748b" onclick="fecharTudo()">Cancelar</button>
     </div>
 </div>
 
 <div id="modalZap" class="modal">
     <div class="modal-content">
         <h3 id="zapTitle">Enviar WhatsApp</h3>
-        <div class="field"><label>Data da Escala</label><input type="date" id="dataZap"></div>
+        <div class="field" id="campoDataZap"><label>Data da Escala</label><input type="date" id="dataZap"></div>
         <div class="field"><label>Mensagem Adicional</label><textarea id="comentZap" rows="2"></textarea></div>
         <button class="btn btn-zap" onclick="gerarLinkZap()">🔍 Gerar Mensagem</button>
-        <button class="btn btn-pdf" style="background:#94a3b8" onclick="fecharTudo()">Voltar</button>
+        <button class="btn btn-pdf" style="background:#64748b" onclick="fecharTudo()">Voltar</button>
+    </div>
+</div>
+
+<div id="modalMinistros" class="modal">
+    <div class="modal-content">
+        <h3>Quadro de Ministros</h3>
+        <div class="field">
+            <label>Novo Ministro</label>
+            <input type="text" id="novoMinistro" placeholder="Nome do Ministro">
+            <button class="btn btn-blue" onclick="addMinistro()" style="padding: 8px; font-size: 12px; margin-top:10px;">+ Adicionar à Lista</button>
+        </div>
+        <hr>
+        <label>Ministros Cadastrados (x para remover)</label>
+        <div id="listaMinistrosQuadros" class="mini-list"></div>
+        <button class="btn btn-pdf" style="background:#64748b; margin-top:20px;" onclick="fecharTudo()">Fechar</button>
     </div>
 </div>
 
@@ -220,14 +226,10 @@
         quad.innerHTML = ""; click.innerHTML = "";
         listaGlobalMinistros.forEach(nome => {
             const b1 = document.createElement('span'); b1.className = 'mini-badge';
-            b1.innerHTML = `${nome} <span onclick="removerMinistro('${nome}')" style="color:red;margin-left:8px;font-weight:bold">×</span>`;
+            b1.innerHTML = `${nome} <span onclick="removerMinistro('${nome}')" style="color:red;margin-left:5px;cursor:pointer">×</span>`;
             quad.appendChild(b1);
-            
             const b2 = document.createElement('span'); b2.className = 'mini-badge'; b2.innerText = nome;
-            b2.onclick = () => { 
-                const campo = document.getElementById('fMinistros');
-                campo.value += (campo.value ? ", " : "") + nome; 
-            };
+            b2.onclick = () => { document.getElementById('fMinistros').value += (document.getElementById('fMinistros').value ? ", " : "") + nome; };
             click.appendChild(b2);
         });
     }
@@ -235,32 +237,30 @@
     async function addMinistro() {
         const n = document.getElementById('novoMinistro').value;
         if(!n) return;
-        mostrarStatus("Adicionando...");
+        mostrarStatus("Adicionando Ministro...");
         await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'addMinistro', nome: n }) });
         document.getElementById('novoMinistro').value = "";
         await atualizarListaMinistros();
         fecharTudo();
+        abrirModalMinistros(); // Reabre para ver o resultado
     }
 
     async function removerMinistro(n) {
         if(!confirm("Remover " + n + "?")) return;
-        mostrarStatus("Removendo...");
+        mostrarStatus("Removendo Ministro...");
         await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'removerMinistro', nome: n }) });
         await atualizarListaMinistros();
         fecharTudo();
+        abrirModalMinistros(); // Reabre para ver o resultado
     }
 
     async function salvarDados() {
-        const fMissa = document.getElementById('fMissa').value;
-        if(!fMissa) return alert("Digite o nome da Missa!");
-
         document.getElementById('modalForm').classList.remove('open');
-        mostrarStatus("Salvando dados...");
-        
+        mostrarStatus("Salvando dados na planilha...");
         const payload = {
             action: tipoAtual === 'Fixa' ? 'addRegra' : 'addEscala',
             hora: document.getElementById('fHora').value,
-            missa: fMissa,
+            missa: document.getElementById('fMissa').value,
             ministro: document.getElementById('fMinistros').value,
             obs: document.getElementById('fObs').value
         };
@@ -270,14 +270,15 @@
         try {
             await fetch(URL_API, { method: 'POST', body: JSON.stringify(payload) });
             mostrarStatus("Escala salva com sucesso!", false);
-        } catch(e) { mostrarStatus("Erro ao salvar.", false); }
+        } catch(e) { mostrarStatus("Erro ao salvar dados.", false); }
     }
 
     async function gerarLinkZap() {
         const dataVal = document.getElementById('dataZap').value;
-        if (!dataVal) return alert("Selecione a data!");
+        if (!dataVal) return alert("Selecione a data da escala!");
         
-        mostrarStatus("Buscando Escala...");
+        // ADICIONADO: Mensagem de carregamento ao clicar em Gerar Zap
+        mostrarStatus("Buscando dados e preparando WhatsApp...");
 
         try {
             const res = await fetch(`${URL_API}?t=${new Date().getTime()}`);
@@ -290,22 +291,25 @@
             const nSemana = Math.ceil(dataObj.getDate() / 7);
             const regraHoje = `${nSemana}º ${diaNome}`;
 
+            const formatarHora = (v) => (v && v.toString().trim()) ? v.toString().trim() : "00:00";
+
             const extras = (banco.extras || []).filter(e => e[0] && e[0].toString().includes(dataVal));
             const fixos = (banco.regras || []).filter(r => r[0] && r[0].toString().trim().toLowerCase() === regraHoje.toLowerCase());
 
             if (extras.length === 0 && fixos.length === 0) {
-                mostrarStatus("Nenhuma escala para este dia.", false);
+                mostrarStatus("Nenhuma escala encontrada para este dia.", false);
                 return;
             }
 
             let msg = `*📍 ESCALA MESC - ${dia}/${mes}/${ano}*\n*(${regraHoje})*\n\n`;
+
             const lista = [
-                ...fixos.map(f => ({ h: f[1], m: f[2], n: f[3], o: f[4] })),
-                ...extras.map(e => ({ h: e[1], m: e[2], n: e[3], o: e[4] }))
+                ...fixos.map(f => ({ h: formatarHora(f[1]), m: f[2], n: f[3], o: f[4] })),
+                ...extras.map(e => ({ h: formatarHora(e[1]), m: e[2], n: e[3], o: e[4] }))
             ].sort((a,b) => a.h.localeCompare(b.h));
 
             lista.forEach(item => {
-                msg += `⏰ *Hora:* ${item.h || '00:00'}\n⛪ *Missa:* ${item.m}\n👤 *Ministros:* ${item.n || 'A definir'}\n`;
+                msg += `⏰ *Hora:* ${item.h}\n⛪ *Missa:* ${item.m || "Missa"}\n👤 *Ministros:* ${item.n || "A definir"}\n`;
                 if(item.o) msg += `📝 *Obs:* ${item.o}\n`;
                 msg += `─────────────────\n\n`;
             });
@@ -316,17 +320,21 @@
 
             window.location.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
             fecharTudo();
-        } catch(e) { mostrarStatus("Erro ao preparar Zap", false); }
+        } catch(e) { mostrarStatus("Erro ao preparar mensagem", false); }
     }
 
     function openForm(t) { 
         tipoAtual = t; 
         document.getElementById('fMinistros').value = ""; 
         document.getElementById('fMissa').value = ""; 
+        document.getElementById('fHora').value = ""; 
+        document.getElementById('fObs').value = "";
         document.getElementById('modalForm').classList.add('open'); 
         document.getElementById('seletorRegra').style.display = t === 'Fixa' ? 'block' : 'none'; 
         document.getElementById('campoData').style.display = t === 'Extra' ? 'block' : 'none'; 
     }
+    
+    function abrirModalMinistros() { document.getElementById('modalMinistros').classList.add('open'); }
     function fecharTudo() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('open')); }
     function abrirZapModal(t) { tipoAtual = t; document.getElementById('modalZap').classList.add('open'); }
 </script>
