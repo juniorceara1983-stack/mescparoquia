@@ -1,10 +1,12 @@
 {
+  "id": "/ministro",
   "name": "MESC Ministro",
+  "short_name": "Ministro",
   "start_url": "./Ministro.html",
-  "scope": "./Ministro.html",
-  "display": "standalone"
-  "background_color": "#f1f5f9",
-  "theme_color": "#1e3a8a",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f766e",
+  "theme_color": "#0f766e",
   "icons": [
     {
       "src": "icon-512.png",
