@@ -1,7 +1,7 @@
 {
-  "name": "MESC Digital",
-  "short_name": "MESC",
-  "description": "Sistema de Gestão de Escalas - Ministros Extraordinários",
+  "name": "MESC Coordenador",
+  "short_name": "Coordenador",
+  "description": "Gestão de Escalas - Ministros Extraordinários",
   "start_url": "./Mesc.html",
   "scope": "./",
   "display": "standalone",
