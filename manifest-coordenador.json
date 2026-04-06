@@ -1,10 +1,8 @@
 {
   "name": "MESC Coordenador",
-  "short_name": "Coordenador",
-  "description": "Gestão de Escalas - Ministros Extraordinários",
   "start_url": "./Mesc.html",
-  "scope": "./",
-  "display": "standalone",
+  "scope": "./Mesc.html", 
+  "display": "standalone"
   "background_color": "#1e3a8a",
   "theme_color": "#1e3a8a",
   "icons": [
