@@ -1,9 +1,9 @@
 {
-  "id": "/ministro",
+  "id": "mesc-app-ministro",
   "name": "MESC Ministro",
   "short_name": "Ministro",
   "start_url": "./Ministro.html",
-  "scope": "./",
+  "scope": "./Ministro.html",
   "display": "standalone",
   "background_color": "#0f766e",
   "theme_color": "#0f766e",
@@ -11,8 +11,7 @@
     {
       "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }
