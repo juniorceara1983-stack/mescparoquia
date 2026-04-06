@@ -3,7 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1e3a8a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>COORDENADOR - MESC</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="mesc.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icon-512.png">
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --primary: #1e3a8a; --bg: #f1f5f9; --teal: #0f766e; --green: #15803d; --slate: #475569; --danger: #b91c1c; }
@@ -146,7 +154,10 @@
         "«O Senhor é meu pastor, nada me faltará.» — Salmo 23"
     ];
 
-    window.onload = () => { if(localStorage.getItem('mesc_acesso') === 'true') liberarApp(); };
+    window.onload = () => { 
+        if(localStorage.getItem('mesc_acesso') === 'true') liberarApp();
+        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
+    };
 
     function mostrarStatus(titulo, carregando = true) {
         document.getElementById('statusTitulo').innerText = titulo;
@@ -276,6 +287,7 @@
         const dataVal = document.getElementById('dataZap').value;
         if (!dataVal) return alert("Selecione a data da escala!");
         
+        document.getElementById('modalZap').classList.remove('open');
         mostrarStatus("Buscando dados e preparando WhatsApp...");
 
         try {
