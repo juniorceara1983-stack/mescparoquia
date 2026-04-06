@@ -1,8 +1,9 @@
 {
+  "id": "/coordenador",
   "name": "MESC Coordenador",
   "start_url": "./Mesc.html",
-  "scope": "./Mesc.html", 
-  "display": "standalone"
+  "scope": "./",
+  "display": "standalone",
   "background_color": "#1e3a8a",
   "theme_color": "#1e3a8a",
   "icons": [
