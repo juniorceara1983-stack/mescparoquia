@@ -46,7 +46,6 @@
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 10px auto; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Estilos da Imagem do Padre Luciano */
         .welcome-avatar { width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 4px solid var(--gold); margin-bottom: 15px; }
         .welcome-msg { font-size: 18px; color: var(--primary); font-weight: bold; margin-bottom: 10px; }
         .welcome-quote { font-style: italic; color: var(--slate); font-size: 14px; line-height: 1.4; padding: 0 15px; }
@@ -196,9 +195,43 @@
                         <button class="btn btn-green" onclick="prepararSalvar('${esc.data}', '${horaDisplay}', '${esc.missa}')">📅 Salvar na Agenda Google</button>
                     `;
                     lista.appendChild(card);
+                    
+                    // NOVO: Agendar Notificações locais se for data válida
+                    if(!esc.data.includes('º')) {
+                        agendarNotificacaoLocal(esc.data, horaDisplay, esc.missa);
+                    }
                 });
             } else { lista.innerHTML = "<p style='text-align:center; color:#64748b;'>Nenhuma escala encontrada.</p>"; }
         } catch(e) { loader.style.display = "none"; lista.innerHTML = "<p style='color:red;'>Erro ao carregar dados.</p>"; }
+    }
+
+    // --- SISTEMA DE NOTIFICAÇÕES PROFISSIONAIS ---
+    async function agendarNotificacaoLocal(dataStr, horaStr, missa) {
+        if (!("Notification" in window)) return;
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") return;
+
+        const [dia, mes, ano] = dataStr.split('/');
+        const dataAlvo = new Date(`${ano}-${mes}-${dia}T${horaStr}`);
+        const agora = new Date();
+
+        const tempos = [
+            { label: "12h", offset: 12 * 60 * 60 * 1000 },
+            { label: "30min", offset: 30 * 60 * 1000 }
+        ];
+
+        tempos.forEach(t => {
+            const tempoAviso = new Date(dataAlvo.getTime() - t.offset);
+            if (tempoAviso > agora) {
+                const diff = tempoAviso.getTime() - agora.getTime();
+                setTimeout(() => {
+                    new Notification(`Lembrete de Escala: ${t.label}`, {
+                        body: `Você tem uma missa: ${missa} às ${horaStr}`,
+                        icon: "https://cdn-icons-png.flaticon.com/512/3209/3209265.png"
+                    });
+                }, diff);
+            }
+        });
     }
 
     function prepararSalvar(dataStr, horaStr, missa) {
