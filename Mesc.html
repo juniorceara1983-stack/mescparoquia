@@ -129,7 +129,9 @@
         "«Quem não vive para servir, não serve para viver.» — São José de Anchieta",
         "«Onde houver desespero, que eu leve a esperança.» — São Francisco de Assis",
         "«A medida do amor é amar sem medida.» — Santo Agostinho",
-        "«Nada te perturbe, nada te espante, tudo passa, Deus não muda.» — Santa Teresa d'Ávila"
+        "«Nada te perturbe, nada te espante, tudo passa, Deus não muda.» — Santa Teresa d'Ávila",
+        "«Tudo posso Naquele que me fortalece.» — Fil 4,13",
+        "«O Senhor é meu pastor, nada me faltará.» — Salmo 23"
     ];
 
     window.onload = () => { if(localStorage.getItem('mesc_acesso') === 'true') liberarApp(); };
@@ -238,7 +240,10 @@
     }
 
     async function salvarDados() {
-        mostrarStatus("Salvando dados...");
+        // Primeiro fecha o formulário para focar no status
+        document.getElementById('modalForm').classList.remove('open');
+        
+        mostrarStatus("Salvando dados na planilha...");
         const payload = {
             action: tipoAtual === 'Fixa' ? 'addRegra' : 'addEscala',
             hora: document.getElementById('fHora').value,
@@ -249,8 +254,12 @@
         if(tipoAtual === 'Fixa') payload.regra = document.getElementById('fSemana').value + " " + document.getElementById('fDia').value;
         else payload.data = document.getElementById('fData').value;
 
-        await fetch(URL_API, { method: 'POST', body: JSON.stringify(payload) });
-        mostrarStatus("Escala salva com sucesso!", false);
+        try {
+            await fetch(URL_API, { method: 'POST', body: JSON.stringify(payload) });
+            mostrarStatus("Escala salva com sucesso!", false);
+        } catch(e) {
+            mostrarStatus("Erro ao salvar dados.", false);
+        }
     }
 
     async function gerarLinkZap() {
@@ -269,7 +278,6 @@
             const nSemana = Math.ceil(dataObj.getDate() / 7);
             const regraHoje = `${nSemana}º ${diaNome}`;
 
-            // SOLUÇÃO DISPLAY VALUES: A hora agora vem como texto puro "19:00"
             const formatarHora = (v) => (v && v.toString().trim()) ? v.toString().trim() : "00:00";
 
             const extras = (banco.extras || []).filter(e => e[0] && e[0].toString().includes(dataVal));
