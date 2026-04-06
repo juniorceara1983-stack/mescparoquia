@@ -1,0 +1,17 @@
+{
+  "name": "MESC - Ministro",
+  "short_name": "Ministro",
+  "description": "Acesso às escalas para Ministros",
+  "start_url": "./Ministro.html",
+  "display": "standalone",
+  "background_color": "#f1f5f9",
+  "theme_color": "#1e3a8a",
+  "icons": [
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
