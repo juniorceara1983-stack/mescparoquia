@@ -1,19 +1,24 @@
 {
-  "name": "MESC — Ministros Extraordinários",
+  "name": "MESC Digital",
   "short_name": "MESC",
-  "description": "Escala, coordenação, liturgia e orações — Paróquia PNSPS Maracanaú",
+  "description": "Gestão de Escalas e Ministros",
   "start_url": "./Mesc.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f1f5f9",
+  "background_color": "#1e3a8a",
   "theme_color": "#1e3a8a",
-  "lang": "pt-BR",
   "icons": [
     {
-      "src": "icons/mesc.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "https://cdn-icons-png.flaticon.com/512/3209/3209265.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Ver Escala",
+      "url": "./Ministro.html"
     }
   ]
 }
