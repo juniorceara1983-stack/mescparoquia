@@ -517,8 +517,7 @@ body {
 <div id="screen-menu" class="screen active">
   <div class="top-bar">
     <button class="btn-icon" id="btn-music-menu" onclick="toggleMusic()" title="Música">🎵</button>
-    <img src="https://github.com/user-attachments/assets/e2856569-535f-4c35-98ce-72b9d7986b8e"
-         class="tia-bel-avatar" alt="Tia Bel" onclick="tiaBelGreet()">
+    <img id="img-tia-bel-menu" class="tia-bel-avatar" alt="Tia Bel" onclick="tiaBelGreet()">
     <div class="stars-counter">⭐<br><span id="total-stars-display">0</span></div>
   </div>
   <div class="main-title">Salinha da<br>Tia Bel ✨</div>
@@ -572,8 +571,7 @@ body {
 <!-- ==================== MODAL ==================== -->
 <div class="modal-overlay hidden" id="modal">
   <div class="modal-box">
-    <img src="https://github.com/user-attachments/assets/e2856569-535f-4c35-98ce-72b9d7986b8e"
-         class="modal-img" alt="Tia Bel" id="modal-img">
+    <img id="img-tia-bel-modal" class="modal-img" alt="Tia Bel">
     <span class="modal-emojis" id="modal-emojis"></span>
     <div class="modal-title" id="modal-title"></div>
     <div class="modal-msg"   id="modal-msg"></div>
@@ -708,7 +706,7 @@ function tone(freq, dur, type='sine', vol=0.28, delay=0) {
     g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + delay + dur);
     o.start(c.currentTime + delay);
     o.stop(c.currentTime + delay + dur + 0.05);
-  } catch(e) {}
+  } catch(e) { console.error('Web Audio error:', e); }
 }
 
 function sndClick()   { tone(600, 0.07, 'square', 0.12); }
@@ -1021,7 +1019,7 @@ function renderSeq(q, C) {
 
 function renderMemory() {
   const n    = S.memCards.length;
-  const cols = n <= 8 ? 4 : 4;
+  const cols = n <= 8 ? 4 : n <= 12 ? 4 : 4;
   setProgress(0);
 
   document.getElementById('game-container').innerHTML = `
@@ -1269,6 +1267,22 @@ function spawnConfetti() {
    ============================================================ */
 window.addEventListener('load', () => {
   _voices = window.speechSynthesis?.getVoices() || [];
+
+  /* Set Tia Bel image from the single TIA_BEL constant */
+  ['img-tia-bel-menu', 'img-tia-bel-modal'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.src = TIA_BEL;
+  });
+
+  /* Visual indicator if speech synthesis is unavailable */
+  if (!window.speechSynthesis) {
+    const note = document.createElement('div');
+    note.style.cssText = 'position:fixed;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;padding:6px 14px;border-radius:20px;font-size:.85rem;z-index:9999;pointer-events:none';
+    note.textContent = '🔇 Áudio de voz não disponível neste dispositivo';
+    document.body.appendChild(note);
+    setTimeout(() => note.remove(), 5000);
+  }
+
   setupMenu();
   setTimeout(() => speak('Bem-vindo à Salinha da Tia Bel! Escolha um jogo para começar!'), 900);
 });
