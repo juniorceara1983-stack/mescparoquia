@@ -92,7 +92,7 @@
         <div id="boxLogin">
             <h2>Acesso MESC</h2>
             <div class="field"><label>Paróquia</label><input type="text" id="paroquiaAcesso" placeholder="Ex: NOSSA SENHORA"></div>
-            <div class="field"><label>Código de Ativação</label><input type="password" id="codigoAcesso" placeholder="Código"></div>
+            <div class="field"><label for="codigoAcesso">Código de Ativação</label><input type="password" id="codigoAcesso" placeholder="Código"></div>
             <button class="btn btn-blue" onclick="verificarAcesso()">ATIVAR APLICATIVO</button>
         </div>
 
@@ -593,7 +593,7 @@
             if (calendar && data) {
                 const [y, m, d] = data.split('-');
                 const hh = hora ? hora.replace(':', '') : '0800';
-                const hFim = (parseInt(hh.substring(0,2)) + 1).toString().padStart(2,'0') + hh.substring(2);
+                const hFim = ((parseInt(hh.substring(0,2)) + 1) % 24).toString().padStart(2,'0') + hh.substring(2);
                 const start = `${y}${m}${d}T${hh}00`;
                 const end   = `${y}${m}${d}T${hFim}00`;
                 const titulo = encodeURIComponent(`Aviso MESC: ${msg.substring(0, 50)}`);

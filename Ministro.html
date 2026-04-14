@@ -274,7 +274,7 @@
                 if (a[5] === '1' && a[0]) {
                     const [y, m, d] = a[0].split('-');
                     const hh  = a[1] ? a[1].replace(':', '') : '0800';
-                    const hFim = (parseInt(hh.substring(0,2)) + 1).toString().padStart(2,'0') + hh.substring(2);
+                    const hFim = ((parseInt(hh.substring(0,2)) + 1) % 24).toString().padStart(2,'0') + hh.substring(2);
                     const start  = `${y}${m}${d}T${hh}00`;
                     const end    = `${y}${m}${d}T${hFim}00`;
                     const titulo = encodeURIComponent(`Aviso MESC: ${a[2].substring(0, 50)}`);
@@ -313,7 +313,7 @@
         else { const p = dataStr.split('/'); dataFinal = `${p[2]}${p[1]}${p[0]}`; }
         const horaFmt = horaStr.replace(':', '');
         const start   = `${dataFinal}T${horaFmt}00`;
-        const hFim    = (parseInt(horaFmt.substring(0,2)) + 1).toString().padStart(2,'0');
+        const hFim    = ((parseInt(horaFmt.substring(0,2)) + 1) % 24).toString().padStart(2,'0');
         const end     = `${dataFinal}T${hFim}${horaFmt.substring(2)}00`;
         const titulo  = encodeURIComponent(`Escala MESC: ${missa}`);
         window.open(`https://www.google.com/calendar/render?action=TEMPLATE&text=${titulo}&dates=${start}/${end}&sf=true&output=xml`, '_blank');
