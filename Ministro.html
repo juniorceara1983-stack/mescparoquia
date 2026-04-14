@@ -19,24 +19,26 @@
         
         #lockScreen { position: fixed; inset: 0; background: var(--primary); z-index: 2000; display: flex; align-items: center; justify-content: center; color: white; text-align: center; padding: 20px; }
         .lock-box { background: white; padding: 30px; border-radius: 20px; color: #334155; width: 100%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .lock-box h2 { margin-top: 0; color: var(--primary); }
         
         .wrap { max-width: 480px; margin: 0 auto; display: none; }
         header { text-align: center; margin-bottom: 20px; }
-        h1 { color: var(--primary); margin: 0; font-size: 24px; }
+        h1 { color: var(--primary); margin: 0; font-size: 22px; }
+        .sub-header { font-size: 13px; color: var(--slate); margin-top: 4px; }
         
         .section { margin-top: 15px; padding: 15px; background: #fff; border-radius: 12px; border-top: 4px solid var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .section h2 { font-size: 13px; text-transform: uppercase; color: #64748b; margin-bottom: 10px; margin-top: 0; }
 
         .card-escala { background: #fff; padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 5px solid var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .card-escala .hora { font-size: 18px; font-weight: bold; color: var(--primary); }
-        .card-escala .missa { font-weight: 600; margin: 4px 0; }
+        .card-escala .hora   { font-size: 18px; font-weight: bold; color: var(--primary); }
+        .card-escala .missa  { font-weight: 600; margin: 4px 0; }
         .card-escala .detalhes { font-size: 12px; color: #64748b; }
         
         .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #fff; font-size: 14px; text-decoration: none; }
-        .btn-blue { background: var(--primary); }
-        .btn-green { background: var(--green); margin-top: 10px; font-size: 12px; padding: 8px; }
-        .btn-teal { background: var(--teal); }
-        .btn-gold { background: var(--gold); }
+        .btn-blue    { background: var(--primary); }
+        .btn-green   { background: var(--green); margin-top: 10px; font-size: 12px; padding: 8px; }
+        .btn-teal    { background: var(--teal); }
+        .btn-gold    { background: var(--gold); }
         .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); margin-top: 20px; }
 
         .grid-botoes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -49,40 +51,60 @@
 
         .field { margin-bottom: 12px; text-align: left; }
         label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 4px; color: var(--primary); text-transform: uppercase; }
-        input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
 
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 10px auto; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         .welcome-avatar { width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 4px solid var(--gold); margin-bottom: 15px; }
-        .welcome-msg { font-size: 18px; color: var(--primary); font-weight: bold; margin-bottom: 10px; }
+        .welcome-msg   { font-size: 18px; color: var(--primary); font-weight: bold; margin-bottom: 10px; }
         .welcome-quote { font-style: italic; color: var(--slate); font-size: 14px; line-height: 1.4; padding: 0 15px; }
+
+        /* Aviso card (ministro) */
+        .aviso-card { background: #fffbeb; border-left: 4px solid var(--gold); border-radius: 8px; padding: 12px; margin-bottom: 8px; text-align: left; }
+        .aviso-card .av-data { font-size: 11px; color: var(--slate); }
+        .aviso-card .av-msg  { font-size: 14px; font-weight: 600; margin: 4px 0; }
     </style>
 </head>
 <body>
 
+<!-- ══════════════════════ LOCK SCREEN ══════════════════════ -->
 <div id="lockScreen">
     <div class="lock-box">
-        <h2 style="margin-top:0; color:var(--primary)">Acesso Ministro</h2>
+        <h2>Acesso Ministro</h2>
         <div class="field">
             <label>Seu Nome (Como na lista)</label>
             <input type="text" id="nomeAcesso" placeholder="Ex: João Silva">
+        </div>
+        <div class="field">
+            <label>Local onde serve</label>
+            <select id="localAcesso">
+                <option value="Matriz">⛪ Matriz</option>
+                <option value="SaoJudas">⛪ Cap. São Judas</option>
+                <option value="SaoFrancisco">⛪ Cap. São Francisco</option>
+                <option value="SaoSebastiao">⛪ Cap. São Sebastião</option>
+            </select>
         </div>
         <button class="btn btn-blue" onclick="verificarMinistro()">ENTRAR NO PAINEL</button>
     </div>
 </div>
 
+<!-- Welcome modal -->
 <div id="modalWelcome" class="modal">
     <div class="modal-content">
         <img src="IMG_20260401_014539.jpg" alt="Padre Luciano" class="welcome-avatar">
         <div id="welcomeName" class="welcome-msg">Seja bem-vindo(a)!</div>
         <div id="welcomeQuote" class="welcome-quote"></div>
-        <div class="loader" style="display: block; margin-top: 20px;"></div>
+        <div class="loader" style="display:block; margin-top:20px;"></div>
     </div>
 </div>
 
+<!-- ══════════════════════ APP ══════════════════════ -->
 <div class="wrap" id="appContent">
-    <header><h1 id="boasVindas">Olá, Ministro</h1></header>
+    <header>
+        <h1 id="boasVindas">Olá, Ministro</h1>
+        <div id="subHeaderMin" class="sub-header"></div>
+    </header>
     
     <div class="section">
         <h2>Minhas Próximas Escalas</h2>
@@ -90,11 +112,18 @@
         <div id="loaderEscala" class="loader"></div>
     </div>
 
+    <!-- Avisos do local -->
+    <div class="section" style="border-top-color: var(--gold);">
+        <h2>📢 Avisos e Comunicados</h2>
+        <div id="listaAvisosMin"></div>
+        <div id="loaderAvisos" class="loader"></div>
+    </div>
+
     <div class="section">
         <h2>Recursos e Oração</h2>
         <div class="grid-botoes">
-            <a href="https://liturgia.cancaonova.com/pb/" target="_blank" class="btn btn-teal" style="font-size: 12px;">📖 Liturgia</a>
-            <a href="https://santo.cancaonova.com/" target="_blank" class="btn btn-teal" style="font-size: 12px;">😇 Santo do Dia</a>
+            <a href="https://liturgia.cancaonova.com/pb/" target="_blank" class="btn btn-teal" style="font-size:12px;">📖 Liturgia</a>
+            <a href="https://santo.cancaonova.com/" target="_blank" class="btn btn-teal" style="font-size:12px;">😇 Santo do Dia</a>
         </div>
         <button class="btn btn-gold" onclick="abrirOracoes()">🙏 Orações do Ministro</button>
     </div>
@@ -102,6 +131,7 @@
     <button class="btn btn-outline" onclick="logout()">Trocar de Usuário / Sair</button>
 </div>
 
+<!-- Orações modal -->
 <div id="modalOracoes" class="modal">
     <div class="modal-content">
         <h3>Orações</h3>
@@ -119,6 +149,13 @@
 
 <script>
     const URL_API = "https://script.google.com/macros/s/AKfycbybTBWupiQNckDNS6YPcDtpNL04vGfjF2nkO1J4PCQpuI5b4nMaaw_Pltqu-3qOOEPX/exec";
+
+    const LOCAIS_NOMES = {
+        Matriz:        'Matriz',
+        SaoJudas:      'Cap. São Judas',
+        SaoFrancisco:  'Cap. São Francisco',
+        SaoSebastiao:  'Cap. São Sebastião'
+    };
 
     const FRASES_MISSAO = [
         "\"A messe é grande, mas os operários são poucos.\" (Mt 9,37)",
@@ -147,53 +184,57 @@
     };
 
     window.onload = () => {
-        const salvo = localStorage.getItem('ministro_nome');
-        if(salvo) {
-            document.getElementById('nomeAcesso').value = salvo;
+        const salvoNome  = localStorage.getItem('ministro_nome');
+        const salvoLocal = localStorage.getItem('ministro_local');
+        if (salvoNome) {
+            document.getElementById('nomeAcesso').value = salvoNome;
+            if (salvoLocal) document.getElementById('localAcesso').value = salvoLocal;
             verificarMinistro(true);
         }
-        // Registro do Service Worker para PWA
-        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
+        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw-ministro.js'); }
     };
 
     function verificarMinistro(pularWelcome = false) {
-        const nome = document.getElementById('nomeAcesso').value.trim();
-        if(!nome) return alert("Digite seu nome!");
-        
-        localStorage.setItem('ministro_nome', nome);
-        document.getElementById('boasVindas').innerText = "Olá, " + nome.split(' ')[0];
+        const nome  = document.getElementById('nomeAcesso').value.trim();
+        const local = document.getElementById('localAcesso').value;
+        if (!nome) return alert("Digite seu nome!");
+
+        localStorage.setItem('ministro_nome',  nome);
+        localStorage.setItem('ministro_local', local);
+
+        const nomeLocal = LOCAIS_NOMES[local] || local;
+        document.getElementById('boasVindas').innerText  = "Olá, " + nome.split(' ')[0];
+        document.getElementById('subHeaderMin').innerText = "📍 " + nomeLocal;
 
         if (pularWelcome) {
-            exibirPainel(nome);
+            exibirPainel(nome, local);
         } else {
-            document.getElementById('welcomeName').innerText = `Seja bem-vindo(a), ${nome.split(' ')[0]}!`;
+            document.getElementById('welcomeName').innerText  = `Seja bem-vindo(a), ${nome.split(' ')[0]}!`;
             document.getElementById('welcomeQuote').innerText = FRASES_MISSAO[Math.floor(Math.random() * FRASES_MISSAO.length)];
             document.getElementById('modalWelcome').classList.add('open');
             setTimeout(() => {
                 document.getElementById('modalWelcome').classList.remove('open');
-                exibirPainel(nome);
+                exibirPainel(nome, local);
             }, 3000);
         }
     }
 
-    function exibirPainel(nome) {
+    function exibirPainel(nome, local) {
         document.getElementById('lockScreen').style.display = 'none';
         document.getElementById('appContent').style.display = 'block';
-        buscarEscalas(nome);
+        buscarEscalas(nome, local);
+        carregarAvisos(local);
     }
 
-    async function buscarEscalas(nome) {
-        const lista = document.getElementById('listaEscalas');
+    async function buscarEscalas(nome, local) {
+        const lista  = document.getElementById('listaEscalas');
         const loader = document.getElementById('loaderEscala');
         lista.innerHTML = ""; loader.style.display = "block";
         try {
-            const response = await fetch(URL_API, {
-                method: 'POST',
-                body: JSON.stringify({ action: 'buscarMinhaEscala', nome: nome })
-            });
-            const data = await response.json();
+            const res  = await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'buscarMinhaEscala', nome, local }) });
+            const data = await res.json();
             loader.style.display = "none";
-            if(data.ok && data.escalas.length > 0) {
+            if (data.ok && data.escalas.length > 0) {
                 data.escalas.forEach(esc => {
                     const horaDisplay = esc.hora || "00:00";
                     const card = document.createElement('div');
@@ -201,17 +242,47 @@
                     card.innerHTML = `
                         <div class="hora">⏰ ${horaDisplay}</div>
                         <div class="missa">⛪ ${esc.missa}</div>
-                        <div class="detalhes">📅 ${esc.data} (${esc.tipo})</div>
+                        <div class="detalhes">📅 ${esc.data} (${esc.tipo}) — 📍 ${LOCAIS_NOMES[esc.local] || esc.local}</div>
                         <button class="btn btn-green" onclick="prepararSalvar('${esc.data}', '${horaDisplay}', '${esc.missa}')">📅 Salvar na Agenda Google</button>
                     `;
                     lista.appendChild(card);
-                    
-                    if(!esc.data.includes('º')) {
-                        agendarNotificacaoLocal(esc.data, horaDisplay, esc.missa);
-                    }
+                    if (!esc.data.includes('º')) agendarNotificacaoLocal(esc.data, horaDisplay, esc.missa);
                 });
-            } else { lista.innerHTML = "<p style='text-align:center; color:#64748b;'>Nenhuma escala encontrada.</p>"; }
-        } catch(e) { loader.style.display = "none"; lista.innerHTML = "<p style='color:red;'>Erro ao carregar dados.</p>"; }
+            } else {
+                lista.innerHTML = "<p style='text-align:center;color:#64748b;'>Nenhuma escala encontrada.</p>";
+            }
+        } catch (e) { loader.style.display = "none"; lista.innerHTML = "<p style='color:red;'>Erro ao carregar dados.</p>"; }
+    }
+
+    async function carregarAvisos(local) {
+        const div    = document.getElementById('listaAvisosMin');
+        const loader = document.getElementById('loaderAvisos');
+        div.innerHTML = ""; loader.style.display = "block";
+        try {
+            const res   = await fetch(`${URL_API}?local=${local}&t=${Date.now()}`);
+            const banco = await res.json();
+            loader.style.display = "none";
+            const avisos = (banco.avisos || []).slice(1);
+            if (!avisos.length) { div.innerHTML = "<p style='color:#64748b;font-size:13px;'>Nenhum aviso.</p>"; return; }
+            avisos.forEach(a => {
+                const card = document.createElement('div');
+                card.className = 'aviso-card';
+                card.innerHTML = `
+                    <div class="av-data">${a[0] ? '📅 '+formatarDataBr(a[0]) : ''} ${a[1] ? '⏰ '+a[1] : ''}</div>
+                    <div class="av-msg">${a[2]}</div>`;
+                // Google Calendar button if calendar flag is set
+                if (a[5] === '1' && a[0]) {
+                    const [y, m, d] = a[0].split('-');
+                    const hh  = a[1] ? a[1].replace(':', '') : '0800';
+                    const hFim = (parseInt(hh.substring(0,2)) + 1).toString().padStart(2,'0') + hh.substring(2);
+                    const start  = `${y}${m}${d}T${hh}00`;
+                    const end    = `${y}${m}${d}T${hFim}00`;
+                    const titulo = encodeURIComponent(`Aviso MESC: ${a[2].substring(0, 50)}`);
+                    card.innerHTML += `<a href="https://www.google.com/calendar/render?action=TEMPLATE&text=${titulo}&dates=${start}/${end}&sf=true&output=xml" target="_blank" class="btn btn-green" style="margin-top:8px;text-decoration:none;">📅 Adicionar ao Google Agenda</a>`;
+                }
+                div.appendChild(card);
+            });
+        } catch (e) { loader.style.display = "none"; div.innerHTML = "<p style='color:red;'>Erro ao carregar avisos.</p>"; }
     }
 
     async function agendarNotificacaoLocal(dataStr, horaStr, missa) {
@@ -221,75 +292,65 @@
 
         const [dia, mes, ano] = dataStr.split('/');
         const dataAlvo = new Date(`${ano}-${mes}-${dia}T${horaStr}`);
-        const agora = new Date();
+        const agora    = new Date();
 
-        const tempos = [
-            { label: "12h", offset: 12 * 60 * 60 * 1000 },
-            { label: "30min", offset: 30 * 60 * 1000 }
-        ];
-
-        tempos.forEach(t => {
+        [{ label: "12h", offset: 12 * 60 * 60 * 1000 }, { label: "30min", offset: 30 * 60 * 1000 }].forEach(t => {
             const tempoAviso = new Date(dataAlvo.getTime() - t.offset);
             if (tempoAviso > agora) {
-                const diff = tempoAviso.getTime() - agora.getTime();
                 setTimeout(() => {
                     new Notification(`Lembrete de Escala: ${t.label}`, {
                         body: `Você tem uma missa: ${missa} às ${horaStr}`,
                         icon: "icon-512.png"
                     });
-                }, diff);
+                }, tempoAviso.getTime() - agora.getTime());
             }
         });
     }
 
     function prepararSalvar(dataStr, horaStr, missa) {
         let dataFinal = "";
-        if (dataStr.includes('º')) { dataFinal = calcularDataPorRegra(dataStr); } 
-        else { const partes = dataStr.split('/'); dataFinal = `${partes[2]}${partes[1]}${partes[0]}`; }
-        const horaFormatada = horaStr.replace(':', '');
-        const start = `${dataFinal}T${horaFormatada}00`;
-        let h = parseInt(horaFormatada.substring(0,2)) + 1;
-        const end = `${dataFinal}T${h.toString().padStart(2, '0')}${horaFormatada.substring(2)}00`;
-        const titulo = encodeURIComponent(`Escala MESC: ${missa}`);
-        const link = `https://www.google.com/calendar/render?action=TEMPLATE&text=${titulo}&dates=${start}/${end}&sf=true&output=xml`;
-        window.open(link, '_blank');
+        if (dataStr.includes('º')) { dataFinal = calcularDataPorRegra(dataStr); }
+        else { const p = dataStr.split('/'); dataFinal = `${p[2]}${p[1]}${p[0]}`; }
+        const horaFmt = horaStr.replace(':', '');
+        const start   = `${dataFinal}T${horaFmt}00`;
+        const hFim    = (parseInt(horaFmt.substring(0,2)) + 1).toString().padStart(2,'0');
+        const end     = `${dataFinal}T${hFim}${horaFmt.substring(2)}00`;
+        const titulo  = encodeURIComponent(`Escala MESC: ${missa}`);
+        window.open(`https://www.google.com/calendar/render?action=TEMPLATE&text=${titulo}&dates=${start}/${end}&sf=true&output=xml`, '_blank');
     }
 
     function calcularDataPorRegra(regra) {
         const partes = regra.split(' ');
         const nSemana = parseInt(partes[0]);
         const diaNome = partes[1].toLowerCase();
-        const diasSemanaMap = { "domingo": 0, "segunda": 1, "terça": 2, "quarta": 3, "quinta": 4, "sexta": 5, "sábado": 6 };
-        const diaAlvo = diasSemanaMap[diaNome];
+        const map = { "domingo":0,"segunda":1,"terça":2,"quarta":3,"quinta":4,"sexta":5,"sábado":6 };
+        const diaAlvo = map[diaNome];
         let hoje = new Date(); let ano = hoje.getFullYear(); let mes = hoje.getMonth();
-        let dataEncontrada = encontrarDiaNoMes(ano, mes, nSemana, diaAlvo);
-        if (dataEncontrada < hoje) { mes++; if (mes > 11) { mes = 0; ano++; } dataEncontrada = encontrarDiaNoMes(ano, mes, nSemana, diaAlvo); }
-        const y = dataEncontrada.getFullYear();
-        const m = (dataEncontrada.getMonth() + 1).toString().padStart(2, '0');
-        const d = dataEncontrada.getDate().toString().padStart(2, '0');
-        return `${y}${m}${d}`;
+        let dataEnc = encontrarDiaNoMes(ano, mes, nSemana, diaAlvo);
+        if (dataEnc < hoje) { mes++; if (mes > 11) { mes = 0; ano++; } dataEnc = encontrarDiaNoMes(ano, mes, nSemana, diaAlvo); }
+        return `${dataEnc.getFullYear()}${(dataEnc.getMonth()+1).toString().padStart(2,'0')}${dataEnc.getDate().toString().padStart(2,'0')}`;
     }
 
     function encontrarDiaNoMes(ano, mes, nSemana, diaAlvo) {
         let contador = 0;
         for (let d = 1; d <= 31; d++) {
-            let tempDate = new Date(ano, mes, d);
-            if (tempDate.getMonth() !== mes) break;
-            if (tempDate.getDay() === diaAlvo) { contador++; if (contador === nSemana) return tempDate; }
+            const t = new Date(ano, mes, d);
+            if (t.getMonth() !== mes) break;
+            if (t.getDay() === diaAlvo) { contador++; if (contador === nSemana) return t; }
         }
         return new Date(ano, mes, 1);
     }
 
-    function abrirOracoes() { document.getElementById('modalOracoes').classList.add('open'); trocarOracao(); }
-    function fecharOracoes() { document.getElementById('modalOracoes').classList.remove('open'); }
-    function trocarOracao() {
-        const chave = document.getElementById('seletorOracao').value;
-        document.getElementById('corpoOracao').innerText = ORACOES_DB[chave];
+    function formatarDataBr(dateStr) {
+        if (!dateStr) return '';
+        const p = dateStr.split('-');
+        return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : dateStr;
     }
-    function logout() { localStorage.removeItem('ministro_nome'); location.reload(); }
-    if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw-ministro.js');
-}
+
+    function abrirOracoes()  { document.getElementById('modalOracoes').classList.add('open'); trocarOracao(); }
+    function fecharOracoes() { document.getElementById('modalOracoes').classList.remove('open'); }
+    function trocarOracao()  { document.getElementById('corpoOracao').innerText = ORACOES_DB[document.getElementById('seletorOracao').value]; }
+    function logout()        { localStorage.removeItem('ministro_nome'); localStorage.removeItem('ministro_local'); location.reload(); }
 </script>
 </body>
 </html>
