@@ -24,8 +24,8 @@
         .lock-box h2 { margin-top: 0; color: var(--primary); }
 
         /* ── Local selector buttons ── */
-        .local-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
-        .btn-local { padding: 14px 8px; border: 2px solid var(--primary); border-radius: 12px; background: white; color: var(--primary); font-weight: bold; font-size: 13px; cursor: pointer; transition: all .2s; }
+        .local-grid { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+        .btn-local { width: 100%; padding: 14px 12px; border: 2px solid var(--primary); border-radius: 12px; background: white; color: var(--primary); font-weight: bold; font-size: 14px; cursor: pointer; transition: all .2s; text-align: left; }
         .btn-local:hover, .btn-local.ativo { background: var(--primary); color: white; }
 
         /* ── App wrapper ── */
@@ -35,9 +35,8 @@
         .sub-header { font-size: 13px; color: var(--slate); margin-top: 4px; }
 
         /* ── Location tabs ── */
-        .tabs { display: flex; overflow-x: auto; gap: 6px; padding: 4px 0 10px; scrollbar-width: none; }
-        .tabs::-webkit-scrollbar { display: none; }
-        .tab-btn { flex-shrink: 0; padding: 8px 16px; border: 2px solid var(--primary); border-radius: 20px; background: white; color: var(--primary); font-weight: bold; font-size: 12px; cursor: pointer; white-space: nowrap; transition: all .2s; }
+        .tabs { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 0 10px; }
+        .tab-btn { flex: 1 1 calc(50% - 3px); min-width: 110px; padding: 8px 10px; border: 2px solid var(--primary); border-radius: 20px; background: white; color: var(--primary); font-weight: bold; font-size: 12px; cursor: pointer; white-space: nowrap; transition: all .2s; text-align: center; }
         .tab-btn.ativo { background: var(--primary); color: white; }
 
         /* ── Sections ── */
@@ -214,7 +213,7 @@
 <!-- Ministros -->
 <div id="modalMinistros" class="modal">
     <div class="modal-content">
-        <h3>Quadro de Ministros</h3>
+        <h3>Quadro de Ministros — <span id="tituloModalMinistros"></span></h3>
         <div class="field">
             <label>Novo Ministro</label>
             <input type="text" id="novoMinistro" placeholder="Nome do Ministro">
@@ -275,6 +274,17 @@
     </div>
 </div>
 
+<!-- Seleção de Ministros antes do WhatsApp -->
+<div id="modalZapMinistros" class="modal">
+    <div class="modal-content">
+        <h3>✅ Confirmar Ministros</h3>
+        <p style="font-size:13px;color:#475569;margin-bottom:10px;">Desmarque os ministros que não participarão desta missa:</p>
+        <div id="listaMinistrosZap"></div>
+        <button class="btn btn-zap" style="margin-top:16px;" onclick="confirmarEnvioZap()">📲 Enviar no WhatsApp</button>
+        <button class="btn btn-pdf" style="background:#64748b;margin-top:8px;" onclick="fecharTudo()">Cancelar</button>
+    </div>
+</div>
+
 <script>
     const URL_API = "https://script.google.com/macros/s/AKfycbybTBWupiQNckDNS6YPcDtpNL04vGfjF2nkO1J4PCQpuI5b4nMaaw_Pltqu-3qOOEPX/exec";
 
@@ -288,6 +298,7 @@
     let tipoAtual  = "";
     let localAtual = "";
     let listaGlobalMinistros = [];
+    let zapData = null; // holds data between Zap modal and minister selection modal
 
     const frases = [
         "«Quem não vive para servir, não serve para viver.» — São José de Anchieta",
@@ -424,7 +435,7 @@
     /* ── Ministros ── */
     async function atualizarListaMinistros() {
         try {
-            const res   = await fetch(`${URL_API}?t=${Date.now()}`);
+            const res   = await fetch(`${URL_API}?local=${localAtual}&t=${Date.now()}`);
             const banco = await res.json();
             listaGlobalMinistros = (banco.ministros || []).map(m => m[0]).filter(n => n && n !== "Nome");
             renderizarMinistros();
@@ -452,7 +463,7 @@
         const n = document.getElementById('novoMinistro').value;
         if (!n) return;
         mostrarStatus("Adicionando Ministro...");
-        await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'addMinistro', nome: n }) });
+        await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'addMinistro', nome: n, local: localAtual }) });
         document.getElementById('novoMinistro').value = "";
         await atualizarListaMinistros();
         fecharTudo();
@@ -462,7 +473,7 @@
     async function removerMinistro(n) {
         if (!confirm("Remover " + n + "?")) return;
         mostrarStatus("Removendo Ministro...");
-        await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'removerMinistro', nome: n }) });
+        await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'removerMinistro', nome: n, local: localAtual }) });
         await atualizarListaMinistros();
         fecharTudo();
         abrirModalMinistros();
@@ -509,9 +520,7 @@
 
             const fmt = (v) => (v && v.toString().trim()) ? v.toString().trim() : "00:00";
 
-            // new schema: extras[i][1]=Data, extras[i][2]=Hora, extras[i][3]=Missa, extras[i][4]=Ministros, extras[i][5]=Obs
             const extras = (banco.extras || []).filter(e => e[1] && e[1].toString().includes(dataVal));
-            // new schema: regras[i][1]=Regra, regras[i][2]=Hora, regras[i][3]=Missa, regras[i][4]=Ministros, regras[i][5]=Obs
             const fixos  = (banco.regras || []).filter(r => r[1] && r[1].toString().trim().toLowerCase() === regraHoje.toLowerCase());
 
             if (extras.length === 0 && fixos.length === 0) {
@@ -520,26 +529,64 @@
             }
 
             const nomeLocal = LOCAIS_NOMES[localAtual] || localAtual;
-            let msg = `*📍 ESCALA MESC — ${nomeLocal}*\n*${dia}/${mes}/${ano}* _(${regraHoje})_\n\n`;
-
             const lista = [
-                ...fixos.map(f  => ({ h: fmt(f[2]),  m: f[3], n: f[4], o: f[5] })),
-                ...extras.map(ex => ({ h: fmt(ex[2]), m: ex[3], n: ex[4], o: ex[5] }))
+                ...fixos.map(f  => ({ h: fmt(f[2]),  m: f[3], nArr: splitMin(f[4]),  o: f[5] })),
+                ...extras.map(ex => ({ h: fmt(ex[2]), m: ex[3], nArr: splitMin(ex[4]), o: ex[5] }))
             ].sort((a, b) => a.h.localeCompare(b.h));
 
-            lista.forEach(item => {
-                msg += `⏰ *Hora:* ${item.h}\n⛪ *Missa:* ${item.m || "Missa"}\n👤 *Ministros:* ${item.n || "A definir"}\n`;
-                if (item.o) msg += `📝 *Obs:* ${item.o}\n`;
-                msg += `─────────────────\n\n`;
-            });
+            zapData = {
+                header:  `*📍 ESCALA MESC — ${nomeLocal}*\n*${dia}/${mes}/${ano}* _(${regraHoje})_\n\n`,
+                lista,
+                comento: document.getElementById('comentZap').value
+            };
 
-            const obs = document.getElementById('comentZap').value;
-            if (obs) msg += `📢 *Comunicado:* ${obs}\n\n`;
-            msg += `_Gerado via MESC Digital_`;
-
-            window.location.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
             fecharTudo();
+            mostrarSeletorMinistrosZap();
         } catch (e) { mostrarStatus("Erro ao preparar mensagem", false); }
+    }
+
+    function splitMin(str) {
+        return (str || '').toString().split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    function mostrarSeletorMinistrosZap() {
+        const div = document.getElementById('listaMinistrosZap');
+        div.innerHTML = '';
+        (zapData.lista || []).forEach((item, idx) => {
+            const sec = document.createElement('div');
+            sec.style = 'margin-bottom:12px;';
+            sec.innerHTML = `<div style="font-weight:bold;color:var(--primary);margin-bottom:6px;">⏰ ${item.h} — ${item.m || 'Missa'}</div>`;
+            if (!item.nArr.length) {
+                sec.innerHTML += `<p style="font-size:13px;color:#64748b;margin:0;">Sem ministros cadastrados</p>`;
+            } else {
+                item.nArr.forEach((nome, ni) => {
+                    const row = document.createElement('div');
+                    row.className = 'check-row';
+                    row.innerHTML = `<input type="checkbox" id="zm_${idx}_${ni}" checked><label for="zm_${idx}_${ni}" style="margin:0;text-transform:none;font-size:14px;">${nome}</label>`;
+                    sec.appendChild(row);
+                });
+            }
+            div.appendChild(sec);
+        });
+        document.getElementById('modalZapMinistros').classList.add('open');
+    }
+
+    function confirmarEnvioZap() {
+        if (!zapData) return;
+        let msg = zapData.header;
+        zapData.lista.forEach((item, idx) => {
+            const checked = item.nArr.filter((_, ni) => {
+                const cb = document.getElementById(`zm_${idx}_${ni}`);
+                return cb ? cb.checked : true;
+            });
+            msg += `⏰ *Hora:* ${item.h}\n⛪ *Missa:* ${item.m || "Missa"}\n👤 *Ministros:* ${checked.length ? checked.join(', ') : "A definir"}\n`;
+            if (item.o) msg += `📝 *Obs:* ${item.o}\n`;
+            msg += `─────────────────\n\n`;
+        });
+        if (zapData.comento) msg += `📢 *Comunicado:* ${zapData.comento}\n\n`;
+        msg += `_Gerado via MESC Digital_`;
+        fecharTudo();
+        window.location.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
     }
 
     /* ── Avisos ── */
@@ -711,7 +758,10 @@
         }
     }
 
-    function abrirModalMinistros() { document.getElementById('modalMinistros').classList.add('open'); }
+    function abrirModalMinistros() {
+        document.getElementById('tituloModalMinistros').innerText = LOCAIS_NOMES[localAtual] || localAtual;
+        document.getElementById('modalMinistros').classList.add('open');
+    }
     function abrirModalAviso()     { document.getElementById('modalAviso').classList.add('open'); }
     function fecharTudo()          { document.querySelectorAll('.modal').forEach(m => m.classList.remove('open')); document.getElementById('msgAtualizacao').style.display = 'none'; }
     function abrirZapModal(t)      { tipoAtual = t; document.getElementById('modalZap').classList.add('open'); }
