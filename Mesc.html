@@ -266,6 +266,8 @@
             <input type="text" id="novaAbaColunas" placeholder="Ex: Data, Hora, Evento, Ministro">
         </div>
         <button class="btn btn-teal" onclick="criarNovaAba()">➕ Criar Aba na Planilha</button>
+        <button class="btn btn-blue" style="margin-top:10px;" onclick="atualizarEstruturaAuto()">🔄 Atualizar Estrutura Automaticamente</button>
+        <div id="msgAtualizacao" style="font-size:13px;color:#0f766e;margin-top:8px;display:none;"></div>
         <hr style="margin: 16px 0;">
         <label>Abas existentes na planilha:</label>
         <div id="listaAbas" class="mini-list" style="margin-top: 8px;"></div>
@@ -554,7 +556,7 @@
                 card.className = 'aviso-card';
                 const localLabel = a[3] === 'Todos' ? '🌐 Todos' : (LOCAIS_NOMES[a[3]] || a[3]);
                 card.innerHTML = `
-                    <div class="av-data">${a[0] ? '📅 '+formatarDataBr(a[0]) : ''} ${a[1] ? '⏰ '+a[1] : ''}</div>
+                    <div class="av-data">${a[0] ? '📅 '+formatarDataBr(a[0]) : ''} ${a[1] ? '⏰ '+formatarHora(a[1]) : ''}</div>
                     <div class="av-msg">${a[2]}</div>
                     <div class="av-local">📍 ${localLabel}</div>`;
                 div.appendChild(card);
@@ -591,8 +593,10 @@
 
             // Adicionar ao Google Agenda se marcado
             if (calendar && data) {
-                const [y, m, d] = data.split('-');
-                const hh = hora ? hora.replace(':', '') : '0800';
+                const dateLimpa = extrairDataISO(data);
+                const [y, m, d] = dateLimpa.split('-');
+                const horaLimpa = formatarHora(hora);
+                const hh = horaLimpa ? horaLimpa.replace(':', '') : '0800';
                 const hFim = ((parseInt(hh.substring(0,2)) + 1) % 24).toString().padStart(2,'0') + hh.substring(2);
                 const start = `${y}${m}${d}T${hh}00`;
                 const end   = `${y}${m}${d}T${hFim}00`;
@@ -641,8 +645,29 @@
     /* ── Helpers ── */
     function formatarDataBr(dateStr) {
         if (!dateStr) return '';
-        const p = dateStr.split('-');
-        return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : dateStr;
+        const s = String(dateStr).trim();
+        // Remove time part from ISO datetime strings (e.g. "2026-04-26T03:00:00.000Z" → "2026-04-26")
+        const dateOnly = s.includes('T') ? s.split('T')[0] : s;
+        const p = dateOnly.split('-');
+        return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : s;
+    }
+
+    function formatarHora(horaStr) {
+        if (!horaStr) return '';
+        const s = String(horaStr).trim();
+        if (s.includes('T')) {
+            // ISO datetime — extract HH:MM from time portion (e.g. "1899-12-30T22:06:28.000Z" → "22:06")
+            const timePart = s.split('T')[1] || '';
+            return timePart.substring(0, 5);
+        }
+        return s.length >= 5 ? s.substring(0, 5) : s;
+    }
+
+    function extrairDataISO(dateStr) {
+        // Return plain YYYY-MM-DD regardless of ISO datetime format
+        if (!dateStr) return '';
+        const s = String(dateStr).trim();
+        return s.includes('T') ? s.split('T')[0] : s;
     }
 
     function openForm(t) {
@@ -657,9 +682,38 @@
         document.getElementById('modalForm').classList.add('open');
     }
 
+    async function atualizarEstruturaAuto() {
+        const msg = document.getElementById('msgAtualizacao');
+        msg.style.display = 'block';
+        msg.style.color   = '#0f766e';
+        msg.innerText     = '⏳ Verificando e atualizando abas e colunas...';
+        try {
+            const res  = await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'setupPlanilha' }) });
+            const data = await res.json();
+            if (data.ok) {
+                msg.innerText = '✅ Estrutura atualizada! Abas e colunas padrão verificadas.';
+                // Reload tab list
+                const res2  = await fetch(`${URL_API}?t=${Date.now()}`);
+                const banco = await res2.json();
+                const div   = document.getElementById('listaAbas');
+                div.innerHTML = "";
+                (banco.abas || []).forEach(aba => {
+                    const b = document.createElement('span'); b.className = 'mini-badge'; b.innerText = aba;
+                    div.appendChild(b);
+                });
+            } else {
+                msg.style.color = '#b91c1c';
+                msg.innerText   = '❌ Erro: ' + (data.error || 'Falha ao atualizar');
+            }
+        } catch (e) {
+            msg.style.color = '#b91c1c';
+            msg.innerText   = '❌ Erro de conexão ao atualizar estrutura.';
+        }
+    }
+
     function abrirModalMinistros() { document.getElementById('modalMinistros').classList.add('open'); }
     function abrirModalAviso()     { document.getElementById('modalAviso').classList.add('open'); }
-    function fecharTudo()          { document.querySelectorAll('.modal').forEach(m => m.classList.remove('open')); }
+    function fecharTudo()          { document.querySelectorAll('.modal').forEach(m => m.classList.remove('open')); document.getElementById('msgAtualizacao').style.display = 'none'; }
     function abrirZapModal(t)      { tipoAtual = t; document.getElementById('modalZap').classList.add('open'); }
 </script>
 </body>

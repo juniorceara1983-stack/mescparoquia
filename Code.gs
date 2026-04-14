@@ -215,6 +215,11 @@ function doPost(e) {
     }
 
     /* ── Manutenção ── */
+    if (action === 'setupPlanilha') {
+      setupPlanilhaMESC();
+      return jsonOut_({ ok: true });
+    }
+
     if (action === 'limparTudo') {
       var localLimpar = body.local || '';
       var shE = getOrCreateSheet_(SHEET_EXTRAS, ['Local','Data','Hora','Missa','Ministros','Obs']);

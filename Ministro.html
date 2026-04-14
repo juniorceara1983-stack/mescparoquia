@@ -268,12 +268,14 @@
                 const card = document.createElement('div');
                 card.className = 'aviso-card';
                 card.innerHTML = `
-                    <div class="av-data">${a[0] ? '📅 '+formatarDataBr(a[0]) : ''} ${a[1] ? '⏰ '+a[1] : ''}</div>
+                    <div class="av-data">${a[0] ? '📅 '+formatarDataBr(a[0]) : ''} ${a[1] ? '⏰ '+formatarHora(a[1]) : ''}</div>
                     <div class="av-msg">${a[2]}</div>`;
-                // Google Calendar button if calendar flag is set
-                if (a[5] === '1' && a[0]) {
-                    const [y, m, d] = a[0].split('-');
-                    const hh  = a[1] ? a[1].replace(':', '') : '0800';
+                // Show Google Calendar button for every notice that has a date
+                if (a[0]) {
+                    const dateLimpa = extrairDataISO(a[0]);
+                    const [y, m, d] = dateLimpa.split('-');
+                    const horaLimpa = formatarHora(a[1]);
+                    const hh  = horaLimpa ? horaLimpa.replace(':', '') : '0800';
                     const hFim = ((parseInt(hh.substring(0,2)) + 1) % 24).toString().padStart(2,'0') + hh.substring(2);
                     const start  = `${y}${m}${d}T${hh}00`;
                     const end    = `${y}${m}${d}T${hFim}00`;
@@ -343,8 +345,26 @@
 
     function formatarDataBr(dateStr) {
         if (!dateStr) return '';
-        const p = dateStr.split('-');
-        return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : dateStr;
+        const s = String(dateStr).trim();
+        const dateOnly = s.includes('T') ? s.split('T')[0] : s;
+        const p = dateOnly.split('-');
+        return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : s;
+    }
+
+    function formatarHora(horaStr) {
+        if (!horaStr) return '';
+        const s = String(horaStr).trim();
+        if (s.includes('T')) {
+            const timePart = s.split('T')[1] || '';
+            return timePart.substring(0, 5);
+        }
+        return s.length >= 5 ? s.substring(0, 5) : s;
+    }
+
+    function extrairDataISO(dateStr) {
+        if (!dateStr) return '';
+        const s = String(dateStr).trim();
+        return s.includes('T') ? s.split('T')[0] : s;
     }
 
     function abrirOracoes()  { document.getElementById('modalOracoes').classList.add('open'); trocarOracao(); }
