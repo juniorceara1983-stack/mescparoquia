@@ -14,78 +14,161 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        :root { --primary: #1e3a8a; --bg: #f1f5f9; --teal: #0f766e; --green: #15803d; --slate: #475569; --danger: #b91c1c; }
+        :root { --primary: #1e3a8a; --bg: #f1f5f9; --teal: #0f766e; --green: #15803d; --slate: #475569; --danger: #b91c1c; --gold: #b45309; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: var(--bg); margin: 0; padding: 16px; }
-        
+
+        /* ── Lock Screen ── */
         #lockScreen { position: fixed; inset: 0; background: var(--primary); z-index: 2000; display: flex; align-items: center; justify-content: center; color: white; text-align: center; padding: 20px; }
         .lock-box { background: white; padding: 30px; border-radius: 20px; color: #334155; width: 100%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-        
+        .lock-box h2 { margin-top: 0; color: var(--primary); }
+
+        /* ── Local selector buttons ── */
+        .local-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+        .btn-local { padding: 14px 8px; border: 2px solid var(--primary); border-radius: 12px; background: white; color: var(--primary); font-weight: bold; font-size: 13px; cursor: pointer; transition: all .2s; }
+        .btn-local:hover, .btn-local.ativo { background: var(--primary); color: white; }
+
+        /* ── App wrapper ── */
         .wrap { max-width: 480px; margin: 0 auto; display: none; }
-        header { text-align: center; margin-bottom: 20px; }
-        h1 { color: var(--primary); margin: 0; font-size: 24px; }
+        header { text-align: center; margin-bottom: 16px; }
+        h1 { color: var(--primary); margin: 0; font-size: 22px; }
+        .sub-header { font-size: 13px; color: var(--slate); margin-top: 4px; }
+
+        /* ── Location tabs ── */
+        .tabs { display: flex; overflow-x: auto; gap: 6px; padding: 4px 0 10px; scrollbar-width: none; }
+        .tabs::-webkit-scrollbar { display: none; }
+        .tab-btn { flex-shrink: 0; padding: 8px 16px; border: 2px solid var(--primary); border-radius: 20px; background: white; color: var(--primary); font-weight: bold; font-size: 12px; cursor: pointer; white-space: nowrap; transition: all .2s; }
+        .tab-btn.ativo { background: var(--primary); color: white; }
+
+        /* ── Sections ── */
         .section { margin-top: 15px; padding: 15px; background: #fff; border-radius: 12px; border-top: 4px solid var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .section h2 { font-size: 13px; text-transform: uppercase; color: #64748b; margin-bottom: 10px; margin-top: 0; }
-        
+
+        /* ── Buttons ── */
         .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #fff; font-size: 14px; text-decoration: none; }
-        .btn-teal { background: var(--teal); }
-        .btn-blue { background: var(--primary); }
-        .btn-pdf { background: var(--slate); }
-        .btn-zap { background: var(--green); }
+        .btn-teal  { background: var(--teal); }
+        .btn-blue  { background: var(--primary); }
+        .btn-pdf   { background: var(--slate); }
+        .btn-zap   { background: var(--green); }
+        .btn-gold  { background: var(--gold); }
         .btn-danger { background: var(--danger); }
-        
+        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); margin-top: 12px; }
+
+        /* ── Modals ── */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 1000; align-items: center; justify-content: center; padding: 15px; }
         .modal.open { display: flex; }
         .modal-content { background: #fff; border-radius: 16px; width: 100%; max-width: 420px; padding: 20px; max-height: 90vh; overflow-y: auto; text-align: center; }
-        
+        .modal-content h3 { color: var(--primary); margin-top: 0; }
+
+        /* ── Forms ── */
         .field { margin-bottom: 12px; text-align: left; }
         label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 4px; color: var(--primary); text-transform: uppercase; }
         select, input, textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
-        
+
         .mini-list { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
         .mini-badge { background: #e2e8f0; padding: 5px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; border: 1px solid #cbd5e1; }
-        
+
         .frase-santo { font-style: italic; color: var(--slate); margin: 15px 0; font-size: 15px; line-height: 1.4; border-left: 3px solid var(--primary); padding-left: 10px; }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 10px auto; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* ── Aviso card ── */
+        .aviso-card { background: #fffbeb; border-left: 4px solid var(--gold); border-radius: 8px; padding: 12px; margin-bottom: 8px; text-align: left; }
+        .aviso-card .av-data { font-size: 11px; color: var(--slate); }
+        .aviso-card .av-msg  { font-size: 14px; font-weight: 600; margin: 4px 0; }
+        .aviso-card .av-local { font-size: 11px; color: var(--primary); }
+
+        /* ── Checkbox row ── */
+        .check-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+        .check-row input[type=checkbox] { width: auto; }
     </style>
 </head>
 <body>
 
+<!-- ══════════════════════ LOCK SCREEN ══════════════════════ -->
 <div id="lockScreen">
     <div class="lock-box">
-        <h2 style="margin-top:0; color:var(--primary)">Acesso MESC</h2>
-        <div class="field"><label>Paróquia</label><input type="text" id="paroquiaAcesso" placeholder="Ex: TESTE"></div>
-        <div class="field"><label>Código de Ativação</label><input type="text" id="codigoAcesso" placeholder="123456"></div>
-        <button class="btn btn-blue" id="btnEntrar" onclick="verificarAcesso()">ATIVAR APLICATIVO</button>
+        <!-- Passo 1: Login (oculto se já tiver código salvo) -->
+        <div id="boxLogin">
+            <h2>Acesso MESC</h2>
+            <div class="field"><label>Paróquia</label><input type="text" id="paroquiaAcesso" placeholder="Ex: NOSSA SENHORA"></div>
+            <div class="field"><label for="codigoAcesso">Código de Ativação</label><input type="password" id="codigoAcesso" placeholder="Código"></div>
+            <button class="btn btn-blue" onclick="verificarAcesso()">ATIVAR APLICATIVO</button>
+        </div>
+
+        <!-- Passo 2: Escolher Local (aparece após login ou ao voltar) -->
+        <div id="boxLocal" style="display:none;">
+            <h2>Escolher Local</h2>
+            <p style="color:#64748b; font-size:13px; margin-bottom:12px;">Selecione o local que você vai gerenciar:</p>
+            <div class="local-grid">
+                <button class="btn-local" onclick="selecionarLocal('Matriz')">⛪ Matriz</button>
+                <button class="btn-local" onclick="selecionarLocal('SaoJudas')">⛪ Cap. São Judas</button>
+                <button class="btn-local" onclick="selecionarLocal('SaoFrancisco')">⛪ Cap. São Francisco</button>
+                <button class="btn-local" onclick="selecionarLocal('SaoSebastiao')">⛪ Cap. São Sebastião</button>
+            </div>
+            <button class="btn btn-outline" style="margin-top:20px; font-size:12px;" onclick="trocarCodigo()">🔑 Trocar código / Sair</button>
+        </div>
     </div>
 </div>
 
+<!-- ══════════════════════ APP ══════════════════════ -->
 <div class="wrap" id="appContent">
-    <header><h1 id="tituloHeader">Painel MESC</h1></header>
+    <header>
+        <h1 id="tituloHeader">Painel MESC</h1>
+        <div id="subHeader" class="sub-header"></div>
+    </header>
+
+    <!-- Abas de local -->
+    <div class="tabs" id="tabsLocais">
+        <button class="tab-btn" onclick="mudarLocal('Matriz')">⛪ Matriz</button>
+        <button class="tab-btn" onclick="mudarLocal('SaoJudas')">⛪ São Judas</button>
+        <button class="tab-btn" onclick="mudarLocal('SaoFrancisco')">⛪ São Francisco</button>
+        <button class="tab-btn" onclick="mudarLocal('SaoSebastiao')">⛪ São Sebastião</button>
+    </div>
+
     <div class="section">
         <h2>Escala Fixa (Anual)</h2>
         <button class="btn btn-teal" onclick="openForm('Fixa')">📝 Configurar Fixa</button>
-        <button class="btn btn-zap" onclick="abrirZapModal('Fixa')">📲 Enviar Fixa via Zap</button>
-        <button class="btn btn-pdf" onclick="gerarPdf('regras')">📄 Baixar PDF Fixa</button>
+        <button class="btn btn-zap"  onclick="abrirZapModal('Fixa')">📲 Enviar Fixa via Zap</button>
+        <button class="btn btn-pdf"  onclick="gerarPdf('regras')">📄 Baixar PDF Fixa</button>
     </div>
+
     <div class="section">
         <h2>Evento Extra</h2>
         <button class="btn btn-teal" onclick="openForm('Extra')">📝 Criar Escala Extra</button>
-        <button class="btn btn-zap" onclick="abrirZapModal('Extra')">📲 Enviar Extra via Zap</button>
-        <button class="btn btn-pdf" onclick="gerarPdf('extras')">📄 Baixar PDF Extra</button>
+        <button class="btn btn-zap"  onclick="abrirZapModal('Extra')">📲 Enviar Extra via Zap</button>
+        <button class="btn btn-pdf"  onclick="gerarPdf('extras')">📄 Baixar PDF Extra</button>
     </div>
+
     <div class="section">
         <h2>Quadro de Ministros</h2>
         <button class="btn btn-blue" onclick="abrirModalMinistros()">👥 Gerenciar Ministros</button>
     </div>
 
+    <!-- Avisos -->
+    <div class="section" style="border-top-color: var(--gold);">
+        <h2>📢 Avisos e Comunicados</h2>
+        <button class="btn btn-gold" onclick="abrirModalAviso()">✏️ Criar Novo Aviso</button>
+        <div id="listaAvisos" style="margin-top:12px;"></div>
+    </div>
+
+    <!-- Configurar Planilha -->
+    <div class="section" style="border-top-color: var(--teal);">
+        <h2>⚙️ Configurar Planilha</h2>
+        <button class="btn btn-teal" onclick="abrirModalAbas()">📋 Gerenciar Abas da Planilha</button>
+    </div>
+
     <div class="section" style="border-top: 4px solid var(--danger);">
         <h2>Manutenção</h2>
-        <button class="btn btn-danger" onclick="confirmarLimpeza()">⚠️ Reiniciar Todas as Escalas</button>
+        <button class="btn btn-danger" onclick="confirmarLimpeza()">⚠️ Reiniciar Escalas deste Local</button>
     </div>
+
+    <button class="btn btn-outline" onclick="voltarParaLocais()">📍 Trocar Local / Sair</button>
 </div>
 
+<!-- ══════════════════════ MODALS ══════════════════════ -->
+
+<!-- Status -->
 <div id="modalStatus" class="modal">
     <div class="modal-content">
         <h3 id="statusTitulo">Processando...</h3>
@@ -95,13 +178,14 @@
     </div>
 </div>
 
+<!-- Formulário de Escala -->
 <div id="modalForm" class="modal">
     <div class="modal-content">
         <h3 id="formTitle">Lançar</h3>
         <div id="seletorRegra">
             <div style="display: flex; gap: 8px;">
-                <div class="field" style="flex: 1;"><label>Semana</label><select id="fSemana"><option>1º</option><option>2º</option><option>3º</option><option>4º</option><option>5º</option></select></div>
-                <div class="field" style="flex: 2;"><label>Dia</label><select id="fDia"><option>Sábado</option><option>Domingo</option><option>Segunda</option><option>Terça</option><option>Quarta</option><option>Quinta</option><option>Sexta</option></select></div>
+                <div class="field" style="flex:1;"><label>Semana</label><select id="fSemana"><option>1º</option><option>2º</option><option>3º</option><option>4º</option><option>5º</option></select></div>
+                <div class="field" style="flex:2;"><label>Dia</label><select id="fDia"><option>Sábado</option><option>Domingo</option><option>Segunda</option><option>Terça</option><option>Quarta</option><option>Quinta</option><option>Sexta</option></select></div>
             </div>
         </div>
         <div id="campoData" class="field" style="display:none;"><label>Data</label><input type="date" id="fData"></div>
@@ -116,6 +200,7 @@
     </div>
 </div>
 
+<!-- WhatsApp -->
 <div id="modalZap" class="modal">
     <div class="modal-content">
         <h3 id="zapTitle">Enviar WhatsApp</h3>
@@ -126,25 +211,82 @@
     </div>
 </div>
 
+<!-- Ministros -->
 <div id="modalMinistros" class="modal">
     <div class="modal-content">
         <h3>Quadro de Ministros</h3>
         <div class="field">
             <label>Novo Ministro</label>
             <input type="text" id="novoMinistro" placeholder="Nome do Ministro">
-            <button class="btn btn-blue" onclick="addMinistro()" style="padding: 8px; font-size: 12px; margin-top:10px;">+ Adicionar à Lista</button>
+            <button class="btn btn-blue" onclick="addMinistro()" style="padding:8px; font-size:12px; margin-top:10px;">+ Adicionar à Lista</button>
         </div>
         <hr>
-        <label>Ministros Cadastrados (x para remover)</label>
+        <label>Ministros Cadastrados (× para remover)</label>
         <div id="listaMinistrosQuadros" class="mini-list"></div>
         <button class="btn btn-pdf" style="background:#64748b; margin-top:20px;" onclick="fecharTudo()">Fechar</button>
     </div>
 </div>
 
+<!-- Aviso -->
+<div id="modalAviso" class="modal">
+    <div class="modal-content">
+        <h3>📢 Novo Aviso / Comunicado</h3>
+        <div class="field"><label>Mensagem</label><textarea id="avisoMsg" rows="4" placeholder="Digite o aviso..."></textarea></div>
+        <div style="display:flex; gap:10px;">
+            <div class="field" style="flex:1;"><label>Data (opcional)</label><input type="date" id="avisoData"></div>
+            <div class="field" style="flex:1;"><label>Horário (opcional)</label><input type="time" id="avisoHora"></div>
+        </div>
+        <div class="field">
+            <label>Destinatário</label>
+            <select id="avisoLocal">
+                <option value="Todos">Para Todos os Locais</option>
+                <option value="Matriz">Apenas Matriz</option>
+                <option value="SaoJudas">Apenas Cap. São Judas</option>
+                <option value="SaoFrancisco">Apenas Cap. São Francisco</option>
+                <option value="SaoSebastiao">Apenas Cap. São Sebastião</option>
+            </select>
+        </div>
+        <div class="check-row"><input type="checkbox" id="avisoZap" checked><label style="margin:0; text-transform:none; font-size:14px;">📲 Enviar via WhatsApp</label></div>
+        <div class="check-row"><input type="checkbox" id="avisoCalendar"><label style="margin:0; text-transform:none; font-size:14px;">📅 Adicionar ao Google Agenda</label></div>
+        <button class="btn btn-gold" onclick="salvarAviso()">💾 Salvar Aviso</button>
+        <button class="btn btn-pdf" style="background:#64748b" onclick="fecharTudo()">Cancelar</button>
+    </div>
+</div>
+
+<!-- Abas da Planilha -->
+<div id="modalAbas" class="modal">
+    <div class="modal-content">
+        <h3>📋 Gerenciar Abas da Planilha</h3>
+        <div class="field">
+            <label>Nome da Nova Aba</label>
+            <input type="text" id="novaAba" placeholder="Ex: Batizados">
+        </div>
+        <div class="field">
+            <label>Colunas (separadas por vírgula)</label>
+            <input type="text" id="novaAbaColunas" placeholder="Ex: Data, Hora, Evento, Ministro">
+        </div>
+        <button class="btn btn-teal" onclick="criarNovaAba()">➕ Criar Aba na Planilha</button>
+        <hr style="margin: 16px 0;">
+        <label>Abas existentes na planilha:</label>
+        <div id="listaAbas" class="mini-list" style="margin-top: 8px;"></div>
+        <button class="btn btn-pdf" style="background:#64748b; margin-top:16px;" onclick="fecharTudo()">Fechar</button>
+    </div>
+</div>
+
 <script>
     const URL_API = "https://script.google.com/macros/s/AKfycbybTBWupiQNckDNS6YPcDtpNL04vGfjF2nkO1J4PCQpuI5b4nMaaw_Pltqu-3qOOEPX/exec";
-    let tipoAtual = "";
+
+    const LOCAIS_NOMES = {
+        Matriz:        'Matriz',
+        SaoJudas:      'Cap. São Judas',
+        SaoFrancisco:  'Cap. São Francisco',
+        SaoSebastiao:  'Cap. São Sebastião'
+    };
+
+    let tipoAtual  = "";
+    let localAtual = "";
     let listaGlobalMinistros = [];
+
     const frases = [
         "«Quem não vive para servir, não serve para viver.» — São José de Anchieta",
         "«Onde houver desespero, que eu leve a esperança.» — São Francisco de Assis",
@@ -154,84 +296,141 @@
         "«O Senhor é meu pastor, nada me faltará.» — Salmo 23"
     ];
 
-    window.onload = () => { 
-        if(localStorage.getItem('mesc_acesso') === 'true') liberarApp();
-        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
+    /* ── Inicialização ── */
+    window.onload = () => {
+        if (localStorage.getItem('mesc_acesso') === 'true') {
+            // Já logado: mostrar seletor de local
+            mostrarBoxLocal();
+        }
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw-coordenador.js');
+        }
     };
 
-    function mostrarStatus(titulo, carregando = true) {
-        document.getElementById('statusTitulo').innerText = titulo;
-        document.getElementById('statusFrase').innerText = frases[Math.floor(Math.random() * frases.length)];
-        document.getElementById('statusLoader').style.display = carregando ? 'block' : 'none';
-        document.getElementById('btnStatusOk').style.display = carregando ? 'none' : 'block';
-        document.getElementById('modalStatus').classList.add('open');
+    function mostrarBoxLocal() {
+        document.getElementById('boxLogin').style.display = 'none';
+        document.getElementById('boxLocal').style.display  = 'block';
     }
 
+    function trocarCodigo() {
+        localStorage.removeItem('mesc_acesso');
+        localStorage.removeItem('mesc_nome_paroquia');
+        localStorage.removeItem('mesc_local');
+        document.getElementById('boxLocal').style.display = 'none';
+        document.getElementById('boxLogin').style.display = 'block';
+        document.getElementById('paroquiaAcesso').value = '';
+        document.getElementById('codigoAcesso').value   = '';
+    }
+
+    /* ── Verificar código de acesso ── */
     async function verificarAcesso() {
         const p = document.getElementById('paroquiaAcesso').value.trim();
         const c = document.getElementById('codigoAcesso').value.trim();
-        if(!p || !c) { alert("Preencha os campos!"); return; }
+        if (!p || !c) { alert("Preencha os campos!"); return; }
 
         mostrarStatus("Verificando Acesso...");
         try {
-            const response = await fetch(URL_API, { 
-                method: 'POST', 
-                body: JSON.stringify({ action: 'verificarToken', paroquia: p, codigo: c }) 
-            });
-            const data = await response.json();
-
-            if(data.ok) {
+            const res  = await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'verificarToken', paroquia: p, codigo: c }) });
+            const data = await res.json();
+            if (data.ok) {
                 localStorage.setItem('mesc_acesso', 'true');
                 localStorage.setItem('mesc_nome_paroquia', p.toUpperCase());
-                liberarApp();
                 fecharTudo();
-            } else { mostrarStatus(data.error || "Código Inválido", false); }
-        } catch(e) { mostrarStatus("Erro de conexão", false); }
+                mostrarBoxLocal();
+            } else {
+                mostrarStatus(data.error || "Código Inválido", false);
+            }
+        } catch (e) { mostrarStatus("Erro de conexão", false); }
     }
 
-    function liberarApp() {
+    /* ── Selecionar / Trocar local ── */
+    function selecionarLocal(local) {
+        localAtual = local;
+        localStorage.setItem('mesc_local', local);
         document.getElementById('lockScreen').style.display = 'none';
         document.getElementById('appContent').style.display = 'block';
         const par = localStorage.getItem('mesc_nome_paroquia') || "PARÓQUIA";
         document.getElementById('tituloHeader').innerText = "MESC - " + par;
+        document.getElementById('subHeader').innerText    = "📍 " + (LOCAIS_NOMES[local] || local);
+        atualizarTabAtiva();
         atualizarListaMinistros();
+        carregarAvisos();
     }
 
+    function mudarLocal(local) {
+        selecionarLocal(local);
+    }
+
+    function voltarParaLocais() {
+        document.getElementById('appContent').style.display = 'none';
+        document.getElementById('lockScreen').style.display = 'flex';
+        mostrarBoxLocal();
+    }
+
+    function atualizarTabAtiva() {
+        document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+            const ids = ['Matriz', 'SaoJudas', 'SaoFrancisco', 'SaoSebastiao'];
+            btn.classList.toggle('ativo', ids[i] === localAtual);
+        });
+    }
+
+    /* ── Status modal ── */
+    function mostrarStatus(titulo, carregando = true) {
+        document.getElementById('statusTitulo').innerText = titulo;
+        document.getElementById('statusFrase').innerText  = frases[Math.floor(Math.random() * frases.length)];
+        document.getElementById('statusLoader').style.display  = carregando ? 'block' : 'none';
+        document.getElementById('btnStatusOk').style.display   = carregando ? 'none'  : 'block';
+        document.getElementById('modalStatus').classList.add('open');
+    }
+
+    /* ── PDF ── */
     async function gerarPdf(tipo) {
         mostrarStatus("Gerando seu PDF...");
         try {
-            const res = await fetch(URL_API);
+            const res   = await fetch(`${URL_API}?local=${localAtual}&t=${Date.now()}`);
             const banco = await res.json();
+            // new schema: [Local, Data/Regra, Hora, Missa, Ministros, Obs]
             const dados = tipo === 'regras' ? banco.regras : banco.extras;
-            let html = `<div style="padding:20px; font-family:sans-serif;"><h2>ESCALA ${tipo.toUpperCase()}</h2><table border="1" style="width:100%; border-collapse:collapse;">`;
-            dados.slice(1).forEach(r => { 
-                html += `<tr><td style="padding:5px">${r[0]}</td><td style="padding:5px">${r[1]}</td><td style="padding:5px">${r[2]}</td><td style="padding:5px">${r[3]}</td></tr>`; 
+            const nomeLocal = LOCAIS_NOMES[localAtual] || localAtual;
+            let html = `<div style="padding:20px;font-family:sans-serif;"><h2>ESCALA ${tipo.toUpperCase()} — ${nomeLocal}</h2>
+                        <table border="1" style="width:100%;border-collapse:collapse;">
+                        <tr><th>Data/Regra</th><th>Hora</th><th>Missa</th><th>Ministros</th></tr>`;
+            dados.slice(1).forEach(r => {
+                html += `<tr>
+                    <td style="padding:5px">${r[1]}</td>
+                    <td style="padding:5px">${r[2]}</td>
+                    <td style="padding:5px">${r[3]}</td>
+                    <td style="padding:5px">${r[4]}</td>
+                </tr>`;
             });
             html += `</table></div>`;
-            await html2pdf().from(html).save(`Escala_${tipo}.pdf`);
+            await html2pdf().from(html).save(`Escala_${tipo}_${localAtual}.pdf`);
             mostrarStatus("PDF baixado com sucesso!", false);
-        } catch(e) { mostrarStatus("Erro ao gerar PDF", false); }
+        } catch (e) { mostrarStatus("Erro ao gerar PDF", false); }
     }
 
+    /* ── Limpeza ── */
     async function confirmarLimpeza() {
-        const p = prompt("Digite APAGAR para confirmar:");
-        if(p !== "APAGAR") return;
+        const nomeLocal = LOCAIS_NOMES[localAtual] || localAtual;
+        const p = prompt(`Digite APAGAR para confirmar a limpeza das escalas de ${nomeLocal}:`);
+        if (p !== "APAGAR") return;
         mostrarStatus("Limpando planilha...");
-        await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'limparTudo' }) });
+        await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'limparTudo', local: localAtual }) });
         mostrarStatus("Planilha reiniciada!", false);
     }
 
+    /* ── Ministros ── */
     async function atualizarListaMinistros() {
         try {
-            const res = await fetch(URL_API);
+            const res   = await fetch(`${URL_API}?t=${Date.now()}`);
             const banco = await res.json();
             listaGlobalMinistros = (banco.ministros || []).map(m => m[0]).filter(n => n && n !== "Nome");
             renderizarMinistros();
-        } catch(e) { console.log("Erro ministros"); }
+        } catch (e) { console.log("Erro ministros"); }
     }
 
     function renderizarMinistros() {
-        const quad = document.getElementById('listaMinistrosQuadros');
+        const quad  = document.getElementById('listaMinistrosQuadros');
         const click = document.getElementById('clickListaMinistros');
         quad.innerHTML = ""; click.innerHTML = "";
         listaGlobalMinistros.forEach(nome => {
@@ -239,14 +438,17 @@
             b1.innerHTML = `${nome} <span onclick="removerMinistro('${nome}')" style="color:red;margin-left:5px;cursor:pointer">×</span>`;
             quad.appendChild(b1);
             const b2 = document.createElement('span'); b2.className = 'mini-badge'; b2.innerText = nome;
-            b2.onclick = () => { document.getElementById('fMinistros').value += (document.getElementById('fMinistros').value ? ", " : "") + nome; };
+            b2.onclick = () => {
+                const tf = document.getElementById('fMinistros');
+                tf.value += (tf.value ? ", " : "") + nome;
+            };
             click.appendChild(b2);
         });
     }
 
     async function addMinistro() {
         const n = document.getElementById('novoMinistro').value;
-        if(!n) return;
+        if (!n) return;
         mostrarStatus("Adicionando Ministro...");
         await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'addMinistro', nome: n }) });
         document.getElementById('novoMinistro').value = "";
@@ -256,7 +458,7 @@
     }
 
     async function removerMinistro(n) {
-        if(!confirm("Remover " + n + "?")) return;
+        if (!confirm("Remover " + n + "?")) return;
         mostrarStatus("Removendo Ministro...");
         await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'removerMinistro', nome: n }) });
         await atualizarListaMinistros();
@@ -264,92 +466,201 @@
         abrirModalMinistros();
     }
 
+    /* ── Salvar escala ── */
     async function salvarDados() {
         document.getElementById('modalForm').classList.remove('open');
         mostrarStatus("Salvando dados na planilha...");
         const payload = {
-            action: tipoAtual === 'Fixa' ? 'addRegra' : 'addEscala',
-            hora: document.getElementById('fHora').value,
-            missa: document.getElementById('fMissa').value,
-            ministro: document.getElementById('fMinistros').value,
-            obs: document.getElementById('fObs').value
+            action:    tipoAtual === 'Fixa' ? 'addRegra' : 'addEscala',
+            local:     localAtual,
+            hora:      document.getElementById('fHora').value,
+            missa:     document.getElementById('fMissa').value,
+            ministro:  document.getElementById('fMinistros').value,
+            obs:       document.getElementById('fObs').value
         };
-        if(tipoAtual === 'Fixa') payload.regra = document.getElementById('fSemana').value + " " + document.getElementById('fDia').value;
-        else payload.data = document.getElementById('fData').value;
-
+        if (tipoAtual === 'Fixa') payload.regra = document.getElementById('fSemana').value + " " + document.getElementById('fDia').value;
+        else                      payload.data  = document.getElementById('fData').value;
         try {
             await fetch(URL_API, { method: 'POST', body: JSON.stringify(payload) });
             mostrarStatus("Escala salva com sucesso!", false);
-        } catch(e) { mostrarStatus("Erro ao salvar dados.", false); }
+        } catch (e) { mostrarStatus("Erro ao salvar dados.", false); }
     }
 
+    /* ── WhatsApp ── */
     async function gerarLinkZap() {
         const dataVal = document.getElementById('dataZap').value;
         if (!dataVal) return alert("Selecione a data da escala!");
-        
+
         document.getElementById('modalZap').classList.remove('open');
         mostrarStatus("Buscando dados e preparando WhatsApp...");
 
         try {
-            const res = await fetch(`${URL_API}?t=${new Date().getTime()}`);
+            const res   = await fetch(`${URL_API}?local=${localAtual}&t=${Date.now()}`);
             const banco = await res.json();
-            
+
             const [ano, mes, dia] = dataVal.split('-');
-            const dataObj = new Date(ano, mes-1, dia, 12, 0, 0);
-            const diasSemanas = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
-            const diaNome = diasSemanas[dataObj.getDay()];
-            const nSemana = Math.ceil(dataObj.getDate() / 7);
+            const dataObj  = new Date(ano, mes - 1, dia, 12, 0, 0);
+            const diasSem  = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
+            const diaNome  = diasSem[dataObj.getDay()];
+            const nSemana  = Math.ceil(dataObj.getDate() / 7);
             const regraHoje = `${nSemana}º ${diaNome}`;
 
-            const formatarHora = (v) => (v && v.toString().trim()) ? v.toString().trim() : "00:00";
+            const fmt = (v) => (v && v.toString().trim()) ? v.toString().trim() : "00:00";
 
-            const extras = (banco.extras || []).filter(e => e[0] && e[0].toString().includes(dataVal));
-            const fixos = (banco.regras || []).filter(r => r[0] && r[0].toString().trim().toLowerCase() === regraHoje.toLowerCase());
+            // new schema: extras[i][1]=Data, extras[i][2]=Hora, extras[i][3]=Missa, extras[i][4]=Ministros, extras[i][5]=Obs
+            const extras = (banco.extras || []).filter(e => e[1] && e[1].toString().includes(dataVal));
+            // new schema: regras[i][1]=Regra, regras[i][2]=Hora, regras[i][3]=Missa, regras[i][4]=Ministros, regras[i][5]=Obs
+            const fixos  = (banco.regras || []).filter(r => r[1] && r[1].toString().trim().toLowerCase() === regraHoje.toLowerCase());
 
             if (extras.length === 0 && fixos.length === 0) {
                 mostrarStatus("Nenhuma escala encontrada para este dia.", false);
                 return;
             }
 
-            let msg = `*📍 ESCALA MESC - ${dia}/${mes}/${ano}*\n*(${regraHoje})*\n\n`;
+            const nomeLocal = LOCAIS_NOMES[localAtual] || localAtual;
+            let msg = `*📍 ESCALA MESC — ${nomeLocal}*\n*${dia}/${mes}/${ano}* _(${regraHoje})_\n\n`;
 
             const lista = [
-                ...fixos.map(f => ({ h: formatarHora(f[1]), m: f[2], n: f[3], o: f[4] })),
-                ...extras.map(e => ({ h: formatarHora(e[1]), m: e[2], n: e[3], o: e[4] }))
-            ].sort((a,b) => a.h.localeCompare(b.h));
+                ...fixos.map(f  => ({ h: fmt(f[2]),  m: f[3], n: f[4], o: f[5] })),
+                ...extras.map(ex => ({ h: fmt(ex[2]), m: ex[3], n: ex[4], o: ex[5] }))
+            ].sort((a, b) => a.h.localeCompare(b.h));
 
             lista.forEach(item => {
                 msg += `⏰ *Hora:* ${item.h}\n⛪ *Missa:* ${item.m || "Missa"}\n👤 *Ministros:* ${item.n || "A definir"}\n`;
-                if(item.o) msg += `📝 *Obs:* ${item.o}\n`;
+                if (item.o) msg += `📝 *Obs:* ${item.o}\n`;
                 msg += `─────────────────\n\n`;
             });
 
-            const obsAdicional = document.getElementById('comentZap').value;
-            if (obsAdicional) msg += `📢 *Comunicado:* ${obsAdicional}\n\n`;
+            const obs = document.getElementById('comentZap').value;
+            if (obs) msg += `📢 *Comunicado:* ${obs}\n\n`;
             msg += `_Gerado via MESC Digital_`;
 
             window.location.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
             fecharTudo();
-        } catch(e) { mostrarStatus("Erro ao preparar mensagem", false); }
+        } catch (e) { mostrarStatus("Erro ao preparar mensagem", false); }
     }
 
-    function openForm(t) { 
-        tipoAtual = t; 
-        document.getElementById('fMinistros').value = ""; 
-        document.getElementById('fMissa').value = ""; 
-        document.getElementById('fHora').value = ""; 
-        document.getElementById('fObs').value = "";
-        document.getElementById('modalForm').classList.add('open'); 
-        document.getElementById('seletorRegra').style.display = t === 'Fixa' ? 'block' : 'none'; 
-        document.getElementById('campoData').style.display = t === 'Extra' ? 'block' : 'none'; 
+    /* ── Avisos ── */
+    async function carregarAvisos() {
+        try {
+            const res   = await fetch(`${URL_API}?local=${localAtual}&t=${Date.now()}`);
+            const banco = await res.json();
+            const avisos = (banco.avisos || []).slice(1); // pula cabeçalho
+            const div = document.getElementById('listaAvisos');
+            if (!avisos.length) { div.innerHTML = "<p style='color:#64748b;font-size:13px;'>Nenhum aviso cadastrado.</p>"; return; }
+            div.innerHTML = "";
+            avisos.forEach(a => {
+                const card = document.createElement('div');
+                card.className = 'aviso-card';
+                const localLabel = a[3] === 'Todos' ? '🌐 Todos' : (LOCAIS_NOMES[a[3]] || a[3]);
+                card.innerHTML = `
+                    <div class="av-data">${a[0] ? '📅 '+formatarDataBr(a[0]) : ''} ${a[1] ? '⏰ '+a[1] : ''}</div>
+                    <div class="av-msg">${a[2]}</div>
+                    <div class="av-local">📍 ${localLabel}</div>`;
+                div.appendChild(card);
+            });
+        } catch (e) { console.log("Erro ao carregar avisos"); }
     }
-    
+
+    async function salvarAviso() {
+        const msg = document.getElementById('avisoMsg').value.trim();
+        if (!msg) { alert("Digite a mensagem do aviso!"); return; }
+
+        const data     = document.getElementById('avisoData').value;
+        const hora     = document.getElementById('avisoHora').value;
+        const localDest = document.getElementById('avisoLocal').value;
+        const zap      = document.getElementById('avisoZap').checked;
+        const calendar = document.getElementById('avisoCalendar').checked;
+
+        fecharTudo();
+        mostrarStatus("Salvando aviso...");
+        try {
+            await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'addAviso', mensagem: msg, data, hora, local: localDest, zap, calendar }) });
+            mostrarStatus("Aviso salvo!", false);
+            await carregarAvisos();
+
+            // Enviar via WhatsApp se marcado
+            if (zap) {
+                const nomeLocal = localDest === 'Todos' ? 'Todos os Locais' : (LOCAIS_NOMES[localDest] || localDest);
+                let zapMsg = `*📢 AVISO MESC — ${nomeLocal}*\n\n${msg}`;
+                if (data) zapMsg += `\n\n📅 *Data:* ${formatarDataBr(data)}`;
+                if (hora) zapMsg += `  ⏰ *Horário:* ${hora}`;
+                zapMsg += `\n\n_Enviado via MESC Digital_`;
+                setTimeout(() => { window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(zapMsg)}`, '_blank'); }, 500);
+            }
+
+            // Adicionar ao Google Agenda se marcado
+            if (calendar && data) {
+                const [y, m, d] = data.split('-');
+                const hh = hora ? hora.replace(':', '') : '0800';
+                const hFim = ((parseInt(hh.substring(0,2)) + 1) % 24).toString().padStart(2,'0') + hh.substring(2);
+                const start = `${y}${m}${d}T${hh}00`;
+                const end   = `${y}${m}${d}T${hFim}00`;
+                const titulo = encodeURIComponent(`Aviso MESC: ${msg.substring(0, 50)}`);
+                setTimeout(() => { window.open(`https://www.google.com/calendar/render?action=TEMPLATE&text=${titulo}&dates=${start}/${end}&sf=true&output=xml`, '_blank'); }, 1000);
+            }
+        } catch (e) { mostrarStatus("Erro ao salvar aviso.", false); }
+    }
+
+    /* ── Abas da planilha ── */
+    async function abrirModalAbas() {
+        document.getElementById('modalAbas').classList.add('open');
+        try {
+            const res   = await fetch(`${URL_API}?t=${Date.now()}`);
+            const banco = await res.json();
+            const div   = document.getElementById('listaAbas');
+            div.innerHTML = "";
+            (banco.abas || []).forEach(aba => {
+                const b = document.createElement('span'); b.className = 'mini-badge'; b.innerText = aba;
+                div.appendChild(b);
+            });
+        } catch (e) { document.getElementById('listaAbas').innerText = "Erro ao carregar abas."; }
+    }
+
+    async function criarNovaAba() {
+        const nome    = document.getElementById('novaAba').value.trim();
+        const colsRaw = document.getElementById('novaAbaColunas').value.trim();
+        if (!nome) { alert("Digite o nome da aba!"); return; }
+        const headers = colsRaw ? colsRaw.split(',').map(c => c.trim()).filter(Boolean) : [];
+
+        mostrarStatus("Criando aba na planilha...");
+        fecharTudo();
+        try {
+            const res  = await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'criarAba', nomeAba: nome, headers }) });
+            const data = await res.json();
+            if (data.ok) {
+                document.getElementById('novaAba').value = '';
+                document.getElementById('novaAbaColunas').value = '';
+                mostrarStatus(`Aba "${nome}" criada com sucesso!`, false);
+            } else {
+                mostrarStatus(data.error || "Erro ao criar aba.", false);
+            }
+        } catch (e) { mostrarStatus("Erro de conexão.", false); }
+    }
+
+    /* ── Helpers ── */
+    function formatarDataBr(dateStr) {
+        if (!dateStr) return '';
+        const p = dateStr.split('-');
+        return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : dateStr;
+    }
+
+    function openForm(t) {
+        tipoAtual = t;
+        document.getElementById('fMinistros').value = "";
+        document.getElementById('fMissa').value     = "";
+        document.getElementById('fHora').value      = "";
+        document.getElementById('fObs').value       = "";
+        document.getElementById('formTitle').innerText = t === 'Fixa' ? 'Escala Fixa — ' + (LOCAIS_NOMES[localAtual] || localAtual) : 'Evento Extra — ' + (LOCAIS_NOMES[localAtual] || localAtual);
+        document.getElementById('seletorRegra').style.display = t === 'Fixa'  ? 'block' : 'none';
+        document.getElementById('campoData').style.display    = t === 'Extra' ? 'block' : 'none';
+        document.getElementById('modalForm').classList.add('open');
+    }
+
     function abrirModalMinistros() { document.getElementById('modalMinistros').classList.add('open'); }
-    function fecharTudo() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('open')); }
-    function abrirZapModal(t) { tipoAtual = t; document.getElementById('modalZap').classList.add('open'); }
-    if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw-coordenador.js');
-}
+    function abrirModalAviso()     { document.getElementById('modalAviso').classList.add('open'); }
+    function fecharTudo()          { document.querySelectorAll('.modal').forEach(m => m.classList.remove('open')); }
+    function abrirZapModal(t)      { tipoAtual = t; document.getElementById('modalZap').classList.add('open'); }
 </script>
 </body>
 </html>
