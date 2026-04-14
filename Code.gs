@@ -25,6 +25,29 @@ var SHEET_AVISOS    = 'Avisos';
 
 /* ── helpers ─────────────────────────────────────────────────────────────── */
 
+/**
+ * Converts a spreadsheet cell value to a plain serializable type.
+ * Date objects (dates and time-only values) are formatted as local strings
+ * using the script timezone so that JSON output is always human-readable.
+ */
+function formatCell_(v) {
+  if (v instanceof Date) {
+    var tz = Session.getScriptTimeZone();
+    // Time-only values in Google Sheets use 1899-12-30 or 1900-01-01 as base date
+    if (v.getFullYear() <= 1900) {
+      return Utilities.formatDate(v, tz, 'HH:mm');
+    }
+    return Utilities.formatDate(v, tz, 'yyyy-MM-dd');
+  }
+  return v;
+}
+
+function formatRows_(rows) {
+  return rows.map(function(row) {
+    return row.map(formatCell_);
+  });
+}
+
 function getSpreadsheet_() {
   if (SPREADSHEET_ID) return SpreadsheetApp.openById(SPREADSHEET_ID);
   var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -52,10 +75,10 @@ function doGet(e) {
   try {
     var local = (e && e.parameter && e.parameter.local) ? String(e.parameter.local).trim() : '';
 
-    var extrasAll   = getOrCreateSheet_(SHEET_EXTRAS,    ['Local','Data','Hora','Missa','Ministros','Obs']).getDataRange().getValues();
-    var regrasAll   = getOrCreateSheet_(SHEET_REGRAS,    ['Local','Regra','Hora','Missa','Ministros','Obs']).getDataRange().getValues();
-    var avisosAll   = getOrCreateSheet_(SHEET_AVISOS,    ['Data','Hora','Mensagem','Local','Zap','Calendar']).getDataRange().getValues();
-    var ministros   = getOrCreateSheet_(SHEET_MINISTROS, ['Nome']).getDataRange().getValues();
+    var extrasAll    = getOrCreateSheet_(SHEET_EXTRAS,    ['Local','Data','Hora','Missa','Ministros','Obs']).getDataRange().getValues();
+    var regrasAll    = getOrCreateSheet_(SHEET_REGRAS,    ['Local','Regra','Hora','Missa','Ministros','Obs']).getDataRange().getValues();
+    var avisosAll    = getOrCreateSheet_(SHEET_AVISOS,    ['Data','Hora','Mensagem','Local','Zap','Calendar']).getDataRange().getValues();
+    var ministrosAll = getOrCreateSheet_(SHEET_MINISTROS, ['Nome','Local']).getDataRange().getValues();
 
     var lc = local.toLowerCase();
 
@@ -71,9 +94,20 @@ function doGet(e) {
       ? avisosAll.filter(function(r, i) { return i === 0 || String(r[3]).trim().toLowerCase() === 'todos' || String(r[3]).trim().toLowerCase() === lc; })
       : avisosAll;
 
+    // Filter ministers by local; ministers with no local are shown in all locals (backward compat)
+    var ministros = local
+      ? ministrosAll.filter(function(r, i) { return i === 0 || !r[1] || String(r[1]).trim().toLowerCase() === lc; })
+      : ministrosAll;
+
     var abas = getSpreadsheet_().getSheets().map(function(s) { return s.getName(); });
 
-    return jsonOut_({ extras: extras, regras: regras, avisos: avisos, ministros: ministros, abas: abas });
+    return jsonOut_({
+      extras:    formatRows_(extras),
+      regras:    formatRows_(regras),
+      avisos:    formatRows_(avisos),
+      ministros: formatRows_(ministros),
+      abas:      abas
+    });
   } catch (err) {
     return jsonOut_({ ok: false, error: String(err.message || err) });
   }
@@ -116,17 +150,23 @@ function doPost(e) {
     /* ── Ministros ── */
     if (action === 'addMinistro') {
       var nome = body.nome || '';
+      var localM = String(body.local || '');
       if (!nome) return jsonOut_({ ok: false, error: 'Nome obrigatório' });
-      getOrCreateSheet_(SHEET_MINISTROS, ['Nome']).appendRow([nome]);
+      getOrCreateSheet_(SHEET_MINISTROS, ['Nome','Local']).appendRow([nome, localM]);
       return jsonOut_({ ok: true });
     }
 
     if (action === 'removerMinistro') {
       var nomeRem = body.nome || '';
-      var shM = getOrCreateSheet_(SHEET_MINISTROS, ['Nome']);
+      var localRem = String(body.local || '').toLowerCase();
+      var shM = getOrCreateSheet_(SHEET_MINISTROS, ['Nome','Local']);
       var rowsM = shM.getDataRange().getValues();
       for (var i = rowsM.length - 1; i >= 0; i--) {
-        if (String(rowsM[i][0]) === nomeRem) { shM.deleteRow(i + 1); break; }
+        if (String(rowsM[i][0]) === nomeRem) {
+          if (!localRem || !rowsM[i][1] || String(rowsM[i][1]).toLowerCase() === localRem) {
+            shM.deleteRow(i + 1); break;
+          }
+        }
       }
       return jsonOut_({ ok: true });
     }
@@ -261,7 +301,7 @@ function setupPlanilhaMESC() {
   var ss = getSpreadsheet_();
   ensureSheetWithHeaders_(ss, SHEET_EXTRAS,    ['Local','Data','Hora','Missa','Ministros','Obs']);
   ensureSheetWithHeaders_(ss, SHEET_REGRAS,    ['Local','Regra','Hora','Missa','Ministros','Obs']);
-  ensureSheetWithHeaders_(ss, SHEET_MINISTROS, ['Nome']);
+  ensureSheetWithHeaders_(ss, SHEET_MINISTROS, ['Nome','Local']);
   ensureSheetWithHeaders_(ss, SHEET_TOKENS,    ['Paroquia','Codigo']);
   ensureSheetWithHeaders_(ss, SHEET_AVISOS,    ['Data','Hora','Mensagem','Local','Zap','Calendar']);
 }
