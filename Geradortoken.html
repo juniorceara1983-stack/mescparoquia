@@ -26,6 +26,7 @@
     <p style="color: #64748b; font-size: 14px;">Gerar acesso para Paróquia</p>
     
     <input type="text" id="nomeParoquia" placeholder="NOME DA PARÓQUIA">
+    <input type="text" id="loginCoordenador" placeholder="LOGIN DO COORDENADOR">
     
     <button class="btn btn-gen" onclick="prepararCodigo()">1. GERAR CÓDIGO</button>
     
@@ -48,10 +49,13 @@
     const URL_API = "https://script.google.com/macros/s/AKfycbybTBWupiQNckDNS6YPcDtpNL04vGfjF2nkO1J4PCQpuI5b4nMaaw_Pltqu-3qOOEPX/exec";
     let codigoAtual = "";
     let paroquiaAtual = "";
+    let loginAtual = "";
 
     function prepararCodigo() {
         paroquiaAtual = document.getElementById('nomeParoquia').value.trim().toUpperCase();
+        loginAtual    = document.getElementById('loginCoordenador').value.trim().toUpperCase();
         if(!paroquiaAtual) return alert("Digite o nome da paróquia!");
+        if(!loginAtual)    return alert("Digite o login do coordenador!");
 
         // Caracteres seguros (sem 0, O, 1, I)
         const caracteres = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -81,6 +85,7 @@
                 body: JSON.stringify({
                     action: 'cadastrarToken',
                     paroquia: paroquiaAtual,
+                    login: loginAtual,
                     codigo: codigoAtual
                 })
             });
@@ -100,7 +105,7 @@
     }
 
     function enviarZap() {
-        const mensagem = `*📍 ACESSO MESC DIGITAL*\n\nOlá! Seu acesso ao aplicativo foi liberado.\n\n*Paróquia:* ${paroquiaAtual}\n*Código de Ativação:* ${codigoAtual}\n\n_Use esses dados na tela inicial do app._`;
+        const mensagem = `*📍 ACESSO MESC DIGITAL*\n\nOlá! Seu acesso ao aplicativo foi liberado.\n\n*Paróquia:* ${paroquiaAtual}\n*Login:* ${loginAtual}\n*Código de Ativação:* ${codigoAtual}\n\n_Use esses dados na tela inicial do app._`;
         const link = `https://api.whatsapp.com/send?text=${encodeURIComponent(mensagem)}`;
         window.open(link, '_blank');
     }

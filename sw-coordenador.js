@@ -1,8 +1,9 @@
-const CACHE_NAME = "mesc-v2";
+const CACHE_NAME = "mesc-v3";
 const ASSETS = [
   "./Mesc.html", 
   "./Ministro.html", 
   "./config.js", 
+  "./mesc-biblico.js",
   "./manifest.json",
   "./mesc.svg",
   "./icon-512.png"

@@ -1,7 +1,8 @@
-const CACHE_NAME = "mesc-ministro-v2"; // Nome único para o cache do Ministro
+const CACHE_NAME = "mesc-ministro-v3"; // Nome único para o cache do Ministro
 const ASSETS = [
   "./Ministro.html", // Prioridade para o arquivo do Ministro
   "./config.js",
+  "./mesc-biblico.js",
   "./manifest-ministro.json", // Deve carregar o manifesto do ministro
   "./icon-512.png"
 ];
