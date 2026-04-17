@@ -82,4 +82,34 @@
     window.mescAlert = function (msg, isErro) {
         window.mescModal(msg, !!isErro);
     };
+
+    window.mescConfirm = function (mensagem, onConfirm, titulo) {
+        estilo();
+        var old = document.getElementById("mesc-overlay-biblico");
+        if (old) old.remove();
+        var v = pickVerso();
+        var ov = document.createElement("div");
+        ov.id = "mesc-overlay-biblico";
+        ov.innerHTML =
+            '<div class="mesc-box" role="dialog" aria-modal="true">' +
+            "<h3>" + (titulo || "Confirmar") + "</h3>" +
+            '<p class="msg"></p>' +
+            '<div class="mesc-citacao"><small>' + v.ref + "</small><span>«" + v.txt + "»</span></div>" +
+            '<div style="display:flex;gap:8px;margin-top:8px;">' +
+            '<button type="button" class="mesc-btn" id="mesc-cancelar-biblico" style="background:#64748b;margin-top:0;">Cancelar</button>' +
+            '<button type="button" class="mesc-btn erro" id="mesc-confirmar-biblico" style="margin-top:0;">Confirmar</button>' +
+            "</div>" +
+            "</div>";
+        ov.querySelector(".msg").textContent = mensagem;
+        document.body.appendChild(ov);
+        function fechar() { ov.remove(); }
+        ov.querySelector("#mesc-cancelar-biblico").onclick = fechar;
+        ov.querySelector("#mesc-confirmar-biblico").onclick = function () {
+            fechar();
+            if (typeof onConfirm === "function") onConfirm();
+        };
+        ov.addEventListener("click", function (e) {
+            if (e.target === ov) fechar();
+        });
+    };
 })();
