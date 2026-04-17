@@ -280,7 +280,7 @@
 <div id="modalZapMinistros" class="modal">
     <div class="modal-content">
         <h3>✅ Confirmar Ministros</h3>
-        <p style="font-size:13px;color:#475569;margin-bottom:10px;">Desmarque quem não participará ou adicione substitutos. Nomes <b>adicionados</b> e nomes <b>desmarcados</b> aparecerão em <b>negrito</b> na mensagem do WhatsApp.</p>
+        <p style="font-size:13px;color:#475569;margin-bottom:10px;">Desmarque quem não participará ou adicione substitutos. Na mensagem do WhatsApp, quem <b>vai servir</b> aparecerá com ⬆️ e quem <b>deixa de servir</b> aparecerá com ⬇️. Os demais nomes ficam iguais.</p>
         <div id="listaMinistrosZap"></div>
         <button class="btn btn-zap" style="margin-top:16px;" onclick="confirmarEnvioZap()">📲 Enviar no WhatsApp</button>
         <button class="btn btn-pdf" style="background:#64748b;margin-top:8px;" onclick="fecharTudo()">Cancelar</button>
@@ -667,11 +667,12 @@
             const removidos = [];
             (item.nArr || []).forEach(entry => {
                 if (entry.checked) {
-                    // Ministro ativo: novos em negrito, originais em texto normal
-                    ativos.push(entry.novo ? `*${entry.nome}*` : entry.nome);
+                    // Ministro ativo: novos (substitutos) sinalizados com seta ⬆️,
+                    // originais mantidos sem formatação.
+                    ativos.push(entry.novo ? `⬆️ ${entry.nome}` : entry.nome);
                 } else if (!entry.novo) {
-                    // Ministro original desmarcado → negrito + tachado (sinaliza substituição)
-                    removidos.push(`*~${entry.nome}~*`);
+                    // Ministro original desmarcado → seta ⬇️ indicando que deixou de servir
+                    removidos.push(`⬇️ ${entry.nome}`);
                 }
                 // Ministros novos desmarcados são ignorados
             });
