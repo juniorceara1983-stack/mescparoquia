@@ -217,8 +217,8 @@
     <div class="modal-content">
         <h3>Quadro de Ministros — <span id="tituloModalMinistros"></span></h3>
         <div class="field">
-            <label>Novo Ministro</label>
-            <input type="text" id="novoMinistro" placeholder="Nome do Ministro">
+            <label>Novo(s) Ministro(s)</label>
+            <input type="text" id="novoMinistro" placeholder="Ex: Rafael, Junior, Sandra (separe por vírgula)">
             <button class="btn btn-blue" onclick="addMinistro()" style="padding:8px; font-size:12px; margin-top:10px;">+ Adicionar à Lista</button>
         </div>
         <hr>
@@ -478,27 +478,42 @@
         });
     }
 
+    function capitalizarNomeMinistro(s) {
+        const small = new Set(['de','da','do','das','dos','e']);
+        return s.trim().toLowerCase().split(/\s+/).filter(Boolean).map((w, i) => {
+            if (i > 0 && small.has(w)) return w;
+            return w.charAt(0).toUpperCase() + w.slice(1);
+        }).join(' ');
+    }
+
     async function addMinistro() {
-        const n = document.getElementById('novoMinistro').value.trim();
-        if (!n) { mescAlert("Digite o nome do ministro.", true); return; }
-        mostrarStatus("Adicionando Ministro...");
-        await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'addMinistro', nome: n, local: localAtual }) });
+        const raw = document.getElementById('novoMinistro').value || "";
+        const nomes = raw.split(',').map(capitalizarNomeMinistro).filter(n => n.length > 0);
+        if (!nomes.length) { mescAlert("Digite o nome do ministro.", true); return; }
+        mostrarStatus(nomes.length === 1 ? "Adicionando Ministro..." : "Adicionando " + nomes.length + " Ministros...");
+        for (const nome of nomes) {
+            await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'addMinistro', nome: nome, local: localAtual }) });
+        }
         document.getElementById('novoMinistro').value = "";
         await atualizarListaMinistros();
         fecharTudo();
         abrirModalMinistros();
-        mescAlert("Ministro " + n + " cadastrado em " + (LOCAIS_NOMES[localAtual] || localAtual) + ".", false);
+        const nomeLocal = LOCAIS_NOMES[localAtual] || localAtual;
+        const msg = nomes.length === 1
+            ? "Ministro " + nomes[0] + " cadastrado em " + nomeLocal + "."
+            : nomes.length + " ministros cadastrados em " + nomeLocal + ": " + nomes.join(", ") + ".";
+        mescAlert(msg, false);
     }
 
-    async function removerMinistro(n) {
-        const ok = confirm("Remover " + n + "?");
-        if (!ok) return;
-        mostrarStatus("Removendo Ministro...");
-        await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'removerMinistro', nome: n, local: localAtual }) });
-        await atualizarListaMinistros();
-        fecharTudo();
-        abrirModalMinistros();
-        mescAlert("Ministro removido.", false);
+    function removerMinistro(n) {
+        mescConfirm("Deseja realmente remover o ministro " + n + "?", async function () {
+            mostrarStatus("Removendo Ministro...");
+            await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'removerMinistro', nome: n, local: localAtual }) });
+            await atualizarListaMinistros();
+            fecharTudo();
+            abrirModalMinistros();
+            mescAlert("Ministro removido.", false);
+        }, "Remover Ministro");
     }
 
     /* ── Salvar escala ── */
