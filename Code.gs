@@ -4,8 +4,8 @@
  * Planilha:
  *   Aba "Extras":    A=Local | B=Data  | C=Hora | D=Missa | E=Ministros | F=Obs
  *   Aba "Regras":    A=Local | B=Regra | C=Hora | D=Missa | E=Ministros | F=Obs
- *   Aba "Ministros": A=Nome
- *   Aba "Tokens":    A=Paroquia | B=Codigo
+ *   Aba "Ministros": A=Nome | B=Local
+ *   Aba "Tokens":    A=Paroquia | B=Login | C=Codigo
  *   Aba "Avisos":    A=Data | B=Hora | C=Mensagem | D=Local | E=Zap | F=Calendar
  *
  * Locais suportados: Matriz | SaoJudas | SaoFrancisco | SaoSebastiao
@@ -94,9 +94,11 @@ function doGet(e) {
       ? avisosAll.filter(function(r, i) { return i === 0 || String(r[3]).trim().toLowerCase() === 'todos' || String(r[3]).trim().toLowerCase() === lc; })
       : avisosAll;
 
-    // Filter ministers by local; ministers with no local are shown in all locals (backward compat)
+    // Filter ministers by local strictly: a minister is visible only in the local where
+    // they were registered. Legacy rows without Local are NOT shown in any specific local
+    // (but still shown when no local filter is given, so a coordinator can migrate them).
     var ministros = local
-      ? ministrosAll.filter(function(r, i) { return i === 0 || !r[1] || String(r[1]).trim().toLowerCase() === lc; })
+      ? ministrosAll.filter(function(r, i) { return i === 0 || (r[1] && String(r[1]).trim().toLowerCase() === lc); })
       : ministrosAll;
 
     var abas = getSpreadsheet_().getSheets().map(function(s) { return s.getName(); });
@@ -195,23 +197,55 @@ function doPost(e) {
     /* ── Tokens ── */
     if (action === 'verificarToken') {
       var par = String(body.paroquia || '').toUpperCase().trim();
+      var log = String(body.login    || '').toUpperCase().trim();
       var cod = String(body.codigo   || '').toUpperCase().trim();
-      var shT = getOrCreateSheet_(SHEET_TOKENS, ['Paroquia','Codigo']);
+      var shT = getOrCreateSheet_(SHEET_TOKENS, ['Paroquia','Login','Codigo']);
       var rowsT = shT.getDataRange().getValues();
       for (var i = 1; i < rowsT.length; i++) {
-        if (String(rowsT[i][0]).toUpperCase().trim() === par && String(rowsT[i][1]).toUpperCase().trim() === cod) {
-          return jsonOut_({ ok: true });
+        var rPar = String(rowsT[i][0]).toUpperCase().trim();
+        var rLog, rCod;
+        // Support both legacy 2-column layout (Paroquia|Codigo) and new 3-column (Paroquia|Login|Codigo)
+        if (rowsT[i].length >= 3 && String(rowsT[i][2]).trim() !== '') {
+          rLog = String(rowsT[i][1]).toUpperCase().trim();
+          rCod = String(rowsT[i][2]).toUpperCase().trim();
+        } else {
+          rLog = '';
+          rCod = String(rowsT[i][1]).toUpperCase().trim();
         }
+        if (rPar !== par) continue;
+        if (rCod !== cod) continue;
+        // If the stored row has a login, require the submitted login to match it.
+        // If the stored row has no login (legacy), accept any login value.
+        if (rLog && rLog !== log) continue;
+        return jsonOut_({ ok: true });
       }
-      return jsonOut_({ ok: false, error: 'Código inválido para essa paróquia' });
+      return jsonOut_({ ok: false, error: 'Código, login ou paróquia inválidos' });
     }
 
     if (action === 'cadastrarToken') {
       var parC = String(body.paroquia || '').toUpperCase().trim();
+      var logC = String(body.login    || '').toUpperCase().trim();
       var codC = String(body.codigo   || '').toUpperCase().trim();
       if (!parC || !codC) return jsonOut_({ ok: false, error: 'Campos obrigatórios' });
-      getOrCreateSheet_(SHEET_TOKENS, ['Paroquia','Codigo']).appendRow([parC, codC]);
+      getOrCreateSheet_(SHEET_TOKENS, ['Paroquia','Login','Codigo']).appendRow([parC, logC, codC]);
       return jsonOut_({ ok: true });
+    }
+
+    /* ── Verificar cadastro do ministro num local ── */
+    if (action === 'verificarMinistro') {
+      var nomeV  = String(body.nome  || '').trim().toLowerCase();
+      var localV = String(body.local || '').trim().toLowerCase();
+      if (!nomeV || !localV) return jsonOut_({ ok: false, error: 'Nome e local obrigatórios' });
+      var shV = getOrCreateSheet_(SHEET_MINISTROS, ['Nome','Local']);
+      var rowsV = shV.getDataRange().getValues();
+      for (var iv = 1; iv < rowsV.length; iv++) {
+        var nomeRow  = String(rowsV[iv][0] || '').trim().toLowerCase();
+        var localRow = String(rowsV[iv][1] || '').trim().toLowerCase();
+        if (nomeRow === nomeV && localRow === localV) {
+          return jsonOut_({ ok: true });
+        }
+      }
+      return jsonOut_({ ok: false, error: 'Ministro não cadastrado neste local' });
     }
 
     /* ── Buscar escala do ministro ── */
@@ -219,6 +253,7 @@ function doPost(e) {
       var nomeMin  = String(body.nome  || '').trim().toLowerCase();
       var localMin = String(body.local || '').trim().toLowerCase();
       var hoje     = new Date();
+      hoje.setHours(0, 0, 0, 0);
       var escalas  = [];
 
       var shEx = getOrCreateSheet_(SHEET_EXTRAS, ['Local','Data','Hora','Missa','Ministros','Obs']);
@@ -227,14 +262,16 @@ function doPost(e) {
         var r = extRows[i];
         if (localMin && String(r[0]).trim().toLowerCase() !== localMin) continue;
         if (String(r[4]).toLowerCase().indexOf(nomeMin) === -1) continue;
-        var partes = String(r[1]).split('-');
+        // Normalize Data: may be Date object, ISO string, or "yyyy-MM-dd"
+        var dataStr = formatCell_(r[1]);
+        var partes = String(dataStr).split('T')[0].split('-');
         if (partes.length === 3) {
           var dEsc = new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]));
           if (dEsc >= hoje) {
             escalas.push({
               tipo:  'Extra',
               data:  dEsc.getDate().toString().padStart(2,'0') + '/' + (dEsc.getMonth()+1).toString().padStart(2,'0') + '/' + dEsc.getFullYear(),
-              hora:  String(r[2]),
+              hora:  String(formatCell_(r[2])),
               missa: String(r[3]),
               local: String(r[0])
             });
@@ -248,7 +285,7 @@ function doPost(e) {
         var rr = regRows[j];
         if (localMin && String(rr[0]).trim().toLowerCase() !== localMin) continue;
         if (String(rr[4]).toLowerCase().indexOf(nomeMin) === -1) continue;
-        escalas.push({ tipo: 'Fixa', data: String(rr[1]), hora: String(rr[2]), missa: String(rr[3]), local: String(rr[0]) });
+        escalas.push({ tipo: 'Fixa', data: String(rr[1]), hora: String(formatCell_(rr[2])), missa: String(rr[3]), local: String(rr[0]) });
       }
 
       return jsonOut_({ ok: true, escalas: escalas });
@@ -302,7 +339,7 @@ function setupPlanilhaMESC() {
   ensureSheetWithHeaders_(ss, SHEET_EXTRAS,    ['Local','Data','Hora','Missa','Ministros','Obs']);
   ensureSheetWithHeaders_(ss, SHEET_REGRAS,    ['Local','Regra','Hora','Missa','Ministros','Obs']);
   ensureSheetWithHeaders_(ss, SHEET_MINISTROS, ['Nome','Local']);
-  ensureSheetWithHeaders_(ss, SHEET_TOKENS,    ['Paroquia','Codigo']);
+  ensureSheetWithHeaders_(ss, SHEET_TOKENS,    ['Paroquia','Login','Codigo']);
   ensureSheetWithHeaders_(ss, SHEET_AVISOS,    ['Data','Hora','Mensagem','Local','Zap','Calendar']);
 }
 

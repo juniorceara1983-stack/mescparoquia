@@ -12,6 +12,8 @@
     <link rel="icon" href="mesc.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="icon-512.png">
 
+    <script src="mesc-biblico.js"></script>
+
     <style>
         :root { --primary: #1e3a8a; --bg: #f1f5f9; --teal: #0f766e; --green: #15803d; --slate: #475569; --danger: #b91c1c; --gold: #b45309; }
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
@@ -194,10 +196,35 @@
         if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw-ministro.js'); }
     };
 
-    function verificarMinistro(pularWelcome = false) {
+    async function verificarMinistro(pularWelcome = false) {
         const nome  = document.getElementById('nomeAcesso').value.trim();
         const local = document.getElementById('localAcesso').value;
-        if (!nome) return alert("Digite seu nome!");
+        if (!nome) { mescAlert("Digite seu nome.", true); return; }
+
+        // Validate that the minister is registered in the chosen local
+        try {
+            const res = await fetch(URL_API, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'verificarMinistro', nome, local })
+            });
+            const data = await res.json();
+            if (!data.ok) {
+                const nomeLocal = LOCAIS_NOMES[local] || local;
+                // Clear any previously stored login so the next attempt starts clean
+                localStorage.removeItem('ministro_nome');
+                localStorage.removeItem('ministro_local');
+                mescAlert(
+                    "Você ainda não está cadastrado(a) em " + nomeLocal + ". " +
+                    "Peça ao coordenador deste local para incluir seu nome no quadro de ministros.",
+                    true,
+                    "Acesso não liberado"
+                );
+                return;
+            }
+        } catch (e) {
+            mescAlert("Erro de conexão ao verificar cadastro. Tente novamente.", true);
+            return;
+        }
 
         localStorage.setItem('ministro_nome',  nome);
         localStorage.setItem('ministro_local', local);
@@ -236,7 +263,7 @@
             loader.style.display = "none";
             if (data.ok && data.escalas.length > 0) {
                 data.escalas.forEach(esc => {
-                    const horaDisplay = esc.hora || "00:00";
+                    const horaDisplay = formatarHora(esc.hora) || "00:00";
                     const card = document.createElement('div');
                     card.className = 'card-escala';
                     card.innerHTML = `
