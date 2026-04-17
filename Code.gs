@@ -348,9 +348,17 @@ function ensureSheetWithHeaders_(ss, name, headers) {
   if (!sh) sh = ss.insertSheet(name);
   if (sh.getLastRow() === 0) {
     sh.appendRow(headers);
-  } else {
-    var first = sh.getRange(1, 1, 1, headers.length).getValues()[0];
-    var empty = first.every(function(c) { return c === '' || c === null; });
-    if (empty) sh.getRange(1, 1, 1, headers.length).setValues([headers]);
+    return;
+  }
+  // Always normalize the first row to match the expected header schema. This
+  // fixes sheets created by older versions whose header row is shorter or
+  // shifted relative to the current schema (e.g. missing the leading "Local"
+  // column), which would otherwise make headers misaligned with the data.
+  var first = sh.getRange(1, 1, 1, headers.length).getValues()[0];
+  var matches = headers.every(function(h, i) {
+    return String(first[i] || '').trim() === h;
+  });
+  if (!matches) {
+    sh.getRange(1, 1, 1, headers.length).setValues([headers]);
   }
 }
