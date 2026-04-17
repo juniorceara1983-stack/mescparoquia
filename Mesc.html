@@ -280,7 +280,7 @@
 <div id="modalZapMinistros" class="modal">
     <div class="modal-content">
         <h3>✅ Confirmar Ministros</h3>
-        <p style="font-size:13px;color:#475569;margin-bottom:10px;">Desmarque os ministros que não participarão desta missa:</p>
+        <p style="font-size:13px;color:#475569;margin-bottom:10px;">Desmarque quem não participará ou adicione substitutos. Nomes <b>adicionados</b> e nomes <b>desmarcados</b> aparecerão em <b>negrito</b> na mensagem do WhatsApp.</p>
         <div id="listaMinistrosZap"></div>
         <button class="btn btn-zap" style="margin-top:16px;" onclick="confirmarEnvioZap()">📲 Enviar no WhatsApp</button>
         <button class="btn btn-pdf" style="background:#64748b;margin-top:8px;" onclick="fecharTudo()">Cancelar</button>
@@ -590,24 +590,70 @@
         return (str || '').toString().split(',').map(s => s.trim()).filter(Boolean);
     }
 
+    function escaparHtml(str) {
+        return String(str).replace(/[&<>"']/g, c => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[c]));
+    }
+
+    function renderListaMinistrosZap(idx) {
+        const item = zapData.lista[idx];
+        const cont = document.getElementById(`zmList_${idx}`);
+        if (!cont) return;
+        cont.innerHTML = '';
+        if (!item.nArr.length) {
+            cont.innerHTML = `<p style="font-size:13px;color:#64748b;margin:0 0 6px;">Sem ministros cadastrados</p>`;
+            return;
+        }
+        item.nArr.forEach((entry, ni) => {
+            const row = document.createElement('div');
+            row.className = 'check-row';
+            const labelStyle = `margin:0;text-transform:none;font-size:14px;${entry.novo ? 'font-weight:bold;color:var(--primary);' : ''}`;
+            row.innerHTML = `<input type="checkbox" id="zm_${idx}_${ni}" ${entry.checked ? 'checked' : ''}><label for="zm_${idx}_${ni}" style="${labelStyle}">${escaparHtml(entry.nome)}${entry.novo ? ' ✨' : ''}</label>`;
+            const cb = row.querySelector('input');
+            cb.addEventListener('change', () => { entry.checked = cb.checked; });
+            cont.appendChild(row);
+        });
+    }
+
+    function adicionarMinistroZap(idx) {
+        const input = document.getElementById(`zmAdd_${idx}`);
+        if (!input) return;
+        const nome = (input.value || '').trim();
+        if (!nome) { mescAlert("Digite o nome do ministro.", true); return; }
+        const item = zapData.lista[idx];
+        const jaExiste = item.nArr.some(e => e.nome.toLowerCase() === nome.toLowerCase());
+        if (jaExiste) { mescAlert("Este ministro já está na lista.", true); input.value = ''; return; }
+        item.nArr.push({ nome, checked: true, novo: true });
+        input.value = '';
+        renderListaMinistrosZap(idx);
+    }
+
     function mostrarSeletorMinistrosZap() {
         const div = document.getElementById('listaMinistrosZap');
         div.innerHTML = '';
+        // Normalizar nArr: strings -> objetos { nome, checked, novo }
+        (zapData.lista || []).forEach(item => {
+            item.nArr = (item.nArr || []).map(n =>
+                (n && typeof n === 'object') ? n : { nome: String(n), checked: true, novo: false }
+            );
+        });
         (zapData.lista || []).forEach((item, idx) => {
             const sec = document.createElement('div');
-            sec.style = 'margin-bottom:12px;';
-            sec.innerHTML = `<div style="font-weight:bold;color:var(--primary);margin-bottom:6px;">⏰ ${item.h} — ${item.m || 'Missa'}</div>`;
-            if (!item.nArr.length) {
-                sec.innerHTML += `<p style="font-size:13px;color:#64748b;margin:0;">Sem ministros cadastrados</p>`;
-            } else {
-                item.nArr.forEach((nome, ni) => {
-                    const row = document.createElement('div');
-                    row.className = 'check-row';
-                    row.innerHTML = `<input type="checkbox" id="zm_${idx}_${ni}" checked><label for="zm_${idx}_${ni}" style="margin:0;text-transform:none;font-size:14px;">${nome}</label>`;
-                    sec.appendChild(row);
-                });
-            }
+            sec.style = 'margin-bottom:14px;padding-bottom:10px;border-bottom:1px dashed #e2e8f0;';
+            sec.innerHTML = `
+                <div style="font-weight:bold;color:var(--primary);margin-bottom:6px;">⏰ ${escaparHtml(item.h)} — ${escaparHtml(item.m || 'Missa')}</div>
+                <div id="zmList_${idx}"></div>
+                <div style="display:flex;gap:6px;margin-top:6px;">
+                    <input type="text" id="zmAdd_${idx}" placeholder="Adicionar ministro..." aria-label="Adicionar ministro para ${escaparHtml(item.h)} ${escaparHtml(item.m || 'Missa')}" style="flex:1;padding:8px;font-size:13px;">
+                    <button type="button" class="btn btn-blue" aria-label="Adicionar ministro" style="margin:0;padding:8px 12px;font-size:13px;width:auto;" onclick="adicionarMinistroZap(${idx})">➕</button>
+                </div>`;
             div.appendChild(sec);
+            renderListaMinistrosZap(idx);
+            const input = document.getElementById(`zmAdd_${idx}`);
+            if (input) input.addEventListener('keydown', ev => {
+                if (ev.key === 'Enter') { ev.preventDefault(); adicionarMinistroZap(idx); }
+            });
         });
         document.getElementById('modalZapMinistros').classList.add('open');
     }
@@ -615,12 +661,27 @@
     function confirmarEnvioZap() {
         if (!zapData) return;
         let msg = zapData.header;
-        zapData.lista.forEach((item, idx) => {
-            const checked = item.nArr.filter((_, ni) => {
-                const cb = document.getElementById(`zm_${idx}_${ni}`);
-                return cb ? cb.checked : true;
+        zapData.lista.forEach((item) => {
+            const partes = [];
+            const ativos = [];
+            const removidos = [];
+            (item.nArr || []).forEach(entry => {
+                if (entry.checked) {
+                    // Ministro ativo: novos em negrito, originais em texto normal
+                    ativos.push(entry.novo ? `*${entry.nome}*` : entry.nome);
+                } else if (!entry.novo) {
+                    // Ministro original desmarcado → negrito + tachado (sinaliza substituição)
+                    removidos.push(`*~${entry.nome}~*`);
+                }
+                // Ministros novos desmarcados são ignorados
             });
-            msg += `⏰ *Hora:* ${item.h}\n⛪ *Missa:* ${item.m || "Missa"}\n👤 *Ministros:* ${checked.length ? checked.join(', ') : "A definir"}\n`;
+            // Se há alguém ativo, mostra ativos + removidos (evidenciando a substituição).
+            // Se ninguém está ativo, exibe apenas "A definir" (sem poluir com tachados).
+            if (ativos.length) {
+                partes.push(...ativos, ...removidos);
+            }
+            const listaStr = partes.length ? partes.join(', ') : "A definir";
+            msg += `⏰ *Hora:* ${item.h}\n⛪ *Missa:* ${item.m || "Missa"}\n👤 *Ministros:* ${listaStr}\n`;
             if (item.o) msg += `📝 *Obs:* ${item.o}\n`;
             msg += `─────────────────\n\n`;
         });
