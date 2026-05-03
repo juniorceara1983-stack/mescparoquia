@@ -590,11 +590,15 @@
 
             // Normalize stored dates to plain YYYY-MM-DD before comparing
             const extras = (banco.extras || []).filter(e => e[1] && extrairDataISO(e[1]) === dataVal);
+            // Match the computed rule (e.g. "1º Domingo") and also any stored variant
+            // that starts with that rule followed by a space (e.g. "1º Domingo Manhã",
+            // "1º Domingo Noite").  The calendar always produces a base rule name, so
+            // regraHoje will never itself contain a trailing qualifier; we only need to
+            // check whether stored rules are more specific than regraHoje, not the other
+            // way around.
             const fixos  = (banco.regras || []).filter(r => {
                 if (!r[1]) return false;
                 const regra = r[1].toString().trim().toLowerCase();
-                // Match exact rule (e.g. "1º Domingo") and also prefixed variants
-                // ("1º Domingo Manhã", "1º Domingo Noite") stored for split services.
                 return regra === regraHoje.toLowerCase() || regra.startsWith(regraHoje.toLowerCase() + ' ');
             });
 

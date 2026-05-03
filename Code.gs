@@ -476,7 +476,7 @@ function setupMinistrosMatriz() {
     'Leonardo',
     'Lúcia',
     'Luzia',
-    'Maria de Jesus',
+    'Maria de Jesus',        // Distinct minister (abbreviated form used in PDF schedule)
     'Maria de Jesus Santos',
     'Maria de Jesus Santiago',
     'Mazé',
