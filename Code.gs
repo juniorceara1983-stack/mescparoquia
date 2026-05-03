@@ -297,6 +297,16 @@ function doPost(e) {
       return jsonOut_({ ok: true });
     }
 
+    if (action === 'setupEscalaFixaMatriz') {
+      setupEscalaFixaMatriz();
+      return jsonOut_({ ok: true });
+    }
+
+    if (action === 'setupMinistrosMatriz') {
+      setupMinistrosMatriz();
+      return jsonOut_({ ok: true });
+    }
+
     if (action === 'limparTudo') {
       var localLimpar = body.local || '';
       var shE = getOrCreateSheet_(SHEET_EXTRAS, ['Local','Data','Hora','Missa','Ministros','Obs']);
@@ -360,5 +370,128 @@ function ensureSheetWithHeaders_(ss, name, headers) {
   });
   if (!matches) {
     sh.getRange(1, 1, 1, headers.length).setValues([headers]);
+  }
+}
+
+/**
+ * Populates the "Regras" sheet with the complete fixed schedule (Escala Fixa)
+ * for the Matriz location, as extracted from the DOC-mesc document.
+ *
+ * Run this function once from the Apps Script editor (or call via doPost
+ * with action = 'setupEscalaFixaMatriz') to import the schedule.
+ * Any previous Matriz entries in the Regras sheet are removed first.
+ *
+ * Format: [Regra, Hora, Missa, Ministros, Obs]
+ * Regra examples: "1º Quarta", "2º Sábado", "1º Domingo Manhã", "Dia 13 Meio-Dia"
+ */
+function setupEscalaFixaMatriz() {
+  var sh = getOrCreateSheet_(SHEET_REGRAS, ['Local','Regra','Hora','Missa','Ministros','Obs']);
+  limparLinhasPorLocal_(sh, 'Matriz');
+
+  // [Regra, Hora, Missa, Ministros, Obs]
+  var entradas = [
+    // ── 1ª SEMANA ────────────────────────────────────────────────────────────
+    ['1º Quarta',       '', '', 'Célia, Fatinha (São Sebastião)', ''],
+    ['1º Quinta',       '', '', 'Celina, Elizinha, Maria de Jesus Santos', ''],
+    ['1º Sexta',        '', '', 'Socorro Feitosa, Santiago, Rosângela, Mazé', ''],
+    ['1º Sábado',       '', '', 'Maria de Jesus, Elizinha', ''],
+    ['1º Domingo Manhã','', '', 'Celina, Júnior, Izabel, Danielle, França, Valéria', ''],
+    ['1º Domingo Noite','', '', 'Maria de Jesus, Santiago, Rafael, Sandra, Elvercio, Socorro Feitosa, Elizinha', ''],
+
+    // ── DIA 13 (celebrado todo mês na Matriz) ────────────────────────────────
+    ['Dia 13 06H Mês Pares',   '06:00', 'Missa Dia 13 Mês Pares',   'Rosângela, Ana Cristina', 'Fev/Abr/Jun/Ago/Out/Dez'],
+    ['Dia 13 06H Mês Ímpares', '06:00', 'Missa Dia 13 Mês Ímpares', 'Célia, França, Maria de Jesus Santos', 'Jan/Mar/Mai/Jul/Set/Nov'],
+    ['Dia 13 Meio-Dia',        '12:00', 'Missa Dia 13 Meio-Dia',    'Helena, Maria de Jesus Santiago, Celina', ''],
+
+    // ── 2ª SEMANA ────────────────────────────────────────────────────────────
+    ['2º Quarta',       '', '', 'Izabel, Maria de Jesus Santos, Fátima Souza, Helena', ''],
+    ['2º Quinta',       '', '', 'Maria de Jesus Santiago, Socorro Feitosa, Célia', ''],
+    ['2º Sexta',        '', '', 'Célia, Tatiana Araújo, Maria de Jesus Santos, Luzia, Rosângela', ''],
+    ['2º Sábado',       '', '', 'França, Luzia, Rosângela, Mazé, Rafael', ''],
+    ['2º Domingo Manhã','', '', 'Valéria, Danielle, Luzia, Célia, Rosélia, Nadgela, Elvercio, Rosângela', ''],
+    ['2º Domingo Noite','', '', 'Leonardo, Maria de Jesus Santos, Ana Maria, Maria de Jesus Santiago, Elizinha, Helena, Socorro Feitosa', ''],
+
+    // ── 3ª SEMANA ────────────────────────────────────────────────────────────
+    ['3º Quarta',       '', '', 'Maria de Jesus Santiago', ''],
+    ['3º Quinta',       '', '', 'Helena, Maria de Jesus Santos', ''],
+    ['3º Sexta',        '', '', 'Elizinha', ''],
+    ['3º Sábado',       '', '', 'Sandra, Leonardo', ''],
+    ['3º Domingo Manhã','', '', 'Alexandra, Leonardo, Ana Maria, Valéria', ''],
+    ['3º Domingo Noite','', '', 'Celina, Luzia, Lúcia, Maria de Jesus Santos', ''],
+
+    // ── 4ª SEMANA ────────────────────────────────────────────────────────────
+    ['4º Quarta',       '', '', 'França, Fátima Souza, Rosângela', ''],
+    ['4º Quinta',       '', '', 'França, Celina, Socorro Feitosa', ''],
+    ['4º Sexta',        '', '', 'Célia, Maria de Jesus Santos, França', ''],
+    ['4º Sábado',       '', '', 'Alexandra, Luzia, Célia, Júnior', ''],
+    ['4º Domingo Manhã','', '', 'Rafael, Sandra, Danielle, Rosélia, Nadgela, Valéria, França', ''],
+    ['4º Domingo Noite','', '', 'Maria de Jesus Santiago, Ana Maria, Júnior, Izabel, Elizinha, Maria de Jesus Santos', ''],
+
+    // ── 5ª SEMANA ────────────────────────────────────────────────────────────
+    ['5º Quinta',       '', '', 'França', ''],
+    ['5º Sábado',       '', '', 'Izabel', ''],
+    ['5º Domingo Manhã','', '', 'Célia, Danielle, Nadgela', ''],
+    ['5º Domingo Noite','', '', 'Ana Maria, Celina, Elvercio', '']
+  ];
+
+  for (var i = 0; i < entradas.length; i++) {
+    var e = entradas[i];
+    sh.appendRow(['Matriz', e[0], e[1], e[2], e[3], e[4]]);
+  }
+}
+
+/**
+ * Registers all Matriz ministers (from the DOC-mesc document) in the
+ * "Ministros" sheet.  Any minister already registered for Matriz is
+ * removed first to avoid duplicates.
+ *
+ * Run once from the Apps Script editor or via doPost with
+ * action = 'setupMinistrosMatriz'.
+ */
+function setupMinistrosMatriz() {
+  var sh = getOrCreateSheet_(SHEET_MINISTROS, ['Nome','Local']);
+  // Remove existing Matriz ministers
+  var rows = sh.getDataRange().getValues();
+  for (var i = rows.length - 1; i >= 1; i--) {
+    if (String(rows[i][1]).trim().toLowerCase() === 'matriz') {
+      sh.deleteRow(i + 1);
+    }
+  }
+
+  var ministros = [
+    'Alexandra',
+    'Ana Cristina',
+    'Ana Maria',
+    'Célia',
+    'Celina',
+    'Danielle',
+    'Elizinha',
+    'Elvercio',
+    'Fatinha (São Sebastião)',
+    'Fátima Souza',
+    'França',
+    'Helena',
+    'Izabel',
+    'Júnior',
+    'Leonardo',
+    'Lúcia',
+    'Luzia',
+    'Maria de Jesus',        // Distinct minister (abbreviated form used in PDF schedule)
+    'Maria de Jesus Santos',
+    'Maria de Jesus Santiago',
+    'Mazé',
+    'Nadgela',
+    'Rafael',
+    'Rosângela',
+    'Rosélia',
+    'Sandra',
+    'Santiago',
+    'Socorro Feitosa',
+    'Tatiana Araújo',
+    'Valéria'
+  ];
+
+  for (var j = 0; j < ministros.length; j++) {
+    sh.appendRow([ministros[j], 'Matriz']);
   }
 }
