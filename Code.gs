@@ -65,6 +65,38 @@ function getOrCreateSheet_(name, headers) {
   return sh;
 }
 
+/* ── Auto-setup ──────────────────────────────────────────────────────────── */
+
+/**
+ * Seeds the Ministros and Regras sheets with data from the DOC-mesc document
+ * the very first time the Web App is accessed (i.e. when both sheets still
+ * contain only their header row).
+ *
+ * A script property ('initialSetupDone') is set after the first successful
+ * seed so that subsequent requests skip this function entirely, keeping
+ * doGet fast after the one-time initialization.
+ *
+ * This means the coordinator will find ministers and the fixed schedule
+ * already registered the moment they open the panel — no manual import step
+ * is needed.
+ */
+function autoSetupIfEmpty_() {
+  var props = PropertiesService.getScriptProperties();
+  if (props.getProperty('initialSetupDone') === 'true') return;
+
+  var shM = getOrCreateSheet_(SHEET_MINISTROS, ['Nome', 'Local']);
+  if (shM.getLastRow() <= 1) {
+    setupMinistrosMatriz();
+  }
+
+  var shR = getOrCreateSheet_(SHEET_REGRAS, ['Local', 'Regra', 'Hora', 'Missa', 'Ministros', 'Obs']);
+  if (shR.getLastRow() <= 1) {
+    setupEscalaFixaMatriz();
+  }
+
+  props.setProperty('initialSetupDone', 'true');
+}
+
 /* ── GET ─────────────────────────────────────────────────────────────────── */
 
 /**
@@ -73,6 +105,10 @@ function getOrCreateSheet_(name, headers) {
  */
 function doGet(e) {
   try {
+    // Automatically seed ministers and fixed schedule on first deploy so that
+    // coordinators and ministers see real data without needing a manual import.
+    autoSetupIfEmpty_();
+
     var local = (e && e.parameter && e.parameter.local) ? String(e.parameter.local).trim() : '';
 
     var extrasAll    = getOrCreateSheet_(SHEET_EXTRAS,    ['Local','Data','Hora','Missa','Ministros','Obs']).getDataRange().getValues();
