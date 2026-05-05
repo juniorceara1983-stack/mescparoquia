@@ -217,15 +217,24 @@
 <!-- Ministros -->
 <div id="modalMinistros" class="modal">
     <div class="modal-content">
-        <h3>Quadro de Ministros — <span id="tituloModalMinistros"></span></h3>
+        <h3>Quadro de Ministros — Todas as Capelas</h3>
         <div class="field">
             <label>Novo(s) Ministro(s)</label>
             <input type="text" id="novoMinistro" placeholder="Ex: Ministro, Ministro, Ministro (separe por vírgula)">
-            <button class="btn btn-blue" onclick="addMinistro()" style="padding:8px; font-size:12px; margin-top:10px;">+ Adicionar à Lista</button>
         </div>
+        <div class="field">
+            <label>Local / Capela</label>
+            <select id="localMinistro">
+                <option value="Matriz">⛪ Matriz</option>
+                <option value="SaoJudas">⛪ Cap. São Judas</option>
+                <option value="SaoFrancisco">⛪ Cap. São Francisco</option>
+                <option value="SaoSebastiao">⛪ Cap. São Sebastião</option>
+            </select>
+        </div>
+        <button class="btn btn-blue" onclick="addMinistro()" style="padding:8px; font-size:12px; margin-top:4px;">+ Adicionar à Lista</button>
         <hr>
-        <label>Ministros Cadastrados (× para remover)</label>
-        <div id="listaMinistrosQuadros" class="mini-list"></div>
+        <label>Ministros Cadastrados por Local (× para remover)</label>
+        <div id="listaMinistrosQuadros"></div>
         <button class="btn btn-pdf" style="background:#64748b; margin-top:20px;" onclick="fecharTudo()">Fechar</button>
     </div>
 </div>
@@ -302,6 +311,7 @@
     let tipoAtual  = "";
     let localAtual = "";
     let listaGlobalMinistros = [];
+    let todosMinistros = [];
     let zapData = null; // holds data between Zap modal and minister selection modal
 
     const frases = [
@@ -377,6 +387,10 @@
         atualizarTabAtiva();
         atualizarListaMinistros();
         carregarAvisos();
+        // Botões de importação da Matriz só fazem sentido no contexto da Matriz
+        const esMatriz = local === 'Matriz';
+        document.getElementById('btnImportarEscala').style.display    = esMatriz ? '' : 'none';
+        document.getElementById('btnImportarMinistros').style.display = esMatriz ? '' : 'none';
     }
 
     function mudarLocal(local) {
@@ -490,19 +504,60 @@
     }
 
     function renderizarMinistros() {
-        const quad  = document.getElementById('listaMinistrosQuadros');
         const click = document.getElementById('clickListaMinistros');
-        quad.innerHTML = ""; click.innerHTML = "";
+        click.innerHTML = "";
         listaGlobalMinistros.forEach(nome => {
-            const b1 = document.createElement('span'); b1.className = 'mini-badge';
-            b1.innerHTML = `${nome} <span onclick="removerMinistro('${nome}')" style="color:red;margin-left:5px;cursor:pointer">×</span>`;
-            quad.appendChild(b1);
             const b2 = document.createElement('span'); b2.className = 'mini-badge'; b2.innerText = nome;
             b2.onclick = () => {
                 const tf = document.getElementById('fMinistros');
                 tf.value += (tf.value ? ", " : "") + nome;
             };
             click.appendChild(b2);
+        });
+    }
+
+    async function carregarTodosMinistros() {
+        try {
+            const res   = await fetch(`${URL_API}?t=${Date.now()}`);
+            const banco = await res.json();
+            todosMinistros = (banco.ministros || []).slice(1)
+                .filter(m => m[0] && m[0] !== 'Nome')
+                .map(m => ({ nome: String(m[0]), local: String(m[1] || '') }));
+            renderizarTodosMinistros();
+        } catch (e) { console.error("Erro ao carregar todos ministros:", e); }
+    }
+
+    function renderizarTodosMinistros() {
+        const quad = document.getElementById('listaMinistrosQuadros');
+        quad.innerHTML = '';
+        const locaisOrdem = Object.keys(LOCAIS_NOMES);
+        locaisOrdem.forEach(loc => {
+            const doLoc = todosMinistros.filter(m => m.local === loc);
+            const header = document.createElement('div');
+            header.style.cssText = 'font-size:12px;font-weight:bold;color:var(--primary);margin-top:14px;margin-bottom:6px;border-bottom:1px solid #e2e8f0;padding-bottom:4px;';
+            header.innerText = '⛪ ' + (LOCAIS_NOMES[loc] || loc) + ' (' + doLoc.length + ')';
+            quad.appendChild(header);
+            if (!doLoc.length) {
+                const p = document.createElement('p');
+                p.style.cssText = 'font-size:12px;color:#94a3b8;margin:0 0 4px;';
+                p.innerText = 'Nenhum ministro cadastrado.';
+                quad.appendChild(p);
+            } else {
+                const list = document.createElement('div');
+                list.className = 'mini-list';
+                doLoc.forEach(m => {
+                    const b = document.createElement('span');
+                    b.className = 'mini-badge';
+                    b.appendChild(document.createTextNode(m.nome + ' '));
+                    const x = document.createElement('span');
+                    x.textContent = '×';
+                    x.style.cssText = 'color:red;margin-left:5px;cursor:pointer';
+                    x.addEventListener('click', () => removerMinistro(m.nome, m.local));
+                    b.appendChild(x);
+                    list.appendChild(b);
+                });
+                quad.appendChild(list);
+            }
         });
     }
 
@@ -518,25 +573,27 @@
         const raw = document.getElementById('novoMinistro').value || "";
         const nomes = raw.split(',').map(capitalizarNomeMinistro).filter(n => n.length > 0);
         if (!nomes.length) { mescAlert("Digite o nome do ministro.", true); return; }
+        const localSelecionado = document.getElementById('localMinistro').value || localAtual;
         mostrarStatus(nomes.length === 1 ? "Adicionando Ministro..." : "Adicionando " + nomes.length + " Ministros...");
         for (const nome of nomes) {
-            await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'addMinistro', nome: nome, local: localAtual }) });
+            await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'addMinistro', nome: nome, local: localSelecionado }) });
         }
         document.getElementById('novoMinistro').value = "";
         await atualizarListaMinistros();
         fecharTudo();
         abrirModalMinistros();
-        const nomeLocal = LOCAIS_NOMES[localAtual] || localAtual;
+        const nomeLocal = LOCAIS_NOMES[localSelecionado] || localSelecionado;
         const msg = nomes.length === 1
             ? "Ministro " + nomes[0] + " cadastrado em " + nomeLocal + "."
             : nomes.length + " ministros cadastrados em " + nomeLocal + ": " + nomes.join(", ") + ".";
         mescAlert(msg, false);
     }
 
-    function removerMinistro(n) {
+    function removerMinistro(n, local) {
+        const loc = local || localAtual;
         mescConfirm("Deseja realmente remover o ministro " + n + "?", async function () {
             mostrarStatus("Removendo Ministro...");
-            await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'removerMinistro', nome: n, local: localAtual }) });
+            await fetch(URL_API, { method: 'POST', body: JSON.stringify({ action: 'removerMinistro', nome: n, local: loc }) });
             await atualizarListaMinistros();
             fecharTudo();
             abrirModalMinistros();
@@ -609,8 +666,8 @@
 
             const nomeLocal = LOCAIS_NOMES[localAtual] || localAtual;
             const lista = [
-                ...fixos.map(f  => ({ h: fmt(f[2]),  m: f[3], nArr: splitMin(f[4]),  o: f[5] })),
-                ...extras.map(ex => ({ h: fmt(ex[2]), m: ex[3], nArr: splitMin(ex[4]), o: ex[5] }))
+                ...fixos.map(f  => ({ h: inferirHoraDeRegra(f[1], fmt(f[2])),  m: inferirMissaDeRegra(f[1], f[3]), nArr: splitMin(f[4]),  o: f[5] })),
+                ...extras.map(ex => ({ h: inferirHoraDeRegra(ex[3], fmt(ex[2])), m: inferirMissaDeRegra('', ex[3]), nArr: splitMin(ex[4]), o: ex[5] }))
             ].sort((a, b) => a.h.localeCompare(b.h));
 
             zapData = {
@@ -626,6 +683,24 @@
 
     function splitMin(str) {
         return (str || '').toString().split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    function inferirHoraDeRegra(regra, hora) {
+        if (hora && hora !== '00:00') return hora;
+        const r = String(regra || '').toLowerCase();
+        if (r.includes('manhã') || r.includes('manha')) return '07:00';
+        if (r.includes('noite')) return '19:00';
+        if (r.includes('meio-dia') || r.includes('meiod')) return '12:00';
+        return hora || '';
+    }
+
+    function inferirMissaDeRegra(regra, missa) {
+        if (missa) return missa;
+        const r = String(regra || '').toLowerCase();
+        if (r.includes('manhã') || r.includes('manha')) return 'Missa Manhã';
+        if (r.includes('noite')) return 'Missa Noite';
+        if (r.includes('meio-dia')) return 'Missa Meio-Dia';
+        return 'Missa';
     }
 
     function escaparHtml(str) {
@@ -680,7 +755,10 @@
             const sec = document.createElement('div');
             sec.style = 'margin-bottom:14px;padding-bottom:10px;border-bottom:1px dashed #e2e8f0;';
             sec.innerHTML = `
-                <div style="font-weight:bold;color:var(--primary);margin-bottom:6px;">⏰ ${escaparHtml(item.h)} — ${escaparHtml(item.m || 'Missa')}</div>
+                <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">
+                    <input type="time" id="zmHora_${idx}" value="${escaparHtml(item.h && item.h !== '00:00' ? item.h : '')}" aria-label="Horário da missa ${idx + 1}" style="width:110px;padding:6px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:14px;font-weight:bold;color:var(--primary);">
+                    <input type="text" id="zmMissa_${idx}" value="${escaparHtml(item.m || '')}" placeholder="Nome da Missa" aria-label="Nome da missa ${idx + 1}" style="flex:1;min-width:120px;padding:6px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;">
+                </div>
                 <div id="zmList_${idx}"></div>
                 <div style="display:flex;gap:6px;margin-top:6px;">
                     <input type="text" id="zmAdd_${idx}" placeholder="Adicionar ministro..." aria-label="Adicionar ministro para ${escaparHtml(item.h)} ${escaparHtml(item.m || 'Missa')}" style="flex:1;padding:8px;font-size:13px;">
@@ -698,6 +776,13 @@
 
     function confirmarEnvioZap() {
         if (!zapData) return;
+        // Read editable hora/missa from the confirmation modal inputs
+        zapData.lista.forEach((item, idx) => {
+            const horaInput  = document.getElementById(`zmHora_${idx}`);
+            const missaInput = document.getElementById(`zmMissa_${idx}`);
+            if (horaInput  && horaInput.value)  item.h = horaInput.value;
+            if (missaInput && missaInput.value.trim()) item.m = missaInput.value.trim();
+        });
         let msg = zapData.header;
         zapData.lista.forEach((item) => {
             const partes = [];
@@ -900,8 +985,10 @@
     }
 
     function abrirModalMinistros() {
-        document.getElementById('tituloModalMinistros').innerText = LOCAIS_NOMES[localAtual] || localAtual;
+        const sel = document.getElementById('localMinistro');
+        if (sel) sel.value = localAtual;
         document.getElementById('modalMinistros').classList.add('open');
+        carregarTodosMinistros();
     }
     function abrirModalAviso()     { document.getElementById('modalAviso').classList.add('open'); }
     function fecharTudo()          { document.querySelectorAll('.modal').forEach(m => m.classList.remove('open')); document.getElementById('msgAtualizacao').style.display = 'none'; }

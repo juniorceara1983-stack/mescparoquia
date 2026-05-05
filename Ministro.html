@@ -263,17 +263,21 @@
             loader.style.display = "none";
             if (data.ok && data.escalas.length > 0) {
                 data.escalas.forEach(esc => {
-                    const horaDisplay = formatarHora(esc.hora) || "00:00";
+                    // For fixed schedules, esc.data holds the rule name (e.g. "1º Domingo Manhã")
+                    // Use it to infer hora and missa when the sheet has empty values
+                    const regraOuData = esc.tipo === 'Fixa' ? esc.data : '';
+                    const horaDisplay = inferirHoraDeRegra(regraOuData, formatarHora(esc.hora)) || '–';
+                    const missaDisplay = inferirMissaDeRegra(regraOuData, esc.missa);
                     const card = document.createElement('div');
                     card.className = 'card-escala';
                     card.innerHTML = `
                         <div class="hora">⏰ ${horaDisplay}</div>
-                        <div class="missa">⛪ ${esc.missa}</div>
+                        <div class="missa">⛪ ${missaDisplay}</div>
                         <div class="detalhes">📅 ${esc.data} (${esc.tipo}) — 📍 ${LOCAIS_NOMES[esc.local] || esc.local}</div>
-                        <button class="btn btn-green" onclick="prepararSalvar('${esc.data}', '${horaDisplay}', '${esc.missa}')">📅 Salvar na Agenda Google</button>
+                        <button class="btn btn-green" onclick="prepararSalvar('${esc.data}', '${horaDisplay}', '${missaDisplay}')">📅 Salvar na Agenda Google</button>
                     `;
                     lista.appendChild(card);
-                    if (!esc.data.includes('º')) agendarNotificacaoLocal(esc.data, horaDisplay, esc.missa);
+                    if (!esc.data.includes('º')) agendarNotificacaoLocal(esc.data, horaDisplay, missaDisplay);
                 });
             } else {
                 lista.innerHTML = "<p style='text-align:center;color:#64748b;'>Nenhuma escala encontrada.</p>";
@@ -386,6 +390,24 @@
             return timePart.substring(0, 5);
         }
         return s.length >= 5 ? s.substring(0, 5) : s;
+    }
+
+    function inferirHoraDeRegra(regra, hora) {
+        if (hora && hora !== '00:00') return hora;
+        const r = String(regra || '').toLowerCase();
+        if (r.includes('manhã') || r.includes('manha')) return '07:00';
+        if (r.includes('noite')) return '19:00';
+        if (r.includes('meio-dia') || r.includes('meiod')) return '12:00';
+        return hora || '';
+    }
+
+    function inferirMissaDeRegra(regra, missa) {
+        if (missa) return missa;
+        const r = String(regra || '').toLowerCase();
+        if (r.includes('manhã') || r.includes('manha')) return 'Missa Manhã';
+        if (r.includes('noite')) return 'Missa Noite';
+        if (r.includes('meio-dia')) return 'Missa Meio-Dia';
+        return 'Missa';
     }
 
     function extrairDataISO(dateStr) {
