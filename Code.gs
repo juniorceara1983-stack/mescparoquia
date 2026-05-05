@@ -431,8 +431,8 @@ function setupEscalaFixaMatriz() {
     ['1º Quinta',       '', '', 'Celina, Elizinha, Maria de Jesus Santos', ''],
     ['1º Sexta',        '', '', 'Socorro Feitosa, Santiago, Rosângela, Mazé', ''],
     ['1º Sábado',       '', '', 'Maria de Jesus, Elizinha', ''],
-    ['1º Domingo Manhã','', '', 'Celina, Júnior, Izabel, Danielle, França, Valéria', ''],
-    ['1º Domingo Noite','', '', 'Maria de Jesus, Santiago, Rafael, Sandra, Elvercio, Socorro Feitosa, Elizinha', ''],
+    ['1º Domingo Manhã','07:00', 'Missa Manhã', 'Celina, Júnior, Izabel, Danielle, França, Valéria', ''],
+    ['1º Domingo Noite','19:00', 'Missa Noite', 'Maria de Jesus, Santiago, Rafael, Sandra, Elvercio, Socorro Feitosa, Elizinha', ''],
 
     // ── DIA 13 (celebrado todo mês na Matriz) ────────────────────────────────
     ['Dia 13 06H Mês Pares',   '06:00', 'Missa Dia 13 Mês Pares',   'Rosângela, Ana Cristina', 'Fev/Abr/Jun/Ago/Out/Dez'],
@@ -444,30 +444,30 @@ function setupEscalaFixaMatriz() {
     ['2º Quinta',       '', '', 'Maria de Jesus Santiago, Socorro Feitosa, Célia', ''],
     ['2º Sexta',        '', '', 'Célia, Tatiana Araújo, Maria de Jesus Santos, Luzia, Rosângela', ''],
     ['2º Sábado',       '', '', 'França, Luzia, Rosângela, Mazé, Rafael', ''],
-    ['2º Domingo Manhã','', '', 'Valéria, Danielle, Luzia, Célia, Rosélia, Nadgela, Elvercio, Rosângela', ''],
-    ['2º Domingo Noite','', '', 'Leonardo, Maria de Jesus Santos, Ana Maria, Maria de Jesus Santiago, Elizinha, Helena, Socorro Feitosa', ''],
+    ['2º Domingo Manhã','07:00', 'Missa Manhã', 'Valéria, Danielle, Luzia, Célia, Rosélia, Nadgela, Elvercio, Rosângela', ''],
+    ['2º Domingo Noite','19:00', 'Missa Noite', 'Leonardo, Maria de Jesus Santos, Ana Maria, Maria de Jesus Santiago, Elizinha, Helena, Socorro Feitosa', ''],
 
     // ── 3ª SEMANA ────────────────────────────────────────────────────────────
     ['3º Quarta',       '', '', 'Maria de Jesus Santiago', ''],
     ['3º Quinta',       '', '', 'Helena, Maria de Jesus Santos', ''],
     ['3º Sexta',        '', '', 'Elizinha', ''],
     ['3º Sábado',       '', '', 'Sandra, Leonardo', ''],
-    ['3º Domingo Manhã','', '', 'Alexandra, Leonardo, Ana Maria, Valéria', ''],
-    ['3º Domingo Noite','', '', 'Celina, Luzia, Lúcia, Maria de Jesus Santos', ''],
+    ['3º Domingo Manhã','07:00', 'Missa Manhã', 'Alexandra, Leonardo, Ana Maria, Valéria', ''],
+    ['3º Domingo Noite','19:00', 'Missa Noite', 'Celina, Luzia, Lúcia, Maria de Jesus Santos', ''],
 
     // ── 4ª SEMANA ────────────────────────────────────────────────────────────
     ['4º Quarta',       '', '', 'França, Fátima Souza, Rosângela', ''],
     ['4º Quinta',       '', '', 'França, Celina, Socorro Feitosa', ''],
     ['4º Sexta',        '', '', 'Célia, Maria de Jesus Santos, França', ''],
     ['4º Sábado',       '', '', 'Alexandra, Luzia, Célia, Júnior', ''],
-    ['4º Domingo Manhã','', '', 'Rafael, Sandra, Danielle, Rosélia, Nadgela, Valéria, França', ''],
-    ['4º Domingo Noite','', '', 'Maria de Jesus Santiago, Ana Maria, Júnior, Izabel, Elizinha, Maria de Jesus Santos', ''],
+    ['4º Domingo Manhã','07:00', 'Missa Manhã', 'Rafael, Sandra, Danielle, Rosélia, Nadgela, Valéria, França', ''],
+    ['4º Domingo Noite','19:00', 'Missa Noite', 'Maria de Jesus Santiago, Ana Maria, Júnior, Izabel, Elizinha, Maria de Jesus Santos', ''],
 
     // ── 5ª SEMANA ────────────────────────────────────────────────────────────
     ['5º Quinta',       '', '', 'França', ''],
     ['5º Sábado',       '', '', 'Izabel', ''],
-    ['5º Domingo Manhã','', '', 'Célia, Danielle, Nadgela', ''],
-    ['5º Domingo Noite','', '', 'Ana Maria, Celina, Elvercio', '']
+    ['5º Domingo Manhã','07:00', 'Missa Manhã', 'Célia, Danielle, Nadgela', ''],
+    ['5º Domingo Noite','19:00', 'Missa Noite', 'Ana Maria, Celina, Elvercio', '']
   ];
 
   for (var i = 0; i < entradas.length; i++) {

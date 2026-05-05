@@ -666,8 +666,8 @@
 
             const nomeLocal = LOCAIS_NOMES[localAtual] || localAtual;
             const lista = [
-                ...fixos.map(f  => ({ h: fmt(f[2]),  m: f[3], nArr: splitMin(f[4]),  o: f[5] })),
-                ...extras.map(ex => ({ h: fmt(ex[2]), m: ex[3], nArr: splitMin(ex[4]), o: ex[5] }))
+                ...fixos.map(f  => ({ h: inferirHoraDeRegra(f[1], fmt(f[2])),  m: inferirMissaDeRegra(f[1], f[3]), nArr: splitMin(f[4]),  o: f[5] })),
+                ...extras.map(ex => ({ h: inferirHoraDeRegra(ex[3], fmt(ex[2])), m: inferirMissaDeRegra('', ex[3]), nArr: splitMin(ex[4]), o: ex[5] }))
             ].sort((a, b) => a.h.localeCompare(b.h));
 
             zapData = {
@@ -683,6 +683,24 @@
 
     function splitMin(str) {
         return (str || '').toString().split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    function inferirHoraDeRegra(regra, hora) {
+        if (hora && hora !== '00:00') return hora;
+        const r = String(regra || '').toLowerCase();
+        if (r.includes('manhã') || r.includes('manha')) return '07:00';
+        if (r.includes('noite')) return '19:00';
+        if (r.includes('meio-dia') || r.includes('meiod')) return '12:00';
+        return hora || '';
+    }
+
+    function inferirMissaDeRegra(regra, missa) {
+        if (missa) return missa;
+        const r = String(regra || '').toLowerCase();
+        if (r.includes('manhã') || r.includes('manha')) return 'Missa Manhã';
+        if (r.includes('noite')) return 'Missa Noite';
+        if (r.includes('meio-dia')) return 'Missa Meio-Dia';
+        return 'Missa';
     }
 
     function escaparHtml(str) {
@@ -737,7 +755,10 @@
             const sec = document.createElement('div');
             sec.style = 'margin-bottom:14px;padding-bottom:10px;border-bottom:1px dashed #e2e8f0;';
             sec.innerHTML = `
-                <div style="font-weight:bold;color:var(--primary);margin-bottom:6px;">⏰ ${escaparHtml(item.h)} — ${escaparHtml(item.m || 'Missa')}</div>
+                <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">
+                    <input type="time" id="zmHora_${idx}" value="${escaparHtml(item.h && item.h !== '00:00' ? item.h : '')}" aria-label="Horário da missa ${idx + 1}" style="width:110px;padding:6px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:14px;font-weight:bold;color:var(--primary);">
+                    <input type="text" id="zmMissa_${idx}" value="${escaparHtml(item.m || '')}" placeholder="Nome da Missa" aria-label="Nome da missa ${idx + 1}" style="flex:1;min-width:120px;padding:6px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;">
+                </div>
                 <div id="zmList_${idx}"></div>
                 <div style="display:flex;gap:6px;margin-top:6px;">
                     <input type="text" id="zmAdd_${idx}" placeholder="Adicionar ministro..." aria-label="Adicionar ministro para ${escaparHtml(item.h)} ${escaparHtml(item.m || 'Missa')}" style="flex:1;padding:8px;font-size:13px;">
@@ -755,6 +776,13 @@
 
     function confirmarEnvioZap() {
         if (!zapData) return;
+        // Read editable hora/missa from the confirmation modal inputs
+        zapData.lista.forEach((item, idx) => {
+            const horaInput  = document.getElementById(`zmHora_${idx}`);
+            const missaInput = document.getElementById(`zmMissa_${idx}`);
+            if (horaInput  && horaInput.value)  item.h = horaInput.value;
+            if (missaInput && missaInput.value.trim()) item.m = missaInput.value.trim();
+        });
         let msg = zapData.header;
         zapData.lista.forEach((item) => {
             const partes = [];
